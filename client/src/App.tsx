@@ -8,7 +8,11 @@ import Home from "@/pages/Home";
 import Round from "@/pages/Round";
 import Match from "@/pages/Match";
 import Teams from "@/pages/Teams";
+import AuthPage from "@/pages/AuthPage";
+import AdminPage from "@/pages/AdminPage";
 import Layout from "@/components/Layout";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AuthProvider } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 
 function Router() {
@@ -122,6 +126,8 @@ function Router() {
         {params => <Match id={parseInt(params.id)} />}
       </Route>
       <Route path="/teams" component={Teams} />
+      <Route path="/auth" component={AuthPage} />
+      <ProtectedRoute path="/admin" component={AdminPage} adminOnly={true} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -130,12 +136,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Layout>
-          <Router />
-        </Layout>
-        <Toaster />
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Layout>
+            <Router />
+          </Layout>
+          <Toaster />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
