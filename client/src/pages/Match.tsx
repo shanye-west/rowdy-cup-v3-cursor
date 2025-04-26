@@ -1,11 +1,21 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import MatchHeader from "@/components/MatchHeader";
 import MatchScorecard from "@/components/MatchScorecard";
 import ScoreEntry from "@/components/ScoreEntry";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface MatchProps {
   id: number;
@@ -54,6 +64,13 @@ interface ScoreData {
 
 const Match = ({ id }: MatchProps) => {
   const { toast } = useToast();
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [matchSummary, setMatchSummary] = useState({
+    aviatorTotal: 0,
+    producerTotal: 0,
+    result: '',
+    leadingTeam: ''
+  });
 
   // Fetch match data
   const { data: match, isLoading: isMatchLoading } = useQuery<MatchData>({
@@ -77,6 +94,38 @@ const Match = ({ id }: MatchProps) => {
   });
 
   const isLoading = isMatchLoading || isScoresLoading || isHolesLoading || isRoundLoading;
+
+  // Check if match is completed or should be completed
+  useEffect(() => {
+    if (!scores || !match || match.status === "completed") return;
+    
+    // Calculate completedHoles and check for match completion conditions
+    const completedScores = scores.filter(score => 
+      score.aviatorScore !== null && score.producerScore !== null
+    );
+    
+    // If all 18 holes are filled or match is clinched
+    if (completedScores.length === 18 || (match.leadAmount > (18 - Math.max(...completedScores.map(s => s.holeNumber), 0)))) {
+      // Calculate totals for the summary
+      let aviatorTotal = 0;
+      let producerTotal = 0;
+      completedScores.forEach(score => {
+        if (score.aviatorScore) aviatorTotal += score.aviatorScore;
+        if (score.producerScore) producerTotal += score.producerScore;
+      });
+      
+      // Set match summary data
+      setMatchSummary({
+        aviatorTotal,
+        producerTotal,
+        result: match.result || 'Pending',
+        leadingTeam: match.leadingTeam || 'tied'
+      });
+      
+      // Show completion dialog
+      setShowCompletionDialog(true);
+    }
+  }, [scores, match]);
 
   // Function to update score
   const updateScoreMutation = useMutation({
@@ -188,6 +237,42 @@ const Match = ({ id }: MatchProps) => {
           )}
         </>
       )}
+      
+      {/* Match Completion Dialog */}
+      <AlertDialog open={showCompletionDialog} onOpenChange={setShowCompletionDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Match Complete</AlertDialogTitle>
+            <AlertDialogDescription>
+              <div className="space-y-4">
+                <p className="text-lg font-semibold">Final Score:</p>
+                <div className="flex justify-between items-center">
+                  <div className="bg-aviator text-white px-4 py-2 rounded">
+                    <p className="font-bold">The Aviators</p>
+                    <p className="text-2xl text-center">{matchSummary.aviatorTotal}</p>
+                  </div>
+                  <div className="text-xl font-bold">vs</div>
+                  <div className="bg-producer text-white px-4 py-2 rounded">
+                    <p className="font-bold">The Producers</p>
+                    <p className="text-2xl text-center">{matchSummary.producerTotal}</p>
+                  </div>
+                </div>
+                
+                <div className="mt-4 text-center">
+                  <p className="text-lg">
+                    {matchSummary.leadingTeam === 'aviators' ? 'The Aviators' : 
+                     matchSummary.leadingTeam === 'producers' ? 'The Producers' : 'Match'} {' '}
+                    {matchSummary.result !== 'AS' ? 'won' : 'tied'} {matchSummary.result && matchSummary.result}
+                  </p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>Close</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

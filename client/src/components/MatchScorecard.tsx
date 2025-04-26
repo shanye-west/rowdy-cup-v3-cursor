@@ -213,15 +213,7 @@ const MatchScorecard = ({ matchId, holes, scores, onScoreUpdate }: MatchScorecar
                 {frontNineTotals.producerTotal > 0 ? frontNineTotals.producerTotal : '-'}
               </td>
             </tr>
-            <tr>
-              <td className="py-2 px-2 font-semibold text-xs sticky left-0 bg-gray-50">Score</td>
-              {frontNine.map(hole => (
-                <td key={hole.number} className="py-2 px-2 text-center text-xs">
-                  {getMatchStatus(hole.number)}
-                </td>
-              ))}
-              <td className="py-2 px-2 text-center font-semibold bg-gray-100"></td>
-            </tr>
+
           </tbody>
         </table>
         
@@ -292,16 +284,7 @@ const MatchScorecard = ({ matchId, holes, scores, onScoreUpdate }: MatchScorecar
                 {roundTotals.producerTotal > 0 ? roundTotals.producerTotal : '-'}
               </td>
             </tr>
-            <tr>
-              <td className="py-2 px-2 font-semibold text-xs sticky left-0 bg-gray-50">Score</td>
-              {backNine.map(hole => (
-                <td key={hole.number} className="py-2 px-2 text-center text-xs">
-                  {getMatchStatus(hole.number)}
-                </td>
-              ))}
-              <td className="py-2 px-2 text-center font-semibold bg-gray-100"></td>
-              <td className="py-2 px-2 text-center font-semibold bg-gray-200"></td>
-            </tr>
+
           </tbody>
         </table>
       </div>

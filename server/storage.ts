@@ -421,18 +421,25 @@ export class MemStorage implements IStorage {
     // Check if match is completed
     let status = match.status;
     let result: string | null = null;
-
-    if (lastHoleScored === 18) {
+    
+    // Count completed holes
+    const completedHoles = scores.filter(s => s.aviatorScore !== null && s.producerScore !== null).length;
+    
+    // Determine if the match should be complete
+    const remainingHoles = 18 - lastHoleScored;
+    
+    if (completedHoles === 18) {
+      // All 18 holes completed
       status = "completed";
       if (leadingTeam) {
-        result = `${leadAmount}UP`;
+        result = `1UP`; // If someone won after 18 holes, it's "1 UP"
       } else {
         result = "AS"; // All square
       }
-    } else if (leadAmount > 18 - lastHoleScored) {
+    } else if (leadAmount > remainingHoles) {
       // Match is decided if lead is greater than remaining holes
       status = "completed";
-      result = `${leadAmount}&${18 - lastHoleScored}`;
+      result = `${leadAmount}&${remainingHoles}`; // Format as "3&2", "2&1", etc.
     } else if (lastHoleScored > 0) {
       status = "in_progress";
       result = null;
