@@ -286,7 +286,7 @@ function PlayersTab() {
 // Users Management Tab (admin only)
 function UsersTab() {
   const { toast } = useToast();
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ['/api/admin/users'],
     queryFn: getQueryFn({ on401: "throw" }),
   });
