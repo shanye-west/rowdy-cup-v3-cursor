@@ -426,6 +426,104 @@ export class MemStorage implements IStorage {
       producerScore: 0
     });
     
+    // Create players for Aviators team
+    await this.createPlayer({
+      name: "J. Smith",
+      teamId: aviators.id,
+      wins: 2,
+      losses: 1,
+      ties: 0
+    });
+    
+    await this.createPlayer({
+      name: "T. Wilson",
+      teamId: aviators.id,
+      wins: 1,
+      losses: 2,
+      ties: 0
+    });
+    
+    await this.createPlayer({
+      name: "B. Miller",
+      teamId: aviators.id,
+      wins: 1,
+      losses: 1,
+      ties: 1
+    });
+    
+    await this.createPlayer({
+      name: "A. Taylor",
+      teamId: aviators.id,
+      wins: 1,
+      losses: 2,
+      ties: 0
+    });
+    
+    await this.createPlayer({
+      name: "D. White",
+      teamId: aviators.id,
+      wins: 1,
+      losses: 2,
+      ties: 0
+    });
+    
+    await this.createPlayer({
+      name: "E. Martin",
+      teamId: aviators.id,
+      wins: 0,
+      losses: 3,
+      ties: 0
+    });
+    
+    // Create players for Producers team
+    await this.createPlayer({
+      name: "M. Johnson",
+      teamId: producers.id,
+      wins: 2,
+      losses: 1,
+      ties: 0
+    });
+    
+    await this.createPlayer({
+      name: "R. Davis",
+      teamId: producers.id,
+      wins: 2,
+      losses: 1,
+      ties: 0
+    });
+    
+    await this.createPlayer({
+      name: "C. Brown",
+      teamId: producers.id,
+      wins: 1,
+      losses: 1,
+      ties: 1
+    });
+    
+    await this.createPlayer({
+      name: "J. Anderson",
+      teamId: producers.id,
+      wins: 2,
+      losses: 1,
+      ties: 0
+    });
+    
+    await this.createPlayer({
+      name: "G. Thompson",
+      teamId: producers.id,
+      wins: 3,
+      losses: 0,
+      ties: 0
+    });
+    
+    await this.createPlayer({
+      name: "F. Moore",
+      teamId: producers.id,
+      wins: 3,
+      losses: 0,
+      ties: 0
+    });
+    
     // Create standard holes
     const holePars = [4, 3, 5, 4, 4, 3, 5, 4, 4, 4, 5, 3, 4, 4, 5, 3, 4, 4];
     for (let i = 0; i < holePars.length; i++) {
@@ -439,28 +537,36 @@ export class MemStorage implements IStorage {
     const round1 = await this.createRound({
       name: "Round 1",
       matchType: "2-man Team Scramble",
-      date: "October 5, 2023",
+      date: "August 7, 2023",
+      courseName: "The Idaho Club",
+      startTime: "12:00 PM",
       isComplete: true
     });
     
     const round2 = await this.createRound({
       name: "Round 2",
       matchType: "2-man Team Shamble",
-      date: "October 5, 2023",
+      date: "August 7, 2023",
+      courseName: "The Idaho Club",
+      startTime: "4:00 PM",
       isComplete: true
     });
     
     const round3 = await this.createRound({
       name: "Round 3",
       matchType: "2-man Team Best Ball",
-      date: "October 6, 2023",
+      date: "August 8, 2023",
+      courseName: "Circling Raven Golf Club",
+      startTime: "9:00 AM",
       isComplete: true
     });
     
     const round4 = await this.createRound({
       name: "Round 4",
       matchType: "4-man Team Shamble",
-      date: "October 6, 2023",
+      date: "August 8, 2023",
+      courseName: "Circling Raven Golf Club",
+      startTime: "2:00 PM",
       isComplete: false
     });
     
