@@ -67,7 +67,7 @@ const MatchHeader = ({
             
             <div className="w-1/2 pl-3">
               <div className="flex items-center mb-1">
-                <div className="w-3 h-3 rounded-full bg-producer mr-2"></div>
+                <img src={producersLogo} alt="Producers" className="w-5 h-5 mr-2" />
                 <span className="font-semibold text-sm">PRODUCERS</span>
               </div>
               <div className="text-sm font-semibold">{producerPlayers}</div>
