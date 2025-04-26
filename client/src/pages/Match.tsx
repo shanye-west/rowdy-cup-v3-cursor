@@ -11,26 +11,67 @@ interface MatchProps {
   id: number;
 }
 
+interface MatchData {
+  id: number;
+  roundId: number;
+  name: string;
+  status: string;
+  aviatorPlayers: string;
+  producerPlayers: string;
+  currentHole: number;
+  leadingTeam: string | null;
+  leadAmount: number;
+  result: string | null;
+}
+
+interface RoundData {
+  id: number;
+  name: string;
+  matchType: string;
+  courseName: string;
+  startTime: string;
+  aviatorScore: number;
+  producerScore: number;
+  date: string;
+  isComplete: boolean;
+}
+
+interface HoleData {
+  id: number;
+  number: number;
+  par: number;
+}
+
+interface ScoreData {
+  id: number;
+  matchId: number;
+  holeNumber: number;
+  aviatorScore: number | null;
+  producerScore: number | null;
+  winningTeam: string | null;
+  matchStatus: string | null;
+}
+
 const Match = ({ id }: MatchProps) => {
   const { toast } = useToast();
-  
+
   // Fetch match data
-  const { data: match, isLoading: isMatchLoading } = useQuery({
+  const { data: match, isLoading: isMatchLoading } = useQuery<MatchData>({
     queryKey: [`/api/matches/${id}`],
   });
 
   // Fetch scores for this match
-  const { data: scores, isLoading: isScoresLoading } = useQuery({
+  const { data: scores, isLoading: isScoresLoading } = useQuery<ScoreData[]>({
     queryKey: [`/api/scores?matchId=${id}`],
   });
 
   // Fetch holes data
-  const { data: holes, isLoading: isHolesLoading } = useQuery({
+  const { data: holes, isLoading: isHolesLoading } = useQuery<HoleData[]>({
     queryKey: ['/api/holes'],
   });
 
   // Fetch round data
-  const { data: round, isLoading: isRoundLoading } = useQuery({
+  const { data: round, isLoading: isRoundLoading } = useQuery<RoundData>({
     queryKey: [`/api/rounds/${match?.roundId}`],
     enabled: !!match?.roundId,
   });
@@ -66,8 +107,7 @@ const Match = ({ id }: MatchProps) => {
   });
 
   const handleScoreUpdate = (holeNumber: number, aviatorScore: number | null, producerScore: number | null) => {
-    if (aviatorScore === null || producerScore === null) return;
-    
+    // Allow updates even if one of the scores is null
     const scoreData = {
       matchId: id,
       holeNumber,
@@ -104,7 +144,7 @@ const Match = ({ id }: MatchProps) => {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      {isLoading ? (
+      {isLoading || !match ? (
         <>
           <div className="mb-6">
             <Skeleton className="h-4 w-24 mb-2" />

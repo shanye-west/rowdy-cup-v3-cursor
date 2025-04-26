@@ -117,7 +117,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/scores", async (req, res) => {
     try {
-      const scoreData = insertScoreSchema.parse(req.body);
+      // Use a more flexible validation approach
+      const schema = z.object({
+        matchId: z.number(),
+        holeNumber: z.number(),
+        aviatorScore: z.number().nullable(),
+        producerScore: z.number().nullable(),
+      });
+      
+      const scoreData = schema.parse(req.body);
       
       // Check if score already exists
       const existingScore = await storage.getScore(scoreData.matchId, scoreData.holeNumber);
@@ -134,6 +142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json(newScore);
       }
     } catch (error) {
+      console.error("Error processing score update:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid score data", errors: error.errors });
       }
@@ -144,7 +153,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/scores/:id", async (req, res) => {
     try {
       const scoreId = parseInt(req.params.id);
-      const scoreData = req.body;
+      
+      // Use the same flexible validation approach
+      const schema = z.object({
+        matchId: z.number().optional(),
+        holeNumber: z.number().optional(),
+        aviatorScore: z.number().nullable().optional(),
+        producerScore: z.number().nullable().optional(),
+      });
+      
+      const scoreData = schema.parse(req.body);
       
       const updatedScore = await storage.updateScore(scoreId, scoreData);
       
@@ -165,6 +183,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(updatedScore);
     } catch (error) {
+      console.error("Error processing score update:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid score data", errors: error.errors });
+      }
       return res.status(500).json({ message: "Internal server error" });
     }
   });

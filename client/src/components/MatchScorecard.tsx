@@ -52,7 +52,16 @@ const MatchScorecard = ({ matchId, holes, scores, onScoreUpdate }: MatchScorecar
   };
   
   const handleScoreChange = (holeNumber: number, team: 'aviator' | 'producer', value: string) => {
-    const numValue = value === "" ? null : parseInt(value);
+    let numValue = null;
+    
+    // Only parse if the value is not empty
+    if (value !== "") {
+      // Ensure we're parsing a valid number
+      const parsed = parseInt(value);
+      if (!isNaN(parsed)) {
+        numValue = parsed;
+      }
+    }
     
     if (team === 'aviator') {
       const producerScore = getScore(holeNumber)?.producerScore || null;
