@@ -53,8 +53,10 @@ const RoundHeader = ({
             <div className="flex items-center">
               <div className="w-4 h-4 rounded-full bg-aviator mr-2"></div>
               <span className="font-heading font-bold text-xl">{aviatorScore}</span>
+              <span className="ml-2 text-sm text-gray-600">→ The Aviators</span>
             </div>
             <div className="flex items-center">
+              <span className="mr-2 text-sm text-gray-600">The Producers ←</span>
               <span className="font-heading font-bold text-xl">{producerScore}</span>
               <div className="w-4 h-4 rounded-full bg-producer ml-2"></div>
             </div>

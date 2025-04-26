@@ -95,6 +95,54 @@ const Match = ({ id }: MatchProps) => {
 
   const isLoading = isMatchLoading || isScoresLoading || isHolesLoading || isRoundLoading;
 
+  // Function to update score
+  const updateScoreMutation = useMutation({
+    mutationFn: async (scoreData: any) => {
+      const existingScore = scores?.find(s => s.holeNumber === scoreData.holeNumber);
+      
+      if (existingScore) {
+        // Update existing score
+        return apiRequest('PUT', `/api/scores/${existingScore.id}`, scoreData);
+      } else {
+        // Create new score
+        return apiRequest('POST', '/api/scores', scoreData);
+      }
+    },
+    onSuccess: () => {
+      toast({
+        title: "Score updated",
+        description: "The score has been successfully updated.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating score",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Function to update match
+  const updateMatchMutation = useMutation({
+    mutationFn: async (matchData: any) => {
+      return apiRequest('PUT', `/api/matches/${matchData.id}`, matchData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Match completed",
+        description: "The match has been marked as completed.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error completing match",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
   // Calculate proper match play result (e.g., "3&2", "4&3", "1UP")
   const calculateMatchPlayResult = (completedScores: ScoreData[]): string => {
     if (!completedScores.length) return '';
@@ -167,43 +215,24 @@ const Match = ({ id }: MatchProps) => {
       setMatchSummary({
         aviatorTotal,
         producerTotal,
-        result: match.result || 'Pending',
+        result: matchPlayResult,
         leadingTeam: match.leadingTeam || 'tied',
         matchPlayResult
+      });
+      
+      // Mark match as completed and update result in database
+      updateMatchMutation.mutate({
+        id: match.id,
+        status: "completed",
+        result: matchPlayResult,
+        leadingTeam: match.leadingTeam,
+        leadAmount: match.leadAmount
       });
       
       // Show completion dialog
       setShowCompletionDialog(true);
     }
   }, [scores, match]);
-
-  // Function to update score
-  const updateScoreMutation = useMutation({
-    mutationFn: async (scoreData: any) => {
-      const existingScore = scores?.find(s => s.holeNumber === scoreData.holeNumber);
-      
-      if (existingScore) {
-        // Update existing score
-        return apiRequest('PUT', `/api/scores/${existingScore.id}`, scoreData);
-      } else {
-        // Create new score
-        return apiRequest('POST', '/api/scores', scoreData);
-      }
-    },
-    onSuccess: () => {
-      toast({
-        title: "Score updated",
-        description: "The score has been successfully updated.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error updating score",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
 
   const handleScoreUpdate = (holeNumber: number, aviatorScore: number | null, producerScore: number | null) => {
     // Allow updates even if one of the scores is null
@@ -216,8 +245,6 @@ const Match = ({ id }: MatchProps) => {
     
     updateScoreMutation.mutate(scoreData);
   };
-
-
 
   return (
     <div className="container mx-auto px-4 py-6">

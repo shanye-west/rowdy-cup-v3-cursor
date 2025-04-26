@@ -72,7 +72,16 @@ const MatchHeader = ({
             </div>
           </div>
           
-          {leadingTeam ? (
+          {/* Display final match result when completed */}
+          {status === "completed" && result ? (
+            <div className="flex justify-center items-center">
+              <div className="text-center py-2 px-4 rounded-lg font-heading font-bold bg-gray-100 text-lg">
+                <span className={leadingTeam === "aviators" ? "text-aviator" : "text-producer"}>
+                  {leadingTeam === "aviators" ? "Aviators" : "Producers"} win {result}
+                </span>
+              </div>
+            </div>
+          ) : leadingTeam ? (
             <div className="flex justify-center items-center">
               <div className="text-center py-1 px-3 rounded-lg font-heading font-bold bg-gray-100">
                 <span className={leadingTeam === "aviators" ? "text-aviator" : "text-producer"}>
@@ -83,11 +92,7 @@ const MatchHeader = ({
                 </span>
               </div>
               <div className="text-xs text-gray-500 ml-2">
-                {status === "completed" ? (
-                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded">Complete</span>
-                ) : (
-                  <span>Hole {currentHole}</span>
-                )}
+                <span>Hole {currentHole}</span>
               </div>
             </div>
           ) : (
@@ -96,11 +101,7 @@ const MatchHeader = ({
                 ALL SQUARE
               </div>
               <div className="text-xs text-gray-500 ml-2">
-                {status === "completed" ? (
-                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded">Complete</span>
-                ) : (
-                  <span>Hole {currentHole}</span>
-                )}
+                <span>Hole {currentHole}</span>
               </div>
             </div>
           )}
