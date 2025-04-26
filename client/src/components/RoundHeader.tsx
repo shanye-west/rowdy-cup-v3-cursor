@@ -1,4 +1,6 @@
 import { useLocation } from "wouter";
+import aviatorsLogo from "../assets/aviators-logo.svg";
+import producersLogo from "../assets/producers-logo.svg";
 
 interface RoundHeaderProps {
   id: number;
@@ -51,14 +53,14 @@ const RoundHeader = ({
         <div className="p-4">
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center">
-              <div className="w-4 h-4 rounded-full bg-aviator mr-2"></div>
+              <img src={aviatorsLogo} alt="Aviators" className="w-8 h-8 mr-2" />
               <span className="font-heading font-bold text-xl">{aviatorScore}</span>
               <span className="ml-2 text-sm text-gray-600">→ The Aviators</span>
             </div>
             <div className="flex items-center">
               <span className="mr-2 text-sm text-gray-600">The Producers ←</span>
               <span className="font-heading font-bold text-xl">{producerScore}</span>
-              <div className="w-4 h-4 rounded-full bg-producer ml-2"></div>
+              <img src={producersLogo} alt="Producers" className="w-8 h-8 ml-2" />
             </div>
           </div>
           

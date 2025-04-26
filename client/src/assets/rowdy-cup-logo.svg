@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="120" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cup base -->
+  <rect x="80" y="90" width="40" height="10" rx="2" fill="#64748b" />
+  
+  <!-- Cup body -->
+  <path d="M85,40 C85,40 75,70 75,80 C75,85 80,90 100,90 C120,90 125,85 125,80 C125,70 115,40 115,40 L85,40" fill="#0f172a" stroke="#94a3b8" stroke-width="2" />
+  
+  <!-- Cup handles -->
+  <path d="M85,50 C75,50 70,60 75,70" fill="none" stroke="#94a3b8" stroke-width="2" />
+  <path d="M115,50 C125,50 130,60 125,70" fill="none" stroke="#94a3b8" stroke-width="2" />
+  
+  <!-- Golf elements -->
+  <circle cx="100" cy="65" r="10" fill="#94a3b8" />
+  <circle cx="100" cy="65" r="6" fill="#0f172a" />
+  <line x1="75" y1="50" x2="125" y2="50" stroke="#94a3b8" stroke-width="2" />
+  
+  <!-- Text -->
+  <text x="100" y="30" font-family="Arial" font-size="16" font-weight="bold" fill="#0f172a" text-anchor="middle">ROWDY CUP</text>
+  <text x="100" y="110" font-family="Arial" font-size="10" fill="#64748b" text-anchor="middle">EST. 2023</text>
+</svg>

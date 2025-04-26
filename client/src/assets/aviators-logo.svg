@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="60" cy="60" r="55" fill="#0f172a" />
+  
+  <!-- Aviator pilot goggles/glasses -->
+  <path d="M30,55 C30,45 40,45 50,45 L70,45 C80,45 90,45 90,55 C90,65 80,65 70,65 L50,65 C40,65 30,65 30,55" fill="none" stroke="#fca5a5" stroke-width="5" />
+  
+  <!-- Golf club -->
+  <line x1="30" y1="75" x2="90" y2="75" stroke="#94a3b8" stroke-width="3" />
+  <circle cx="30" cy="75" r="5" fill="#94a3b8" />
+  
+  <!-- Text -->
+  <text x="60" y="95" font-family="Arial" font-size="12" font-weight="bold" fill="white" text-anchor="middle">AVIATORS</text>
+</svg>
