@@ -28,6 +28,7 @@ interface Match {
   leadingTeam: string | null;
   leadAmount: number;
   result: string | null;
+  currentHole: number;
 }
 
 const Round = ({ id }: RoundProps) => {
