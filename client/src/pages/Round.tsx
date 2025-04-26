@@ -7,14 +7,37 @@ interface RoundProps {
   id: number;
 }
 
+interface RoundData {
+  id: number;
+  name: string;
+  matchType: string;
+  courseName: string;
+  startTime: string;
+  aviatorScore: number;
+  producerScore: number;
+  date: string;
+  isComplete: boolean;
+}
+
+interface Match {
+  id: number;
+  name: string;
+  status: string;
+  aviatorPlayers: string;
+  producerPlayers: string;
+  leadingTeam: string | null;
+  leadAmount: number;
+  result: string | null;
+}
+
 const Round = ({ id }: RoundProps) => {
   // Fetch round data
-  const { data: round, isLoading: isRoundLoading } = useQuery({
+  const { data: round, isLoading: isRoundLoading } = useQuery<RoundData>({
     queryKey: [`/api/rounds/${id}`],
   });
 
   // Fetch matches for this round
-  const { data: matches, isLoading: isMatchesLoading } = useQuery({
+  const { data: matches, isLoading: isMatchesLoading } = useQuery<Match[]>({
     queryKey: [`/api/matches?roundId=${id}`],
   });
 
@@ -37,22 +60,26 @@ const Round = ({ id }: RoundProps) => {
         </>
       ) : (
         <>
-          {/* Round Header */}
-          <RoundHeader 
-            id={round.id}
-            name={round.name}
-            matchType={round.matchType}
-            courseName={round.courseName}
-            startTime={round.startTime}
-            aviatorScore={round.aviatorScore || 0}
-            producerScore={round.producerScore || 0}
-            date={round.date}
-            matchCount={matches?.length || 0}
-          />
-          
-          {/* Matches List */}
-          <h3 className="font-heading text-lg font-bold mb-3">Matches</h3>
-          <MatchesList matches={matches || []} />
+          {round && (
+            <>
+              {/* Round Header */}
+              <RoundHeader 
+                id={round.id}
+                name={round.name}
+                matchType={round.matchType}
+                courseName={round.courseName || ''}
+                startTime={round.startTime || ''}
+                aviatorScore={round.aviatorScore || 0}
+                producerScore={round.producerScore || 0}
+                date={round.date}
+                matchCount={matches?.length || 0}
+              />
+            
+              {/* Matches List */}
+              <h3 className="font-heading text-lg font-bold mb-3">Matches</h3>
+              <MatchesList matches={matches || []} />
+            </>
+          )}
         </>
       )}
     </div>

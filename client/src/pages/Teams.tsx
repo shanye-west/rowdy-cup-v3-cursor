@@ -22,12 +22,12 @@ const Teams = () => {
   const [_, navigate] = useLocation();
 
   // Fetch teams data
-  const { data: teams, isLoading: isTeamsLoading } = useQuery({
+  const { data: teams, isLoading: isTeamsLoading } = useQuery<Team[]>({
     queryKey: ['/api/teams'],
   });
 
   // Fetch players data
-  const { data: players, isLoading: isPlayersLoading } = useQuery({
+  const { data: players, isLoading: isPlayersLoading } = useQuery<Player[]>({
     queryKey: ['/api/players'],
   });
 

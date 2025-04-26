@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Round from "@/pages/Round";
 import Match from "@/pages/Match";
+import Teams from "@/pages/Teams";
 import Layout from "@/components/Layout";
 import { useState, useEffect } from "react";
 
@@ -120,6 +121,7 @@ function Router() {
       <Route path="/matches/:id">
         {params => <Match id={parseInt(params.id)} />}
       </Route>
+      <Route path="/teams" component={Teams} />
       <Route component={NotFound} />
     </Switch>
   );
