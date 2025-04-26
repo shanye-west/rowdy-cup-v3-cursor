@@ -216,6 +216,8 @@ const Match = ({ id }: MatchProps) => {
             leadingTeam={match.leadingTeam}
             leadAmount={match.leadAmount}
             currentHole={match.currentHole}
+            status={match.status}
+            result={match.result}
           />
           
           {/* Match Scorecard */}

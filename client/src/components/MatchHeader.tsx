@@ -11,6 +11,8 @@ interface MatchHeaderProps {
   leadingTeam: string | null;
   leadAmount: number;
   currentHole: number;
+  status?: string;
+  result?: string | null;
 }
 
 const MatchHeader = ({
@@ -24,6 +26,8 @@ const MatchHeader = ({
   leadingTeam,
   leadAmount,
   currentHole,
+  status = "in_progress",
+  result = null,
 }: MatchHeaderProps) => {
   const [_, navigate] = useLocation();
 
@@ -79,12 +83,25 @@ const MatchHeader = ({
                 </span>
               </div>
               <div className="text-xs text-gray-500 ml-2">
-                Hole {currentHole}
+                {status === "completed" ? (
+                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded">Complete</span>
+                ) : (
+                  <span>Hole {currentHole}</span>
+                )}
               </div>
             </div>
           ) : (
-            <div className="text-center py-1 px-3 rounded-lg font-heading font-bold bg-gray-100">
-              ALL SQUARE
+            <div className="flex justify-center items-center">
+              <div className="text-center py-1 px-3 rounded-lg font-heading font-bold bg-gray-100">
+                ALL SQUARE
+              </div>
+              <div className="text-xs text-gray-500 ml-2">
+                {status === "completed" ? (
+                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded">Complete</span>
+                ) : (
+                  <span>Hole {currentHole}</span>
+                )}
+              </div>
             </div>
           )}
         </div>
