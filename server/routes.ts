@@ -175,5 +175,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(holes);
   });
 
+  // Teams API
+  app.get("/api/teams", async (req, res) => {
+    const teams = await storage.getTeams();
+    res.json(teams);
+  });
+
+  app.get("/api/teams/:id", async (req, res) => {
+    const teamId = parseInt(req.params.id);
+    const team = await storage.getTeam(teamId);
+    
+    if (!team) {
+      return res.status(404).json({ message: "Team not found" });
+    }
+    
+    res.json(team);
+  });
+
+  // Players API
+  app.get("/api/players", async (req, res) => {
+    const teamId = req.query.teamId ? parseInt(req.query.teamId as string) : undefined;
+    
+    if (teamId) {
+      const players = await storage.getPlayersByTeam(teamId);
+      res.json(players);
+    } else {
+      const players = await storage.getPlayers();
+      res.json(players);
+    }
+  });
+
   return httpServer;
 }
