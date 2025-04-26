@@ -20,10 +20,11 @@ interface MatchScorecardProps {
   matchId: number;
   holes: Hole[];
   scores: Score[];
+  matchStatus?: string;
   onScoreUpdate: (holeNumber: number, aviatorScore: number | null, producerScore: number | null) => void;
 }
 
-const MatchScorecard = ({ matchId, holes, scores, onScoreUpdate }: MatchScorecardProps) => {
+const MatchScorecard = ({ matchId, holes, scores, matchStatus = 'in_progress', onScoreUpdate }: MatchScorecardProps) => {
   const frontNine = holes.filter(h => h.number <= 9);
   const backNine = holes.filter(h => h.number > 9);
   
@@ -31,16 +32,72 @@ const MatchScorecard = ({ matchId, holes, scores, onScoreUpdate }: MatchScorecar
     return scores.find(s => s.holeNumber === holeNumber);
   };
   
+  // Determine the last completed hole based on scores
+  const lastCompletedHole = useMemo(() => {
+    const completedHoles = scores
+      .filter(s => s.aviatorScore !== null && s.producerScore !== null)
+      .map(s => s.holeNumber);
+    
+    return completedHoles.length > 0 ? Math.max(...completedHoles) : 0;
+  }, [scores]);
+
+  // Function to check if a hole is or should be greyed out (e.g., match is over)
+  const isHoleGreyedOut = (holeNumber: number): boolean => {
+    if (matchStatus !== 'completed') return false;
+    
+    // Find the match-deciding hole
+    const completedScores = scores.filter(s => s.aviatorScore !== null && s.producerScore !== null);
+    if (completedScores.length === 0) return false;
+    
+    // Count aviator wins vs producer wins
+    let aviatorWins = 0;
+    let producerWins = 0;
+    
+    // Sort scores by hole number
+    const sortedScores = [...completedScores].sort((a, b) => a.holeNumber - b.holeNumber);
+    
+    // Calculate the running score and find the deciding hole
+    let decidingHole = 18; // Default to 18 if match goes all the way
+    
+    for (const score of sortedScores) {
+      if (score.aviatorScore! < score.producerScore!) {
+        aviatorWins++;
+      } else if (score.producerScore! < score.aviatorScore!) {
+        producerWins++;
+      }
+      
+      const lead = Math.abs(aviatorWins - producerWins);
+      const holesRemaining = 18 - score.holeNumber;
+      
+      // If lead is greater than remaining holes, match is decided
+      if (lead > holesRemaining) {
+        decidingHole = score.holeNumber;
+        break;
+      }
+    }
+    
+    // Grey out holes after the deciding hole
+    return holeNumber > decidingHole;
+  };
+
   const getHoleClass = (holeNumber: number): string => {
     const score = getScore(holeNumber);
-    if (!score || !score.aviatorScore || !score.producerScore) return "";
+    let classes = "";
+    
+    // Grey out if hole is after the match was decided
+    if (isHoleGreyedOut(holeNumber)) {
+      return "bg-gray-200 opacity-50"; // Greyed out and disabled
+    }
+    
+    if (!score || !score.aviatorScore || !score.producerScore) return classes;
     
     if (score.aviatorScore < score.producerScore) {
-      return "bg-green-100"; // Aviators win
+      classes += "bg-green-100"; // Aviators win
     } else if (score.producerScore < score.aviatorScore) {
-      return "bg-green-100"; // Producers win
+      classes += "bg-green-100"; // Producers win
     }
-    return ""; // Tied
+    
+    return classes;
   };
   
   const getScoreInputValue = (holeNumber: number, team: 'aviator' | 'producer'): string => {
@@ -181,11 +238,12 @@ const MatchScorecard = ({ matchId, holes, scores, onScoreUpdate }: MatchScorecar
                 <td key={hole.number} className={`py-2 px-2 text-center ${getHoleClass(hole.number)}`}>
                   <input
                     type="number"
-                    className="score-input w-8 h-8 text-center border border-gray-300 rounded"
+                    className={`score-input w-8 h-8 text-center border border-gray-300 rounded ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''}`}
                     value={getScoreInputValue(hole.number, 'aviator')}
                     onChange={(e) => handleScoreChange(hole.number, 'aviator', e.target.value)}
                     min="1"
                     max="12"
+                    disabled={isHoleGreyedOut(hole.number)}
                   />
                 </td>
               ))}
@@ -201,11 +259,12 @@ const MatchScorecard = ({ matchId, holes, scores, onScoreUpdate }: MatchScorecar
                 <td key={hole.number} className={`py-2 px-2 text-center ${getHoleClass(hole.number)}`}>
                   <input
                     type="number"
-                    className="score-input w-8 h-8 text-center border border-gray-300 rounded"
+                    className={`score-input w-8 h-8 text-center border border-gray-300 rounded ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''}`}
                     value={getScoreInputValue(hole.number, 'producer')}
                     onChange={(e) => handleScoreChange(hole.number, 'producer', e.target.value)}
                     min="1"
                     max="12"
+                    disabled={isHoleGreyedOut(hole.number)}
                   />
                 </td>
               ))}
@@ -246,11 +305,12 @@ const MatchScorecard = ({ matchId, holes, scores, onScoreUpdate }: MatchScorecar
                 <td key={hole.number} className={`py-2 px-2 text-center ${getHoleClass(hole.number)}`}>
                   <input
                     type="number"
-                    className="score-input w-8 h-8 text-center border border-gray-300 rounded"
+                    className={`score-input w-8 h-8 text-center border border-gray-300 rounded ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''}`}
                     value={getScoreInputValue(hole.number, 'aviator')}
                     onChange={(e) => handleScoreChange(hole.number, 'aviator', e.target.value)}
                     min="1"
                     max="12"
+                    disabled={isHoleGreyedOut(hole.number)}
                   />
                 </td>
               ))}
@@ -269,11 +329,12 @@ const MatchScorecard = ({ matchId, holes, scores, onScoreUpdate }: MatchScorecar
                 <td key={hole.number} className={`py-2 px-2 text-center ${getHoleClass(hole.number)}`}>
                   <input
                     type="number"
-                    className="score-input w-8 h-8 text-center border border-gray-300 rounded"
+                    className={`score-input w-8 h-8 text-center border border-gray-300 rounded ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''}`}
                     value={getScoreInputValue(hole.number, 'producer')}
                     onChange={(e) => handleScoreChange(hole.number, 'producer', e.target.value)}
                     min="1"
                     max="12"
+                    disabled={isHoleGreyedOut(hole.number)}
                   />
                 </td>
               ))}

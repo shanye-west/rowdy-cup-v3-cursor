@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import MatchHeader from "@/components/MatchHeader";
 import MatchScorecard from "@/components/MatchScorecard";
-import ScoreEntry from "@/components/ScoreEntry";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -167,29 +166,7 @@ const Match = ({ id }: MatchProps) => {
     updateScoreMutation.mutate(scoreData);
   };
 
-  const handleSaveScore = (aviatorScore: number, producerScore: number) => {
-    if (!match) return;
-    
-    const scoreData = {
-      matchId: id,
-      holeNumber: match.currentHole,
-      aviatorScore,
-      producerScore,
-    };
-    
-    updateScoreMutation.mutate(scoreData);
-  };
 
-  // Get the score for the current hole
-  const getCurrentHoleScore = () => {
-    if (!match || !scores) return { aviatorScore: null, producerScore: null };
-    
-    const currentHoleScore = scores.find(s => s.holeNumber === match.currentHole);
-    return {
-      aviatorScore: currentHoleScore?.aviatorScore || null,
-      producerScore: currentHoleScore?.producerScore || null,
-    };
-  };
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -226,17 +203,8 @@ const Match = ({ id }: MatchProps) => {
             holes={holes || []}
             scores={scores || []}
             onScoreUpdate={handleScoreUpdate}
+            matchStatus={match.status}
           />
-          
-          {/* Score Entry Section - Only show if match is in progress */}
-          {match.status === "in_progress" && (
-            <ScoreEntry 
-              currentHole={match.currentHole}
-              aviatorScore={getCurrentHoleScore().aviatorScore}
-              producerScore={getCurrentHoleScore().producerScore}
-              onSaveScore={handleSaveScore}
-            />
-          )}
         </>
       )}
       
