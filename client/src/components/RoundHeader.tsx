@@ -4,6 +4,8 @@ interface RoundHeaderProps {
   id: number;
   name: string;
   matchType: string;
+  courseName: string;
+  startTime: string;
   aviatorScore: number;
   producerScore: number;
   date: string;
@@ -13,7 +15,9 @@ interface RoundHeaderProps {
 const RoundHeader = ({ 
   id, 
   name, 
-  matchType, 
+  matchType,
+  courseName,
+  startTime, 
   aviatorScore, 
   producerScore, 
   date,
@@ -40,6 +44,7 @@ const RoundHeader = ({
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="bg-gray-800 text-white px-4 py-3">
           <h2 className="font-heading font-bold text-xl">{name}</h2>
+          <p className="text-sm text-gray-300 mt-1 font-medium">{courseName}</p>
           <p className="text-sm text-gray-300">{matchType}</p>
         </div>
         
@@ -56,7 +61,8 @@ const RoundHeader = ({
           </div>
           
           <div className="text-center text-sm text-gray-500">
-            <p>{matchCount} Matches • {date}</p>
+            <p>{matchCount} Matches</p>
+            <p className="mt-1">{date} • {startTime}</p>
           </div>
         </div>
       </div>

@@ -34,6 +34,9 @@ export const players = pgTable("players", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   teamId: integer("team_id").notNull(),
+  wins: integer("wins").default(0),
+  losses: integer("losses").default(0),
+  ties: integer("ties").default(0),
 });
 
 export const insertPlayerSchema = createInsertSchema(players);
@@ -46,6 +49,8 @@ export const rounds = pgTable("rounds", {
   name: text("name").notNull(),
   matchType: text("match_type").notNull(), // Scramble, Shamble, Best Ball, etc.
   date: text("date").notNull(),
+  courseName: text("course_name").notNull(),
+  startTime: text("start_time").notNull(),
   isComplete: boolean("is_complete").default(false),
 });
 

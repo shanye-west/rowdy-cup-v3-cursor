@@ -4,6 +4,9 @@ interface Round {
   id: number;
   name: string;
   matchType: string;
+  date: string;
+  courseName: string;
+  startTime: string;
   aviatorScore: number;
   producerScore: number;
   isComplete: boolean;
@@ -30,6 +33,7 @@ const RoundsList = ({ rounds }: RoundsListProps) => {
         >
           <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
             <h3 className="font-heading font-bold">{round.name}</h3>
+            <p className="text-sm text-gray-600 font-medium">{round.courseName}</p>
             <p className="text-sm text-gray-600">{round.matchType}</p>
           </div>
           <div className="p-4">
@@ -42,6 +46,10 @@ const RoundsList = ({ rounds }: RoundsListProps) => {
                 <span className="font-semibold">{round.producerScore}</span>
                 <div className="w-3 h-3 rounded-full bg-producer ml-2"></div>
               </div>
+            </div>
+            <div className="mt-2 text-sm text-gray-500 flex justify-between items-center">
+              <div>{round.date}</div>
+              <div>{round.startTime}</div>
             </div>
             {!round.isComplete && (
               <div className="mt-2">

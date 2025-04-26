@@ -34,14 +34,6 @@ const MainNavigation = ({ isOpen, onNavigate }: MainNavigationProps) => {
               Team Rosters
             </button>
           </li>
-          <li>
-            <button 
-              className="block w-full text-left py-2 hover:bg-gray-100 px-3 rounded"
-              onClick={() => onNavigate('/about')}
-            >
-              About Rowdy Cup
-            </button>
-          </li>
         </ul>
       </div>
     </nav>

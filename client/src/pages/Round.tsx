@@ -42,6 +42,8 @@ const Round = ({ id }: RoundProps) => {
             id={round.id}
             name={round.name}
             matchType={round.matchType}
+            courseName={round.courseName}
+            startTime={round.startTime}
             aviatorScore={round.aviatorScore || 0}
             producerScore={round.producerScore || 0}
             date={round.date}
