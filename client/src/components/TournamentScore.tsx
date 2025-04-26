@@ -9,7 +9,6 @@ interface TournamentScoreProps {
 const TournamentScore = ({ aviatorScore, producerScore }: TournamentScoreProps) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-      <h2 className="font-heading text-center text-xl font-bold mb-4">Tournament Score</h2>
       <div className="flex justify-between items-center">
         <div className="text-center w-5/12">
           <div className="bg-aviator text-white py-2 px-3 rounded-t-lg flex items-center justify-center">
