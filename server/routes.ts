@@ -3,10 +3,14 @@ import { createServer, type Server } from "http";
 import { WebSocketServer } from "ws";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertScoreSchema } from "@shared/schema";
+import { insertScoreSchema, insertUserSchema, insertRoundSchema, insertMatchSchema, insertPlayerSchema, User } from "@shared/schema";
+import { setupAuth, isAuthenticated, isAdmin } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
+  
+  // Setup authentication
+  setupAuth(app);
   
   // Setup WebSocket server for real-time updates with a specific path
   const wss = new WebSocketServer({ 
@@ -224,6 +228,190 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } else {
       const players = await storage.getPlayers();
       res.json(players);
+    }
+  });
+
+  // ADMIN ROUTES - Protected by isAdmin middleware
+
+  // Create a new admin user (special endpoint - only for initial admin setup)
+  app.post("/api/admin/setup", async (req, res) => {
+    try {
+      // Check if any admin users already exist
+      const users = await storage.getUsers();
+      const admins = users.filter((user: User) => user.isAdmin);
+      
+      if (admins.length > 0) {
+        return res.status(403).json({ 
+          error: "Admin already exists, use the regular registration process" 
+        });
+      }
+
+      // Create the first admin user
+      const userData = insertUserSchema.parse({
+        ...req.body,
+        isAdmin: true
+      });
+
+      const user = await storage.createUser(userData);
+      
+      // Return sanitized user (without password)
+      res.status(201).json({
+        id: user.id,
+        username: user.username,
+        isAdmin: user.isAdmin
+      });
+    } catch (error) {
+      console.error("Admin setup error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid user data", details: error.errors });
+      }
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // USER MANAGEMENT (Admin only)
+  app.post("/api/admin/users", isAdmin, async (req, res) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
+      const user = await storage.createUser(userData);
+      
+      res.status(201).json({
+        id: user.id,
+        username: user.username,
+        isAdmin: user.isAdmin
+      });
+    } catch (error) {
+      console.error("User creation error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid user data", details: error.errors });
+      }
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/users", isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      // Sanitize user data (remove passwords)
+      const sanitizedUsers = users.map((user: User) => ({
+        id: user.id,
+        username: user.username,
+        isAdmin: user.isAdmin
+      }));
+      res.json(sanitizedUsers);
+    } catch (error) {
+      console.error("Get users error:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // TOURNAMENT MANAGEMENT (Admin only)
+  app.post("/api/admin/tournament", isAdmin, async (req, res) => {
+    try {
+      const tournament = await storage.getTournament();
+      
+      if (tournament) {
+        // Update existing tournament
+        const updatedData = await storage.updateTournament(tournament.id, req.body);
+        broadcast("tournament-updated", updatedData);
+        return res.json(updatedData);
+      } else {
+        // Create new tournament
+        const tournamentData = req.body;
+        const newTournament = await storage.createTournament(tournamentData);
+        broadcast("tournament-created", newTournament);
+        return res.status(201).json(newTournament);
+      }
+    } catch (error) {
+      console.error("Tournament management error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid tournament data", details: error.errors });
+      }
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // ROUND MANAGEMENT (Admin only)
+  app.post("/api/admin/rounds", isAdmin, async (req, res) => {
+    try {
+      const roundData = insertRoundSchema.parse(req.body);
+      const round = await storage.createRound(roundData);
+      broadcast("round-created", round);
+      res.status(201).json(round);
+    } catch (error) {
+      console.error("Round creation error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid round data", details: error.errors });
+      }
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.put("/api/admin/rounds/:id", isAdmin, async (req, res) => {
+    try {
+      const roundId = parseInt(req.params.id);
+      const round = await storage.getRound(roundId);
+      
+      if (!round) {
+        return res.status(404).json({ error: "Round not found" });
+      }
+
+      const updatedRound = await storage.updateRound(roundId, req.body);
+      broadcast("round-updated", updatedRound);
+      res.json(updatedRound);
+    } catch (error) {
+      console.error("Round update error:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // MATCH MANAGEMENT (Admin only)
+  app.post("/api/admin/matches", isAdmin, async (req, res) => {
+    try {
+      const matchData = insertMatchSchema.parse(req.body);
+      const match = await storage.createMatch(matchData);
+      broadcast("match-created", match);
+      res.status(201).json(match);
+    } catch (error) {
+      console.error("Match creation error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid match data", details: error.errors });
+      }
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.put("/api/admin/matches/:id", isAdmin, async (req, res) => {
+    try {
+      const matchId = parseInt(req.params.id);
+      const match = await storage.getMatch(matchId);
+      
+      if (!match) {
+        return res.status(404).json({ error: "Match not found" });
+      }
+
+      const updatedMatch = await storage.updateMatch(matchId, req.body);
+      broadcast("match-updated", updatedMatch);
+      res.json(updatedMatch);
+    } catch (error) {
+      console.error("Match update error:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // PLAYER MANAGEMENT (Admin only)
+  app.post("/api/admin/players", isAdmin, async (req, res) => {
+    try {
+      const playerData = insertPlayerSchema.parse(req.body);
+      const player = await storage.createPlayer(playerData);
+      broadcast("player-created", player);
+      res.status(201).json(player);
+    } catch (error) {
+      console.error("Player creation error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid player data", details: error.errors });
+      }
+      return res.status(500).json({ error: "Internal server error" });
     }
   });
 
