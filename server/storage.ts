@@ -1,12 +1,28 @@
-import { 
-  teams, type Team, type InsertTeam,
-  players, type Player, type InsertPlayer,
-  rounds, type Round, type InsertRound,
-  matches, type Match, type InsertMatch,
-  holes, type Hole, type InsertHole,
-  scores, type Score, type InsertScore,
-  tournament, type Tournament, type InsertTournament,
-  users, type User, type InsertUser
+import {
+  teams,
+  type Team,
+  type InsertTeam,
+  players,
+  type Player,
+  type InsertPlayer,
+  rounds,
+  type Round,
+  type InsertRound,
+  matches,
+  type Match,
+  type InsertMatch,
+  holes,
+  type Hole,
+  type InsertHole,
+  scores,
+  type Score,
+  type InsertScore,
+  tournament,
+  type Tournament,
+  type InsertTournament,
+  users,
+  type User,
+  type InsertUser,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -14,7 +30,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   // Team methods
   getTeams(): Promise<Team[]>;
   getTeam(id: number): Promise<Team | undefined>;
@@ -52,12 +68,20 @@ export interface IStorage {
   // Tournament methods
   getTournament(): Promise<Tournament | undefined>;
   createTournament(tournament: InsertTournament): Promise<Tournament>;
-  updateTournament(id: number, tournament: Partial<Tournament>): Promise<Tournament | undefined>;
+  updateTournament(
+    id: number,
+    tournament: Partial<Tournament>,
+  ): Promise<Tournament | undefined>;
 
   // Aggregate methods
-  calculateRoundScores(roundId: number): Promise<{ aviatorScore: number, producerScore: number }>;
-  calculateTournamentScores(): Promise<{ aviatorScore: number, producerScore: number }>;
-  
+  calculateRoundScores(
+    roundId: number,
+  ): Promise<{ aviatorScore: number; producerScore: number }>;
+  calculateTournamentScores(): Promise<{
+    aviatorScore: number;
+    producerScore: number;
+  }>;
+
   // Initialization
   initializeData(): Promise<void>;
 }
@@ -71,7 +95,7 @@ export class MemStorage implements IStorage {
   private holes: Map<number, Hole>;
   private scores: Map<number, Score>;
   private tournamentData: Map<number, Tournament>;
-  
+
   private currentId: {
     user: number;
     team: number;
@@ -92,7 +116,7 @@ export class MemStorage implements IStorage {
     this.holes = new Map();
     this.scores = new Map();
     this.tournamentData = new Map();
-    
+
     this.currentId = {
       user: 1,
       team: 1,
@@ -101,7 +125,7 @@ export class MemStorage implements IStorage {
       match: 1,
       hole: 1,
       score: 1,
-      tournament: 1
+      tournament: 1,
     };
   }
 
@@ -146,7 +170,7 @@ export class MemStorage implements IStorage {
 
   async getPlayersByTeam(teamId: number): Promise<Player[]> {
     return Array.from(this.players.values()).filter(
-      (player) => player.teamId === teamId
+      (player) => player.teamId === teamId,
     );
   }
 
@@ -173,10 +197,13 @@ export class MemStorage implements IStorage {
     return newRound;
   }
 
-  async updateRound(id: number, roundData: Partial<Round>): Promise<Round | undefined> {
+  async updateRound(
+    id: number,
+    roundData: Partial<Round>,
+  ): Promise<Round | undefined> {
     const round = this.rounds.get(id);
     if (!round) return undefined;
-    
+
     const updatedRound: Round = { ...round, ...roundData };
     this.rounds.set(id, updatedRound);
     return updatedRound;
@@ -189,7 +216,7 @@ export class MemStorage implements IStorage {
 
   async getMatchesByRound(roundId: number): Promise<Match[]> {
     return Array.from(this.matches.values()).filter(
-      (match) => match.roundId === roundId
+      (match) => match.roundId === roundId,
     );
   }
 
@@ -204,10 +231,13 @@ export class MemStorage implements IStorage {
     return newMatch;
   }
 
-  async updateMatch(id: number, matchData: Partial<Match>): Promise<Match | undefined> {
+  async updateMatch(
+    id: number,
+    matchData: Partial<Match>,
+  ): Promise<Match | undefined> {
     const match = this.matches.get(id);
     if (!match) return undefined;
-    
+
     const updatedMatch: Match = { ...match, ...matchData };
     this.matches.set(id, updatedMatch);
     return updatedMatch;
@@ -232,13 +262,16 @@ export class MemStorage implements IStorage {
 
   async getScoresByMatch(matchId: number): Promise<Score[]> {
     return Array.from(this.scores.values()).filter(
-      (score) => score.matchId === matchId
+      (score) => score.matchId === matchId,
     );
   }
 
-  async getScore(matchId: number, holeNumber: number): Promise<Score | undefined> {
+  async getScore(
+    matchId: number,
+    holeNumber: number,
+  ): Promise<Score | undefined> {
     return Array.from(this.scores.values()).find(
-      (score) => score.matchId === matchId && score.holeNumber === holeNumber
+      (score) => score.matchId === matchId && score.holeNumber === holeNumber,
     );
   }
 
@@ -249,16 +282,19 @@ export class MemStorage implements IStorage {
     return newScore;
   }
 
-  async updateScore(id: number, scoreData: Partial<Score>): Promise<Score | undefined> {
+  async updateScore(
+    id: number,
+    scoreData: Partial<Score>,
+  ): Promise<Score | undefined> {
     const score = this.scores.get(id);
     if (!score) return undefined;
-    
+
     const updatedScore: Score = { ...score, ...scoreData };
     this.scores.set(id, updatedScore);
-    
+
     // Update match state based on scores
     await this.updateMatchState(score.matchId);
-    
+
     return updatedScore;
   }
 
@@ -275,21 +311,26 @@ export class MemStorage implements IStorage {
     return newTournament;
   }
 
-  async updateTournament(id: number, tournamentData: Partial<Tournament>): Promise<Tournament | undefined> {
+  async updateTournament(
+    id: number,
+    tournamentData: Partial<Tournament>,
+  ): Promise<Tournament | undefined> {
     const tournament = this.tournamentData.get(id);
     if (!tournament) return undefined;
-    
+
     const updatedTournament: Tournament = { ...tournament, ...tournamentData };
     this.tournamentData.set(id, updatedTournament);
     return updatedTournament;
   }
 
   // Aggregate methods
-  async calculateRoundScores(roundId: number): Promise<{ aviatorScore: number, producerScore: number }> {
+  async calculateRoundScores(
+    roundId: number,
+  ): Promise<{ aviatorScore: number; producerScore: number }> {
     const matches = await this.getMatchesByRound(roundId);
     let aviatorScore = 0;
     let producerScore = 0;
-    
+
     for (const match of matches) {
       if (match.status === "completed") {
         if (match.leadingTeam === "aviators") {
@@ -303,46 +344,54 @@ export class MemStorage implements IStorage {
         }
       }
     }
-    
+
     return { aviatorScore, producerScore };
   }
 
-  async calculateTournamentScores(): Promise<{ aviatorScore: number, producerScore: number }> {
+  async calculateTournamentScores(): Promise<{
+    aviatorScore: number;
+    producerScore: number;
+  }> {
     const rounds = await this.getRounds();
     let totalAviatorScore = 0;
     let totalProducerScore = 0;
-    
+
     for (const round of rounds) {
-      const { aviatorScore, producerScore } = await this.calculateRoundScores(round.id);
+      const { aviatorScore, producerScore } = await this.calculateRoundScores(
+        round.id,
+      );
       totalAviatorScore += aviatorScore;
       totalProducerScore += producerScore;
     }
-    
+
     // Update tournament record
     const tournament = await this.getTournament();
     if (tournament) {
       await this.updateTournament(tournament.id, {
         aviatorScore: totalAviatorScore,
-        producerScore: totalProducerScore
+        producerScore: totalProducerScore,
       });
     }
-    
-    return { aviatorScore: totalAviatorScore, producerScore: totalProducerScore };
+
+    return {
+      aviatorScore: totalAviatorScore,
+      producerScore: totalProducerScore,
+    };
   }
 
   private async updateMatchState(matchId: number): Promise<void> {
     const match = await this.getMatch(matchId);
     if (!match) return;
-    
+
     const scores = await this.getScoresByMatch(matchId);
-    
+
     // Sort scores by hole number
     scores.sort((a, b) => a.holeNumber - b.holeNumber);
-    
+
     let aviatorWins = 0;
     let producerWins = 0;
     let lastHoleScored = 0;
-    
+
     for (const score of scores) {
       if (score.aviatorScore !== null && score.producerScore !== null) {
         if (score.aviatorScore < score.producerScore) {
@@ -350,17 +399,17 @@ export class MemStorage implements IStorage {
         } else if (score.producerScore < score.aviatorScore) {
           producerWins += 1;
         }
-        
+
         if (score.holeNumber > lastHoleScored) {
           lastHoleScored = score.holeNumber;
         }
       }
     }
-    
+
     // Update match status
     let leadingTeam: string | null = null;
     let leadAmount = 0;
-    
+
     if (aviatorWins > producerWins) {
       leadingTeam = "aviators";
       leadAmount = aviatorWins - producerWins;
@@ -368,11 +417,11 @@ export class MemStorage implements IStorage {
       leadingTeam = "producers";
       leadAmount = producerWins - aviatorWins;
     }
-    
+
     // Check if match is completed
     let status = match.status;
     let result: string | null = null;
-    
+
     if (lastHoleScored === 18) {
       status = "completed";
       if (leadingTeam) {
@@ -380,7 +429,7 @@ export class MemStorage implements IStorage {
       } else {
         result = "AS"; // All square
       }
-    } else if (leadAmount > (18 - lastHoleScored)) {
+    } else if (leadAmount > 18 - lastHoleScored) {
       // Match is decided if lead is greater than remaining holes
       status = "completed";
       result = `${leadAmount}&${18 - lastHoleScored}`;
@@ -388,16 +437,16 @@ export class MemStorage implements IStorage {
       status = "in_progress";
       result = null;
     }
-    
+
     // Update match
     await this.updateMatch(matchId, {
       leadingTeam,
       leadAmount,
       status,
       result,
-      currentHole: lastHoleScored + 1
+      currentHole: lastHoleScored + 1,
     });
-    
+
     // If a match status changes, recalculate tournament scores
     if (status === "completed") {
       await this.calculateTournamentScores();
@@ -409,130 +458,130 @@ export class MemStorage implements IStorage {
     const aviators = await this.createTeam({
       name: "The Aviators",
       shortName: "AVT",
-      colorCode: "#003366"
+      colorCode: "#003366",
     });
-    
+
     const producers = await this.createTeam({
       name: "The Producers",
       shortName: "PRD",
-      colorCode: "#7D0D23"
+      colorCode: "#7D0D23",
     });
-    
+
     // Create tournament
     await this.createTournament({
       name: "Rowdy Cup 2023",
       year: 2023,
       aviatorScore: 0,
-      producerScore: 0
+      producerScore: 0,
     });
-    
+
     // Create players for Aviators team
     await this.createPlayer({
-      name: "J. Smith",
+      name: "S. Peterson",
       teamId: aviators.id,
       wins: 2,
       losses: 1,
-      ties: 0
+      ties: 0,
     });
-    
+
     await this.createPlayer({
-      name: "T. Wilson",
+      name: "R. Benko",
       teamId: aviators.id,
       wins: 1,
       losses: 2,
-      ties: 0
+      ties: 0,
     });
-    
+
     await this.createPlayer({
-      name: "B. Miller",
+      name: "J. Fabozzi",
       teamId: aviators.id,
       wins: 1,
       losses: 1,
-      ties: 1
+      ties: 1,
     });
-    
+
     await this.createPlayer({
-      name: "A. Taylor",
+      name: "T. Euckert",
       teamId: aviators.id,
       wins: 1,
       losses: 2,
-      ties: 0
+      ties: 0,
     });
-    
+
     await this.createPlayer({
-      name: "D. White",
+      name: "J. Dugan",
       teamId: aviators.id,
       wins: 1,
       losses: 2,
-      ties: 0
+      ties: 0,
     });
-    
+
     await this.createPlayer({
-      name: "E. Martin",
+      name: "J.P. Saar",
       teamId: aviators.id,
       wins: 0,
       losses: 3,
-      ties: 0
+      ties: 0,
     });
-    
+
     // Create players for Producers team
     await this.createPlayer({
-      name: "M. Johnson",
+      name: "A. Macksoud",
       teamId: producers.id,
       wins: 2,
       losses: 1,
-      ties: 0
+      ties: 0,
     });
-    
+
     await this.createPlayer({
-      name: "R. Davis",
+      name: "J. Kushner",
       teamId: producers.id,
       wins: 2,
       losses: 1,
-      ties: 0
+      ties: 0,
     });
-    
+
     await this.createPlayer({
-      name: "C. Brown",
+      name: "P. Salazar",
       teamId: producers.id,
       wins: 1,
       losses: 1,
-      ties: 1
+      ties: 1,
     });
-    
+
     await this.createPlayer({
-      name: "J. Anderson",
+      name: "D. Cassady",
       teamId: producers.id,
       wins: 2,
       losses: 1,
-      ties: 0
+      ties: 0,
     });
-    
+
     await this.createPlayer({
-      name: "G. Thompson",
+      name: "S. Sloan",
       teamId: producers.id,
       wins: 3,
       losses: 0,
-      ties: 0
+      ties: 0,
     });
-    
+
     await this.createPlayer({
-      name: "F. Moore",
+      name: "S. Bodmer",
       teamId: producers.id,
       wins: 3,
       losses: 0,
-      ties: 0
+      ties: 0,
     });
-    
+
     // Create standard holes
     const holePars = [4, 3, 5, 4, 4, 3, 5, 4, 4, 4, 5, 3, 4, 4, 5, 3, 4, 4];
     for (let i = 0; i < holePars.length; i++) {
       await this.createHole({
         number: i + 1,
-        par: holePars[i]
+        par: holePars[i],
       });
     }
-    
+
     // Create rounds
     const round1 = await this.createRound({
       name: "Round 1",
@@ -540,36 +589,36 @@ export class MemStorage implements IStorage {
       date: "August 7, 2023",
       courseName: "The Idaho Club",
       startTime: "12:00 PM",
-      isComplete: true
+      isComplete: true,
     });
-    
+
     const round2 = await this.createRound({
       name: "Round 2",
       matchType: "2-man Team Shamble",
       date: "August 7, 2023",
       courseName: "The Idaho Club",
       startTime: "4:00 PM",
-      isComplete: true
+      isComplete: true,
     });
-    
+
     const round3 = await this.createRound({
       name: "Round 3",
       matchType: "2-man Team Best Ball",
       date: "August 8, 2023",
       courseName: "Circling Raven Golf Club",
       startTime: "9:00 AM",
-      isComplete: true
+      isComplete: true,
     });
-    
+
     const round4 = await this.createRound({
       name: "Round 4",
-      matchType: "4-man Team Shamble",
+      matchType: "4-man Team Scramble",
       date: "August 8, 2023",
       courseName: "Circling Raven Golf Club",
       startTime: "2:00 PM",
-      isComplete: false
+      isComplete: false,
     });
-    
+
     // Create sample matches for Round 1
     await this.createMatch({
       roundId: round1.id,
@@ -580,9 +629,9 @@ export class MemStorage implements IStorage {
       leadingTeam: "producers",
       leadAmount: 3,
       result: "3&2",
-      currentHole: 18
+      currentHole: 18,
     });
-    
+
     await this.createMatch({
       roundId: round1.id,
       name: "Match 2",
@@ -592,9 +641,9 @@ export class MemStorage implements IStorage {
       leadingTeam: "producers",
       leadAmount: 2,
       result: "2&1",
-      currentHole: 18
+      currentHole: 18,
     });
-    
+
     await this.createMatch({
       roundId: round1.id,
       name: "Match 3",
@@ -604,9 +653,9 @@ export class MemStorage implements IStorage {
       leadingTeam: "aviators",
       leadAmount: 1,
       result: "1UP",
-      currentHole: 18
+      currentHole: 18,
     });
-    
+
     // Create sample matches for Round 2
     await this.createMatch({
       roundId: round2.id,
@@ -617,9 +666,9 @@ export class MemStorage implements IStorage {
       leadingTeam: "producers",
       leadAmount: 3,
       result: "3&2",
-      currentHole: 18
+      currentHole: 18,
     });
-    
+
     await this.createMatch({
       roundId: round2.id,
       name: "Match 2",
@@ -629,9 +678,9 @@ export class MemStorage implements IStorage {
       leadingTeam: "aviators",
       leadAmount: 1,
       result: "1UP",
-      currentHole: 18
+      currentHole: 18,
     });
-    
+
     await this.createMatch({
       roundId: round2.id,
       name: "Match 3",
@@ -640,9 +689,9 @@ export class MemStorage implements IStorage {
       producerPlayers: "M. Johnson, R. Davis",
       leadingTeam: "producers",
       leadAmount: 2,
-      currentHole: 12
+      currentHole: 12,
     });
-    
+
     // Create sample matches for Round 3
     await this.createMatch({
       roundId: round3.id,
@@ -653,9 +702,9 @@ export class MemStorage implements IStorage {
       leadingTeam: "aviators",
       leadAmount: 2,
       result: "2&1",
-      currentHole: 18
+      currentHole: 18,
     });
-    
+
     await this.createMatch({
       roundId: round3.id,
       name: "Match 2",
@@ -665,9 +714,9 @@ export class MemStorage implements IStorage {
       leadingTeam: "producers",
       leadAmount: 1,
       result: "1UP",
-      currentHole: 18
+      currentHole: 18,
     });
-    
+
     await this.createMatch({
       roundId: round3.id,
       name: "Match 3",
@@ -677,9 +726,9 @@ export class MemStorage implements IStorage {
       leadingTeam: "producers",
       leadAmount: 1,
       result: "1UP",
-      currentHole: 18
+      currentHole: 18,
     });
-    
+
     // Create sample matches for Round 4
     await this.createMatch({
       roundId: round4.id,
@@ -690,9 +739,9 @@ export class MemStorage implements IStorage {
       leadingTeam: "aviators",
       leadAmount: 1,
       result: "1UP",
-      currentHole: 18
+      currentHole: 18,
     });
-    
+
     await this.createMatch({
       roundId: round4.id,
       name: "Match 2",
@@ -701,9 +750,9 @@ export class MemStorage implements IStorage {
       producerPlayers: "G. Thompson, F. Moore, K. Allen, L. Young",
       leadingTeam: null,
       leadAmount: 0,
-      currentHole: 10
+      currentHole: 10,
     });
-    
+
     await this.createMatch({
       roundId: round4.id,
       name: "Match 3",
@@ -712,9 +761,9 @@ export class MemStorage implements IStorage {
       producerPlayers: "S. Clark, T. Wright, V. Hill, W. Green",
       leadingTeam: "producers",
       leadAmount: 1,
-      currentHole: 9
+      currentHole: 9,
     });
-    
+
     // Calculate tournament scores
     await this.calculateTournamentScores();
   }

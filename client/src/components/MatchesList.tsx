@@ -9,6 +9,7 @@ interface Match {
   leadingTeam: string | null;
   leadAmount: number;
   result: string | null;
+  currentHole?: number;
 }
 
 interface MatchesListProps {
@@ -83,6 +84,30 @@ const MatchesList = ({ matches }: MatchesListProps) => {
     
     return null;
   };
+  
+  const renderMatchStatusDisplay = (match: Match) => {
+    if (match.status === "completed" && match.result) {
+      return null; // Result is already displayed
+    } else if (match.status === "in_progress") {
+      if (match.leadingTeam) {
+        // Display leading team status
+        const textColor = match.leadingTeam === "aviators" ? "text-aviator" : "text-producer";
+        return (
+          <div className={`text-center py-1 font-semibold ${textColor}`}>
+            {match.leadAmount} UP
+          </div>
+        );
+      } else {
+        // Display All Square
+        return (
+          <div className="text-center py-1 font-semibold text-gray-600">
+            AS
+          </div>
+        );
+      }
+    }
+    return null;
+  };
 
   return (
     <div className="space-y-4">
@@ -98,7 +123,7 @@ const MatchesList = ({ matches }: MatchesListProps) => {
           </div>
           
           <div className="p-4">
-            <div className="flex mb-4">
+            <div className="flex mb-2">
               <div className="w-1/2 border-r border-gray-200 pr-3">
                 <div className="flex items-center mb-1">
                   <div className="w-3 h-3 rounded-full bg-aviator mr-2"></div>
@@ -115,6 +140,9 @@ const MatchesList = ({ matches }: MatchesListProps) => {
                 <div className="text-sm">{match.producerPlayers}</div>
               </div>
             </div>
+            
+            {/* Display match status */}
+            {renderMatchStatusDisplay(match)}
             
             {renderMatchResult(match)}
           </div>
