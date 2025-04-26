@@ -1,4 +1,6 @@
 import { useLocation } from "wouter";
+import aviatorsLogo from "../assets/aviators-logo.svg";
+import producersLogo from "../assets/producers-logo.svg";
 
 interface MatchHeaderProps {
   id: number;
@@ -57,7 +59,7 @@ const MatchHeader = ({
           <div className="flex mb-3">
             <div className="w-1/2 border-r border-gray-200 pr-3">
               <div className="flex items-center mb-1">
-                <div className="w-3 h-3 rounded-full bg-aviator mr-2"></div>
+                <img src={aviatorsLogo} alt="Aviators" className="w-5 h-5 mr-2" />
                 <span className="font-semibold text-sm">AVIATORS</span>
               </div>
               <div className="text-sm font-semibold">{aviatorPlayers}</div>

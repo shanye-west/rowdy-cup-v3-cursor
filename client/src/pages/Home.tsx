@@ -3,6 +3,7 @@ import TournamentScore from "@/components/TournamentScore";
 import RoundsList from "@/components/RoundsList";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLocation } from "wouter";
+import rowdyCupLogo from "../assets/rowdy-cup-logo.svg";
 
 const Home = () => {
   const [_, navigate] = useLocation();
@@ -70,6 +71,11 @@ const Home = () => {
         </>
       ) : (
         <>
+          {/* Rowdy Cup Logo */}
+          <div className="flex justify-center mb-4">
+            <img src={rowdyCupLogo} alt="Rowdy Cup" className="h-24" />
+          </div>
+          
           {/* Tournament Score */}
           <TournamentScore 
             aviatorScore={tournament?.aviatorScore || 0} 
