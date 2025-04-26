@@ -68,7 +68,8 @@ const Match = ({ id }: MatchProps) => {
     aviatorTotal: 0,
     producerTotal: 0,
     result: '',
-    leadingTeam: ''
+    leadingTeam: '',
+    matchPlayResult: ''
   });
 
   // Fetch match data
@@ -94,6 +95,52 @@ const Match = ({ id }: MatchProps) => {
 
   const isLoading = isMatchLoading || isScoresLoading || isHolesLoading || isRoundLoading;
 
+  // Calculate proper match play result (e.g., "3&2", "4&3", "1UP")
+  const calculateMatchPlayResult = (completedScores: ScoreData[]): string => {
+    if (!completedScores.length) return '';
+    
+    let aviatorWins = 0;
+    let producerWins = 0;
+    let ties = 0;
+    
+    // Sort scores by hole number
+    const sortedScores = [...completedScores].sort((a, b) => a.holeNumber - b.holeNumber);
+    
+    // Calculate wins and ties for each hole
+    sortedScores.forEach(score => {
+      if (score.aviatorScore === null || score.producerScore === null) return;
+      
+      if (score.aviatorScore < score.producerScore) {
+        aviatorWins++;
+      } else if (score.producerScore < score.aviatorScore) {
+        producerWins++;
+      } else {
+        ties++;
+      }
+    });
+    
+    // Calculate lead and holes remaining
+    const lead = Math.abs(aviatorWins - producerWins);
+    const highestHolePlayed = Math.max(...sortedScores.map(s => s.holeNumber));
+    const holesRemaining = 18 - highestHolePlayed;
+    const totalCompleted = aviatorWins + producerWins + ties;
+    
+    // Match play result format
+    if (lead === 0 && totalCompleted === 18) {
+      // Tied match after all holes
+      return 'AS';
+    } else if (lead > holesRemaining) {
+      // Match clinched before 18 holes
+      const leadingTeam = aviatorWins > producerWins ? 'aviators' : 'producers';
+      return `${lead}&${holesRemaining}`;
+    } else if (lead > 0 && totalCompleted === 18) {
+      // Match completed with a winner after 18 holes
+      return `${lead} UP`;
+    }
+    
+    return '';
+  };
+
   // Check if match is completed or should be completed
   useEffect(() => {
     if (!scores || !match || match.status === "completed") return;
@@ -113,12 +160,16 @@ const Match = ({ id }: MatchProps) => {
         if (score.producerScore) producerTotal += score.producerScore;
       });
       
+      // Calculate the match play result
+      const matchPlayResult = calculateMatchPlayResult(completedScores);
+      
       // Set match summary data
       setMatchSummary({
         aviatorTotal,
         producerTotal,
         result: match.result || 'Pending',
-        leadingTeam: match.leadingTeam || 'tied'
+        leadingTeam: match.leadingTeam || 'tied',
+        matchPlayResult
       });
       
       // Show completion dialog
@@ -229,10 +280,12 @@ const Match = ({ id }: MatchProps) => {
                 </div>
                 
                 <div className="mt-4 text-center">
-                  <p className="text-lg">
+                  <p className="text-lg font-semibold">Match Play Result:</p>
+                  <p className="text-xl mt-2">
                     {matchSummary.leadingTeam === 'aviators' ? 'The Aviators' : 
                      matchSummary.leadingTeam === 'producers' ? 'The Producers' : 'Match'} {' '}
-                    {matchSummary.result !== 'AS' ? 'won' : 'tied'} {matchSummary.result && matchSummary.result}
+                    {matchSummary.matchPlayResult !== 'AS' ? 'won' : 'tied'}{' '}
+                    <span className="font-bold">{matchSummary.matchPlayResult}</span>
                   </p>
                 </div>
               </div>
