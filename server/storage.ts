@@ -215,6 +215,7 @@ export class MemStorage implements IStorage {
     const newPlayer: Player = { 
       ...player, 
       id,
+      status: player.status ?? null,
       wins: player.wins ?? null,
       losses: player.losses ?? null,
       ties: player.ties ?? null
@@ -246,6 +247,9 @@ export class MemStorage implements IStorage {
     const newRound: Round = { 
       ...round, 
       id,
+      status: round.status ?? null,
+      aviatorScore: round.aviatorScore ?? null,
+      producerScore: round.producerScore ?? null,
       isComplete: round.isComplete ?? null
     };
     this.rounds.set(id, newRound);
@@ -513,7 +517,7 @@ export class MemStorage implements IStorage {
     } else if (leadAmount > remainingHoles) {
       // Match is decided if lead is greater than remaining holes
       status = "completed";
-      result = `${leadAmount}&${remainingHoles}`; // Format as "3&2", "2&1", etc.
+      result = `${leadAmount} UP`; // Format as "3 UP", "2 UP", etc.
     } else if (lastHoleScored > 0) {
       status = "in_progress";
       result = null;

@@ -165,6 +165,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(match);
   });
   
+  app.post("/api/matches", async (req, res) => {
+    try {
+      const matchData = insertMatchSchema.parse(req.body);
+      const match = await storage.createMatch(matchData);
+      broadcast("match-created", match);
+      res.status(201).json(match);
+    } catch (error) {
+      console.error("Match creation error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid match data", details: error.errors });
+      }
+      return res.status(500).json({ message: "Failed to create match" });
+    }
+  });
+  
   app.put("/api/matches/:id", async (req, res) => {
     try {
       const matchId = parseInt(req.params.id);

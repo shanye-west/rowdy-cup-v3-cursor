@@ -148,7 +148,7 @@ const Match = ({ id }: MatchProps) => {
     }
   });
   
-  // Calculate proper match play result (e.g., "3&2", "4&3", "1UP")
+  // Calculate proper match play result (e.g., "3&2", "4&3", "1 UP")
   const calculateMatchPlayResult = (completedScores: ScoreData[]): string => {
     if (!completedScores.length) return '';
     
@@ -185,7 +185,7 @@ const Match = ({ id }: MatchProps) => {
     } else if (lead > holesRemaining) {
       // Match clinched before 18 holes
       const leadingTeam = aviatorWins > producerWins ? 'aviators' : 'producers';
-      return `${lead}&${holesRemaining}`;
+      return `${lead} UP`;
     } else if (lead > 0 && totalCompleted === 18) {
       // Match completed with a winner after 18 holes
       return `${lead} UP`;
