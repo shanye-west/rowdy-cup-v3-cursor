@@ -5,7 +5,7 @@ import MatchHeader from "@/components/MatchHeader";
 import EnhancedMatchScorecard from "@/components/EnhancedMatchScorecard";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ChevronLeft, Edit, Settings } from "lucide-react";
+import { ChevronLeft, Edit, Save, Settings } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +16,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 interface MatchProps {
   id: number;
@@ -65,6 +76,7 @@ interface ScoreData {
 const Match = ({ id }: MatchProps) => {
   const { toast } = useToast();
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [matchSummary, setMatchSummary] = useState({
     aviatorTotal: 0,
@@ -72,6 +84,11 @@ const Match = ({ id }: MatchProps) => {
     result: '',
     leadingTeam: '',
     matchPlayResult: ''
+  });
+  const [editMatchData, setEditMatchData] = useState({
+    name: '',
+    aviatorPlayers: '',
+    producerPlayers: ''
   });
   
   // Check if admin mode is enabled via URL parameter
@@ -269,6 +286,40 @@ const Match = ({ id }: MatchProps) => {
     }
   }, [scores, match]);
   
+  // Handle editing match
+  useEffect(() => {
+    if (match) {
+      setEditMatchData({
+        name: match.name,
+        aviatorPlayers: match.aviatorPlayers,
+        producerPlayers: match.producerPlayers
+      });
+    }
+  }, [match]);
+  
+  const handleOpenEditDialog = () => {
+    setShowEditDialog(true);
+  };
+  
+  const handleEditMatchSubmit = () => {
+    if (!match) return;
+    
+    updateMatchMutation.mutate({
+      id: match.id,
+      name: editMatchData.name,
+      aviatorPlayers: editMatchData.aviatorPlayers,
+      producerPlayers: editMatchData.producerPlayers
+    }, {
+      onSuccess: () => {
+        setShowEditDialog(false);
+        toast({
+          title: "Match updated",
+          description: "The match details have been updated successfully."
+        });
+      }
+    });
+  };
+  
   const handleBackToAdminMatches = () => {
     if (match && match.roundId) {
       window.location.href = `/admin/rounds/${match.roundId}/matches`;
@@ -303,7 +354,7 @@ const Match = ({ id }: MatchProps) => {
               <div className="flex items-center space-x-2">
                 <button 
                   className="flex items-center text-sm bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded"
-                  onClick={() => window.location.href = `/admin/matches/${id}/edit`}
+                  onClick={handleOpenEditDialog}
                 >
                   <Edit className="h-4 w-4 mr-1" /> Edit Match
                 </button>
@@ -381,6 +432,55 @@ const Match = ({ id }: MatchProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {/* Edit Match Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Match</DialogTitle>
+            <DialogDescription>
+              Update the match details below.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="match-name">Match Name</Label>
+              <Input
+                id="match-name"
+                value={editMatchData.name}
+                onChange={(e) => setEditMatchData({...editMatchData, name: e.target.value})}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="aviator-players">Aviator Players</Label>
+              <Input 
+                id="aviator-players"
+                value={editMatchData.aviatorPlayers}
+                onChange={(e) => setEditMatchData({...editMatchData, aviatorPlayers: e.target.value})}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="producer-players">Producer Players</Label>
+              <Input 
+                id="producer-players"
+                value={editMatchData.producerPlayers}
+                onChange={(e) => setEditMatchData({...editMatchData, producerPlayers: e.target.value})}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
+            <Button onClick={handleEditMatchSubmit}>
+              <Save className="mr-2 h-4 w-4" />
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

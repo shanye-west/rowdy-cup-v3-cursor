@@ -83,6 +83,12 @@ const MatchHeader = ({
                 </span>
               </div>
             </div>
+          ) : status === "upcoming" ? (
+            <div className="flex justify-center items-center">
+              <div className="text-center py-1 px-3 rounded-lg font-heading font-bold bg-gray-100">
+                MATCH PENDING
+              </div>
+            </div>
           ) : leadingTeam ? (
             <div className="flex justify-center items-center">
               <div className="text-center py-1 px-3 rounded-lg font-heading font-bold bg-gray-100">
@@ -90,7 +96,7 @@ const MatchHeader = ({
                   {leadingTeam === "aviators" ? "AVIATORS" : "PRODUCERS"}
                 </span>
                 <span className="text-sm font-mono bg-white px-2 py-1 rounded ml-1">
-                  {leadAmount} UP
+                  {leadAmount > 0 ? `${leadAmount} UP` : "-"}
                 </span>
               </div>
               <div className="text-xs text-gray-500 ml-2">
