@@ -116,3 +116,26 @@
   border: 1px dashed #aaa !important;
   text-decoration: line-through;
 }
+
+/* Enhanced styles for scorecard scrolling */
+.scorecard-container {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.scorecard-table {
+  min-width: max-content; /* Forces table to be at least as wide as needed */
+}
+
+.sticky-column {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background-color: inherit;
+}
+
+/* Force page to scroll to top on navigation */
+html {
+  scroll-behavior: smooth;
+}

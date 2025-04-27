@@ -910,7 +910,7 @@ const EnhancedMatchScorecard = ({
         <p className="text-sm text-muted-foreground">{matchType}</p>
       </div>
       
-      <div className="p-3 overflow-x-auto">
+      <div className="p-3 scorecard-container">
         {isBestBall ? renderBestBallScorecard() : renderRegularScorecard()}
       </div>
     </div>

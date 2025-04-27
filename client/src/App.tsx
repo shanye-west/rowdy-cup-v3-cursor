@@ -17,6 +17,11 @@ import { useState, useEffect } from "react";
 
 function Router() {
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [window.location.pathname]);
 
   useEffect(() => {
     let ws: WebSocket | null = null;
