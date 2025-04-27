@@ -153,12 +153,26 @@ const EnhancedMatchScorecard = ({
   
   // For Best Ball format, get an individual player's score
   const getPlayerScoreValue = (holeNumber: number, playerName: string, teamId: string): string => {
-    const key = `${holeNumber}-${playerName}`;
-    const holeScores = playerScores.get(key);
-    if (!holeScores) return "";
+    // First check if there's a score in our local state
+    const key = `${holeNumber}-${teamId}`;
+    const holeScores = playerScores.get(key) || [];
+    const playerScore = holeScores.find(ps => ps.player === playerName);
     
-    const playerScore = holeScores.find(ps => ps.player === playerName && ps.teamId === teamId);
-    return playerScore?.score !== null && playerScore?.score !== undefined ? playerScore.score.toString() : "";
+    if (playerScore?.score !== null && playerScore?.score !== undefined) {
+      return playerScore.score.toString();
+    }
+    
+    // If not found in local state, check if we need to initialize from the existing score
+    const existingScore = getScore(holeNumber);
+    if (existingScore) {
+      // For the first entry, initialize with the existing team score
+      const teamScore = teamId === 'aviator' ? existingScore.aviatorScore : existingScore.producerScore;
+      if (teamScore !== null) {
+        return teamScore.toString();
+      }
+    }
+    
+    return "";
   };
   
   // Handle score input change for regular match types
@@ -196,31 +210,41 @@ const EnhancedMatchScorecard = ({
       }
     }
     
-    // Update player scores in state
-    const key = `${holeNumber}-${teamId}`;
-    let holeScores = playerScores.get(key) || [];
+    // Store the player score using both keys for redundancy
+    // First key is for the team calculations
+    const teamKey = `${holeNumber}-${teamId}`;
+    // Second key is for looking up individual player scores
+    const playerKey = `${holeNumber}-${playerName}`;
+    
+    let holeScores = playerScores.get(teamKey) || [];
     
     // Find the player in the current hole scores
     const playerIndex = holeScores.findIndex(ps => ps.player === playerName);
+    
+    // Create a player score object
+    const playerScoreObj = {
+      player: playerName,
+      score: numValue,
+      teamId,
+      playerId: teamId === 'aviator' 
+        ? aviatorPlayersList.find(p => p.name === playerName)?.id || 0 
+        : producerPlayersList.find(p => p.name === playerName)?.id || 0
+    };
     
     if (playerIndex >= 0) {
       // Update existing player score
       holeScores[playerIndex].score = numValue;
     } else {
       // Add new player score
-      holeScores.push({
-        player: playerName,
-        score: numValue,
-        teamId,
-        playerId: teamId === 'aviator' 
-          ? aviatorPlayersList.find(p => p.name === playerName)?.id || 0 
-          : producerPlayersList.find(p => p.name === playerName)?.id || 0
-      });
+      holeScores.push(playerScoreObj);
     }
     
-    // Update state
+    // Update state with both keys
     const newPlayerScores = new Map(playerScores);
-    newPlayerScores.set(key, holeScores);
+    newPlayerScores.set(teamKey, holeScores);
+    // Also set the player-specific key for direct lookup
+    newPlayerScores.set(playerKey, [playerScoreObj]);
+    
     setPlayerScores(newPlayerScores);
     
     // Calculate the best score for each team and update the match
@@ -276,14 +300,19 @@ const EnhancedMatchScorecard = ({
     if (holeScores.length < 2) return true; // If only one player, they are the best
     
     // Find current player's score
-    const currentPlayerScore = holeScores.find(ps => ps.player === playerName)?.score;
+    const currentPlayerScoreObj = holeScores.find(ps => ps.player === playerName);
+    const currentPlayerScore = currentPlayerScoreObj?.score;
+    
     if (currentPlayerScore === null || currentPlayerScore === undefined) return false;
     
-    // Find the minimum score in this team for this hole
-    const validScores = holeScores.filter(s => s.score !== null && s.score !== undefined);
+    // Find the minimum score in this team for this hole (excluding nulls)
+    const validScores = holeScores
+      .filter(s => s.score !== null && s.score !== undefined)
+      .map(s => s.score || Infinity);
+    
     if (validScores.length === 0) return false;
     
-    const lowestScore = Math.min(...validScores.map(s => s.score || Infinity));
+    const lowestScore = Math.min(...validScores);
     
     // Check if this player has the lowest score
     return currentPlayerScore === lowestScore;
@@ -632,12 +661,12 @@ const EnhancedMatchScorecard = ({
             ))}
             
             {/* Team Score Row */}
-            <tr className="border-b border-gray-200 bg-aviator bg-opacity-20">
+            <tr className="border-b border-gray-200 bg-aviator">
               <td className="py-2 px-2 font-semibold sticky left-0 bg-aviator text-white">
                 <div>Best Ball</div>
               </td>
               {frontNine.map(hole => (
-                <td key={hole.number} className="py-2 px-2 text-center font-semibold">
+                <td key={hole.number} className="py-2 px-2 text-center font-semibold text-white">
                   {getScoreInputValue(hole.number, 'aviator') || '-'}
                 </td>
               ))}
@@ -661,12 +690,12 @@ const EnhancedMatchScorecard = ({
             </tr>
             
             {/* Team Score Row */}
-            <tr className="border-b border-gray-200 bg-producer bg-opacity-20">
+            <tr className="border-b border-gray-200 bg-producer">
               <td className="py-2 px-2 font-semibold sticky left-0 bg-producer text-white">
                 <div>Best Ball</div>
               </td>
               {frontNine.map(hole => (
-                <td key={hole.number} className="py-2 px-2 text-center font-semibold">
+                <td key={hole.number} className="py-2 px-2 text-center font-semibold text-white">
                   {getScoreInputValue(hole.number, 'producer') || '-'}
                 </td>
               ))}
@@ -761,12 +790,12 @@ const EnhancedMatchScorecard = ({
             ))}
             
             {/* Team Score Row */}
-            <tr className="border-b border-gray-200 bg-aviator bg-opacity-20">
+            <tr className="border-b border-gray-200 bg-aviator">
               <td className="py-2 px-2 font-semibold sticky left-0 bg-aviator text-white">
                 <div>Best Ball</div>
               </td>
               {backNine.map(hole => (
-                <td key={hole.number} className="py-2 px-2 text-center font-semibold">
+                <td key={hole.number} className="py-2 px-2 text-center font-semibold text-white">
                   {getScoreInputValue(hole.number, 'aviator') || '-'}
                 </td>
               ))}
@@ -794,12 +823,12 @@ const EnhancedMatchScorecard = ({
             </tr>
             
             {/* Team Score Row */}
-            <tr className="border-b border-gray-200 bg-producer bg-opacity-20">
+            <tr className="border-b border-gray-200 bg-producer">
               <td className="py-2 px-2 font-semibold sticky left-0 bg-producer text-white">
                 <div>Best Ball</div>
               </td>
               {backNine.map(hole => (
-                <td key={hole.number} className="py-2 px-2 text-center font-semibold">
+                <td key={hole.number} className="py-2 px-2 text-center font-semibold text-white">
                   {getScoreInputValue(hole.number, 'producer') || '-'}
                 </td>
               ))}
