@@ -65,8 +65,34 @@ const EnhancedMatchScorecard = ({
     team: "producer" 
   }));
   
+  const allHoles = [...holes].sort((a, b) => a.number - b.number);
   const frontNine = holes.filter(h => h.number <= 9);
   const backNine = holes.filter(h => h.number > 9);
+  
+  // Compute player score totals
+  const playerTotals = useMemo(() => {
+    const totals = new Map<string, number>();
+    
+    // Process all players
+    [...aviatorPlayersList, ...producerPlayersList].forEach(player => {
+      let playerTotal = 0;
+      
+      // Calculate this player's total across all holes
+      for (let i = 1; i <= 18; i++) {
+        const key = `${i}-${player.name}`;
+        const playerScoreObj = playerScores.get(key);
+        
+        if (playerScoreObj && playerScoreObj.length > 0 && playerScoreObj[0].score !== null) {
+          playerTotal += playerScoreObj[0].score!;
+        }
+      }
+      
+      // Store the player's total
+      totals.set(player.name, playerTotal);
+    });
+    
+    return totals;
+  }, [playerScores, aviatorPlayersList, producerPlayersList]);
   
   // Get a score for a specific hole number
   const getScore = (holeNumber: number): Score | undefined => {

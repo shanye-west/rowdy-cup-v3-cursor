@@ -109,10 +109,7 @@ const Match = ({ id }: MatchProps) => {
       }
     },
     onSuccess: () => {
-      toast({
-        title: "Score updated",
-        description: "The score has been successfully updated.",
-      });
+      // Score update notification removed
     },
     onError: (error) => {
       toast({
