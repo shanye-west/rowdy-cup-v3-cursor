@@ -683,7 +683,9 @@ const EnhancedMatchScorecard = ({
                     </td>
                   );
                 })}
-                <td className="py-2 px-2 text-center bg-gray-100">-</td>
+                <td className="py-2 px-2 text-center font-semibold bg-gray-100">
+                  {playerTotals.get(player.name) || '-'}
+                </td>
               </tr>
             ))}
             
@@ -757,7 +759,9 @@ const EnhancedMatchScorecard = ({
                     </td>
                   );
                 })}
-                <td className="py-2 px-2 text-center bg-gray-100">-</td>
+                <td className="py-2 px-2 text-center font-semibold bg-gray-100">
+                  {playerTotals.get(player.name) || '-'}
+                </td>
               </tr>
             ))}
           </tbody>
