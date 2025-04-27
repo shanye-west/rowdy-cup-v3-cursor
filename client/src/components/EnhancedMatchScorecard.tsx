@@ -548,8 +548,8 @@ const EnhancedMatchScorecard = ({
               <>
                 {aviatorPlayersList.map(player => (
                   <tr key={player.id} className="border-b border-gray-200">
-                    <td className="py-2 px-2 sticky-column bg-aviator text-white">
-                      <div className="text-xs font-medium">{player.name}</div>
+                    <td className="py-2 px-2 sticky-column bg-white border-l-4 border-aviator">
+                      <div className="text-xs font-medium text-black">{player.name}</div>
                     </td>
                     {/* Front Nine Aviator Player Scores */}
                     {frontNine.map(hole => {
@@ -784,8 +784,8 @@ const EnhancedMatchScorecard = ({
               <>
                 {producerPlayersList.map(player => (
                   <tr key={player.id} className="border-b border-gray-200">
-                    <td className="py-2 px-2 sticky-column bg-producer text-white">
-                      <div className="text-xs font-medium">{player.name}</div>
+                    <td className="py-2 px-2 sticky-column bg-white border-l-4 border-producer">
+                      <div className="text-xs font-medium text-black">{player.name}</div>
                     </td>
                     {/* Front Nine Producer Player Scores */}
                     {frontNine.map(hole => {
