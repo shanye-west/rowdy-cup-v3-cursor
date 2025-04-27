@@ -10,7 +10,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
   // Health check endpoint for Autoscale Deployments
-  app.get('/', (req, res) => {
+  app.get('/_health', (req, res) => {
     res.status(200).send('OK');
   });
 

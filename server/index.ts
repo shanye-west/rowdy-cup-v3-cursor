@@ -57,8 +57,8 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  // Add a health check endpoint at the root path
-  app.get('/', (req, res) => {
+  // Add a health check endpoint
+  app.get('/_health', (req, res) => {
     res.status(200).send('OK');
   });
 
