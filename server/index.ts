@@ -54,11 +54,7 @@ app.use((req, res, next) => {
     });
   });
 
-  // Add health check endpoints for both root and /_health path before vite setup
-  app.get('/', (req, res) => {
-    res.status(200).send('OK');
-  });
-
+  // Add health check endpoint for /_health path before vite setup
   app.get('/_health', (req, res) => {
     res.status(200).send('OK');
   });
