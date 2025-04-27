@@ -596,9 +596,9 @@ export class MemStorage implements IStorage {
     });
 
     const tournament = await this.createTournament({
-      name: "Rowdy Cup 2023",
-      startDate: "2023-08-07",
-      endDate: "2023-08-08",
+      name: "Rowdy Cup 2025",
+      startDate: "2025-08-07",
+      endDate: "2025-08-10",
       venue: "The Idaho Club",
       status: "in_progress"
     });
