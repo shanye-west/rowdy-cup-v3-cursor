@@ -114,6 +114,8 @@ export const tournament = pgTable("tournament", {
   name: text("name").notNull(),
   aviatorScore: integer("aviator_score").default(0),
   producerScore: integer("producer_score").default(0),
+  pendingAviatorScore: integer("pending_aviator_score").default(0),
+  pendingProducerScore: integer("pending_producer_score").default(0),
   year: integer("year").notNull(),
 });
 

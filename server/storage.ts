@@ -408,10 +408,12 @@ export class MemStorage implements IStorage {
   // Aggregate methods
   async calculateRoundScores(
     roundId: number,
-  ): Promise<{ aviatorScore: number; producerScore: number }> {
+  ): Promise<{ aviatorScore: number; producerScore: number; pendingAviatorScore: number; pendingProducerScore: number }> {
     const matches = await this.getMatchesByRound(roundId);
     let aviatorScore = 0;
     let producerScore = 0;
+    let pendingAviatorScore = 0;
+    let pendingProducerScore = 0;
 
     for (const match of matches) {
       if (match.status === "completed") {
@@ -424,26 +426,48 @@ export class MemStorage implements IStorage {
           aviatorScore += 0.5;
           producerScore += 0.5;
         }
+      } else if (match.status === "in_progress" && match.leadingTeam) {
+        // Count in-progress matches as pending scores
+        if (match.leadingTeam === "aviators") {
+          pendingAviatorScore += 1;
+        } else if (match.leadingTeam === "producers") {
+          pendingProducerScore += 1;
+        }
       }
     }
 
-    return { aviatorScore, producerScore };
+    return { 
+      aviatorScore, 
+      producerScore, 
+      pendingAviatorScore, 
+      pendingProducerScore 
+    };
   }
 
   async calculateTournamentScores(): Promise<{
     aviatorScore: number;
     producerScore: number;
+    pendingAviatorScore: number;
+    pendingProducerScore: number;
   }> {
     const rounds = await this.getRounds();
     let totalAviatorScore = 0;
     let totalProducerScore = 0;
+    let totalPendingAviatorScore = 0;
+    let totalPendingProducerScore = 0;
 
     for (const round of rounds) {
-      const { aviatorScore, producerScore } = await this.calculateRoundScores(
-        round.id,
-      );
+      const { 
+        aviatorScore, 
+        producerScore, 
+        pendingAviatorScore, 
+        pendingProducerScore 
+      } = await this.calculateRoundScores(round.id);
+      
       totalAviatorScore += aviatorScore;
       totalProducerScore += producerScore;
+      totalPendingAviatorScore += pendingAviatorScore;
+      totalPendingProducerScore += pendingProducerScore;
     }
 
     // Update tournament record
@@ -452,12 +476,17 @@ export class MemStorage implements IStorage {
       await this.updateTournament(tournament.id, {
         aviatorScore: totalAviatorScore,
         producerScore: totalProducerScore,
+        // Type cast to ensure TypeScript understands these properties are valid
+        pendingAviatorScore: totalPendingAviatorScore as number,
+        pendingProducerScore: totalPendingProducerScore as number
       });
     }
 
     return {
       aviatorScore: totalAviatorScore,
       producerScore: totalProducerScore,
+      pendingAviatorScore: totalPendingAviatorScore,
+      pendingProducerScore: totalPendingProducerScore
     };
   }
 
@@ -536,10 +565,9 @@ export class MemStorage implements IStorage {
       currentHole: lastHoleScored + 1,
     });
 
-    // If a match status changes, recalculate tournament scores
-    if (status === "completed") {
-      await this.calculateTournamentScores();
-    }
+    // Always recalculate tournament scores when match state changes
+    // This ensures both completed and pending scores are updated
+    await this.calculateTournamentScores();
   }
 
   async initializeData(): Promise<void> {
@@ -562,6 +590,8 @@ export class MemStorage implements IStorage {
       year: 2023,
       aviatorScore: 0,
       producerScore: 0,
+      pendingAviatorScore: 0,
+      pendingProducerScore: 0,
     });
 
     // Create players for Aviators team
