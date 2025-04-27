@@ -205,11 +205,31 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getPlayer(id: number): Promise<Player | undefined> {
+    return this.players.get(id);
+  }
+
   async createPlayer(player: InsertPlayer): Promise<Player> {
     const id = this.currentId.player++;
-    const newPlayer: Player = { ...player, id };
+    // Ensure we have values for nullable fields
+    const newPlayer: Player = { 
+      ...player, 
+      id,
+      wins: player.wins ?? null,
+      losses: player.losses ?? null,
+      ties: player.ties ?? null
+    };
     this.players.set(id, newPlayer);
     return newPlayer;
+  }
+  
+  async updatePlayer(id: number, playerData: Partial<Player>): Promise<Player | undefined> {
+    const player = this.players.get(id);
+    if (!player) return undefined;
+
+    const updatedPlayer: Player = { ...player, ...playerData };
+    this.players.set(id, updatedPlayer);
+    return updatedPlayer;
   }
 
   // Round methods
@@ -223,7 +243,11 @@ export class MemStorage implements IStorage {
 
   async createRound(round: InsertRound): Promise<Round> {
     const id = this.currentId.round++;
-    const newRound: Round = { ...round, id };
+    const newRound: Round = { 
+      ...round, 
+      id,
+      isComplete: round.isComplete ?? null
+    };
     this.rounds.set(id, newRound);
     return newRound;
   }
@@ -257,7 +281,14 @@ export class MemStorage implements IStorage {
 
   async createMatch(match: InsertMatch): Promise<Match> {
     const id = this.currentId.match++;
-    const newMatch: Match = { ...match, id };
+    const newMatch: Match = { 
+      ...match, 
+      id,
+      currentHole: match.currentHole ?? null,
+      leadingTeam: match.leadingTeam ?? null,
+      leadAmount: match.leadAmount ?? null,
+      result: match.result ?? null
+    };
     this.matches.set(id, newMatch);
     return newMatch;
   }
@@ -308,7 +339,14 @@ export class MemStorage implements IStorage {
 
   async createScore(score: InsertScore): Promise<Score> {
     const id = this.currentId.score++;
-    const newScore: Score = { ...score, id };
+    const newScore: Score = { 
+      ...score, 
+      id,
+      aviatorScore: score.aviatorScore ?? null,
+      producerScore: score.producerScore ?? null,
+      winningTeam: score.winningTeam ?? null,
+      matchStatus: score.matchStatus ?? null
+    };
     this.scores.set(id, newScore);
     return newScore;
   }
@@ -337,7 +375,12 @@ export class MemStorage implements IStorage {
 
   async createTournament(tournament: InsertTournament): Promise<Tournament> {
     const id = this.currentId.tournament++;
-    const newTournament: Tournament = { ...tournament, id };
+    const newTournament: Tournament = { 
+      ...tournament, 
+      id,
+      aviatorScore: tournament.aviatorScore ?? null,
+      producerScore: tournament.producerScore ?? null
+    };
     this.tournamentData.set(id, newTournament);
     return newTournament;
   }
