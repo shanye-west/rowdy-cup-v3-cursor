@@ -53,6 +53,7 @@ const EnhancedMatchScorecard = ({
   // Debug logging
   console.log('Match Type:', matchType);
   console.log('Aviator Players:', aviatorPlayers);
+  console.log('Producer Players:', producerPlayers);
   console.log('Is Best Ball:', isBestBall);
   const [playerScores, setPlayerScores] = useState<Map<string, BestBallPlayerScore[]>>(new Map());
   
@@ -68,6 +69,10 @@ const EnhancedMatchScorecard = ({
     id: idx + 100, // Offset to ensure unique IDs
     team: "producer" 
   }));
+  
+  // Log player lists after processing
+  console.log('Aviator Players List:', aviatorPlayersList);
+  console.log('Producer Players List:', producerPlayersList);
   
   const allHoles = [...holes].sort((a, b) => a.number - b.number);
   const frontNine = holes.filter(h => h.number <= 9);
