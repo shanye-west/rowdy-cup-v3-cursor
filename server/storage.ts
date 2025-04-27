@@ -270,17 +270,21 @@ export class MemStorage implements IStorage {
 
   // Match methods
   async getMatches(): Promise<Match[]> {
-    return Array.from(this.matches.values());
+    return Array.from(this.matches.values()).filter(
+      (match) => match.status !== 'deleted'
+    );
   }
 
   async getMatchesByRound(roundId: number): Promise<Match[]> {
     return Array.from(this.matches.values()).filter(
-      (match) => match.roundId === roundId,
+      (match) => match.roundId === roundId && match.status !== 'deleted'
     );
   }
 
   async getMatch(id: number): Promise<Match | undefined> {
-    return this.matches.get(id);
+    const match = this.matches.get(id);
+    // Return undefined if match is deleted or doesn't exist
+    return match && match.status !== 'deleted' ? match : undefined;
   }
 
   async createMatch(match: InsertMatch): Promise<Match> {
