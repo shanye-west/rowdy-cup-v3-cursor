@@ -55,10 +55,8 @@ const RoundHeader = ({
             <div className="flex items-center">
               <img src={aviatorsLogo} alt="Aviators" className="w-8 h-8 mr-2" />
               <span className="font-heading font-bold text-xl">{aviatorScore}</span>
-              <span className="ml-2 text-sm text-gray-600">→ The Aviators</span>
             </div>
             <div className="flex items-center">
-              <span className="mr-2 text-sm text-gray-600">The Producers ←</span>
               <span className="font-heading font-bold text-xl">{producerScore}</span>
               <img src={producersLogo} alt="Producers" className="w-8 h-8 ml-2" />
             </div>
