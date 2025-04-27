@@ -108,3 +108,11 @@
 .tab-active {
   border-bottom: 3px solid #FFD700;
 }
+
+/* Style for non-counting scores in Best Ball */
+.non-counting-score {
+  background-color: #f0f0f0 !important;
+  color: #888 !important;
+  border: 1px dashed #aaa !important;
+  text-decoration: line-through;
+}

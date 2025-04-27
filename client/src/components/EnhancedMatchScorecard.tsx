@@ -153,23 +153,24 @@ const EnhancedMatchScorecard = ({
   
   // For Best Ball format, get an individual player's score
   const getPlayerScoreValue = (holeNumber: number, playerName: string, teamId: string): string => {
-    // First check if there's a score in our local state
-    const key = `${holeNumber}-${teamId}`;
-    const holeScores = playerScores.get(key) || [];
+    // For individual player scores, check for player-specific key first
+    const playerKey = `${holeNumber}-${playerName}`;
+    const playerSpecificScores = playerScores.get(playerKey);
+    
+    if (playerSpecificScores && playerSpecificScores.length > 0) {
+      const score = playerSpecificScores[0].score;
+      if (score !== null && score !== undefined) {
+        return score.toString();
+      }
+    }
+    
+    // Then check team scores
+    const teamKey = `${holeNumber}-${teamId}`;
+    const holeScores = playerScores.get(teamKey) || [];
     const playerScore = holeScores.find(ps => ps.player === playerName);
     
     if (playerScore?.score !== null && playerScore?.score !== undefined) {
       return playerScore.score.toString();
-    }
-    
-    // If not found in local state, check if we need to initialize from the existing score
-    const existingScore = getScore(holeNumber);
-    if (existingScore) {
-      // For the first entry, initialize with the existing team score
-      const teamScore = teamId === 'aviator' ? existingScore.aviatorScore : existingScore.producerScore;
-      if (teamScore !== null) {
-        return teamScore.toString();
-      }
     }
     
     return "";
@@ -646,7 +647,7 @@ const EnhancedMatchScorecard = ({
                         pattern="[0-9]*"
                         className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
                           ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''} 
-                          ${!isLowest ? 'opacity-60' : ''}`}
+                          ${!isLowest ? 'non-counting-score' : ''}`}
                         value={getPlayerScoreValue(hole.number, player.name, "aviator")}
                         onChange={(e) => handlePlayerScoreChange(hole.number, player.name, "aviator", e.target.value)}
                         min="1"
