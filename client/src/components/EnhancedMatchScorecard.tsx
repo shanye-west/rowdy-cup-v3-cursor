@@ -509,7 +509,7 @@ const EnhancedMatchScorecard = ({
         <table className="w-full text-sm scorecard-table">
           <thead>
             <tr className="bg-gray-100">
-              <th className="py-2 px-2 text-left font-semibold sticky left-0 bg-gray-100">Hole</th>
+              <th className="py-2 px-2 text-left font-semibold sticky-column bg-gray-100">Hole</th>
               {frontNine.map(hole => (
                 <th key={hole.number} className="py-2 px-2 text-center font-semibold">{hole.number}</th>
               ))}
@@ -518,14 +518,14 @@ const EnhancedMatchScorecard = ({
           </thead>
           <tbody>
             <tr className="border-b border-gray-200">
-              <td className="py-2 px-2 font-semibold bg-gray-50 sticky left-0">Par</td>
+              <td className="py-2 px-2 font-semibold bg-gray-50 sticky-column">Par</td>
               {frontNine.map(hole => (
                 <td key={hole.number} className="py-2 px-2 text-center">{hole.par}</td>
               ))}
               <td className="py-2 px-2 text-center font-semibold bg-gray-100">{frontNineTotals.parTotal}</td>
             </tr>
             <tr className="border-b border-gray-200">
-              <td className="py-2 px-2 font-semibold sticky left-0 bg-aviator text-white">
+              <td className="py-2 px-2 font-semibold sticky-column bg-aviator text-white">
                 <div>The Aviators</div>
               </td>
               {frontNine.map(hole => (
@@ -550,7 +550,7 @@ const EnhancedMatchScorecard = ({
             
             {/* Match Status Row */}
             <tr className="border-b border-gray-200 bg-gray-50">
-              <td className="py-2 px-2 font-semibold sticky left-0 bg-gray-100">Status</td>
+              <td className="py-2 px-2 font-semibold sticky-column bg-gray-100">Status</td>
               {frontNine.map(hole => {
                 const status = generateMatchStatus(hole.number);
                 return (
@@ -563,7 +563,7 @@ const EnhancedMatchScorecard = ({
             </tr>
             
             <tr className="border-b border-gray-200">
-              <td className="py-2 px-2 font-semibold sticky left-0 bg-producer text-white">
+              <td className="py-2 px-2 font-semibold sticky-column bg-producer text-white">
                 <div>The Producers</div>
               </td>
               {frontNine.map(hole => (
@@ -592,7 +592,7 @@ const EnhancedMatchScorecard = ({
         <table className="w-full text-sm scorecard-table mt-3">
           <thead>
             <tr className="bg-gray-100">
-              <th className="py-2 px-2 text-left font-semibold sticky left-0 bg-gray-100">Hole</th>
+              <th className="py-2 px-2 text-left font-semibold sticky-column bg-gray-100">Hole</th>
               {backNine.map(hole => (
                 <th key={hole.number} className="py-2 px-2 text-center font-semibold">{hole.number}</th>
               ))}
@@ -602,7 +602,7 @@ const EnhancedMatchScorecard = ({
           </thead>
           <tbody>
             <tr className="border-b border-gray-200">
-              <td className="py-2 px-2 font-semibold bg-gray-50 sticky left-0">Par</td>
+              <td className="py-2 px-2 font-semibold bg-gray-50 sticky-column">Par</td>
               {backNine.map(hole => (
                 <td key={hole.number} className="py-2 px-2 text-center">{hole.par}</td>
               ))}
@@ -610,7 +610,7 @@ const EnhancedMatchScorecard = ({
               <td className="py-2 px-2 text-center font-semibold bg-gray-200">{roundTotals.parTotal}</td>
             </tr>
             <tr className="border-b border-gray-200">
-              <td className="py-2 px-2 font-semibold sticky left-0 bg-aviator text-white">
+              <td className="py-2 px-2 font-semibold sticky-column bg-aviator text-white">
                 <div>The Aviators</div>
               </td>
               {backNine.map(hole => (
@@ -638,7 +638,7 @@ const EnhancedMatchScorecard = ({
             
             {/* Match Status Row */}
             <tr className="border-b border-gray-200 bg-gray-50">
-              <td className="py-2 px-2 font-semibold sticky left-0 bg-gray-100">Status</td>
+              <td className="py-2 px-2 font-semibold sticky-column bg-gray-100">Status</td>
               {backNine.map(hole => {
                 const status = generateMatchStatus(hole.number);
                 return (
@@ -652,7 +652,7 @@ const EnhancedMatchScorecard = ({
             </tr>
             
             <tr className="border-b border-gray-200">
-              <td className="py-2 px-2 font-semibold sticky left-0 bg-producer text-white">
+              <td className="py-2 px-2 font-semibold sticky-column bg-producer text-white">
                 <div>The Producers</div>
               </td>
               {backNine.map(hole => (
@@ -691,7 +691,7 @@ const EnhancedMatchScorecard = ({
         <table className="w-full text-sm scorecard-table">
           <thead>
             <tr className="bg-gray-100">
-              <th className="py-2 px-2 text-left font-semibold sticky left-0 bg-gray-100">Hole</th>
+              <th className="py-2 px-2 text-left font-semibold sticky-column bg-gray-100">Hole</th>
               {frontNine.map(hole => (
                 <th key={hole.number} className="py-2 px-2 text-center font-semibold">{hole.number}</th>
               ))}
@@ -700,7 +700,7 @@ const EnhancedMatchScorecard = ({
           </thead>
           <tbody>
             <tr className="border-b border-gray-200">
-              <td className="py-2 px-2 font-semibold bg-gray-50 sticky left-0">Par</td>
+              <td className="py-2 px-2 font-semibold bg-gray-50 sticky-column">Par</td>
               {frontNine.map(hole => (
                 <td key={hole.number} className="py-2 px-2 text-center">{hole.par}</td>
               ))}
@@ -710,7 +710,7 @@ const EnhancedMatchScorecard = ({
             {/* Aviator Players Rows */}
             {aviatorPlayersList.map(player => (
               <tr key={player.id} className="border-b border-gray-200">
-                <td className="py-2 px-2 sticky left-0 bg-aviator text-white">
+                <td className="py-2 px-2 sticky-column bg-aviator text-white">
                   <div className="text-xs font-medium">{player.name}</div>
                 </td>
                 {frontNine.map(hole => {
@@ -741,7 +741,7 @@ const EnhancedMatchScorecard = ({
             
             {/* Team Score Row */}
             <tr className="border-b border-gray-200 bg-aviator">
-              <td className="py-2 px-2 font-semibold sticky left-0 bg-aviator text-white">
+              <td className="py-2 px-2 font-semibold sticky-column bg-aviator text-white">
                 <div>Best Ball</div>
               </td>
               {frontNine.map(hole => (
@@ -756,7 +756,7 @@ const EnhancedMatchScorecard = ({
             
             {/* Match Status Row */}
             <tr className="border-b border-gray-200 bg-gray-50">
-              <td className="py-2 px-2 font-semibold sticky left-0 bg-gray-100">Status</td>
+              <td className="py-2 px-2 font-semibold sticky-column bg-gray-100">Status</td>
               {frontNine.map(hole => {
                 const status = generateMatchStatus(hole.number);
                 return (
@@ -770,7 +770,7 @@ const EnhancedMatchScorecard = ({
             
             {/* Team Score Row */}
             <tr className="border-b border-gray-200 bg-producer">
-              <td className="py-2 px-2 font-semibold sticky left-0 bg-producer text-white">
+              <td className="py-2 px-2 font-semibold sticky-column bg-producer text-white">
                 <div>Best Ball</div>
               </td>
               {frontNine.map(hole => (
@@ -786,7 +786,7 @@ const EnhancedMatchScorecard = ({
             {/* Producer Players Rows */}
             {producerPlayersList.map(player => (
               <tr key={player.id} className="border-b border-gray-200">
-                <td className="py-2 px-2 sticky left-0 bg-producer text-white">
+                <td className="py-2 px-2 sticky-column bg-producer text-white">
                   <div className="text-xs font-medium">{player.name}</div>
                 </td>
                 {frontNine.map(hole => {
@@ -821,7 +821,7 @@ const EnhancedMatchScorecard = ({
         <table className="w-full text-sm scorecard-table mt-3">
           <thead>
             <tr className="bg-gray-100">
-              <th className="py-2 px-2 text-left font-semibold sticky left-0 bg-gray-100">Hole</th>
+              <th className="py-2 px-2 text-left font-semibold sticky-column bg-gray-100">Hole</th>
               {backNine.map(hole => (
                 <th key={hole.number} className="py-2 px-2 text-center font-semibold">{hole.number}</th>
               ))}
@@ -831,7 +831,7 @@ const EnhancedMatchScorecard = ({
           </thead>
           <tbody>
             <tr className="border-b border-gray-200">
-              <td className="py-2 px-2 font-semibold bg-gray-50 sticky left-0">Par</td>
+              <td className="py-2 px-2 font-semibold bg-gray-50 sticky-column">Par</td>
               {backNine.map(hole => (
                 <td key={hole.number} className="py-2 px-2 text-center">{hole.par}</td>
               ))}
@@ -842,7 +842,7 @@ const EnhancedMatchScorecard = ({
             {/* Aviator Players Rows */}
             {aviatorPlayersList.map(player => (
               <tr key={player.id} className="border-b border-gray-200">
-                <td className="py-2 px-2 sticky left-0 bg-aviator text-white">
+                <td className="py-2 px-2 sticky-column bg-aviator text-white">
                   <div className="text-xs font-medium">{player.name}</div>
                 </td>
                 {backNine.map(hole => {
@@ -872,7 +872,7 @@ const EnhancedMatchScorecard = ({
             
             {/* Team Score Row */}
             <tr className="border-b border-gray-200 bg-aviator">
-              <td className="py-2 px-2 font-semibold sticky left-0 bg-aviator text-white">
+              <td className="py-2 px-2 font-semibold sticky-column bg-aviator text-white">
                 <div>Best Ball</div>
               </td>
               {backNine.map(hole => (
@@ -890,7 +890,7 @@ const EnhancedMatchScorecard = ({
             
             {/* Match Status Row */}
             <tr className="border-b border-gray-200 bg-gray-50">
-              <td className="py-2 px-2 font-semibold sticky left-0 bg-gray-100">Status</td>
+              <td className="py-2 px-2 font-semibold sticky-column bg-gray-100">Status</td>
               {backNine.map(hole => {
                 const status = generateMatchStatus(hole.number);
                 return (
@@ -905,7 +905,7 @@ const EnhancedMatchScorecard = ({
             
             {/* Team Score Row */}
             <tr className="border-b border-gray-200 bg-producer">
-              <td className="py-2 px-2 font-semibold sticky left-0 bg-producer text-white">
+              <td className="py-2 px-2 font-semibold sticky-column bg-producer text-white">
                 <div>Best Ball</div>
               </td>
               {backNine.map(hole => (
@@ -924,7 +924,7 @@ const EnhancedMatchScorecard = ({
             {/* Producer Players Rows */}
             {producerPlayersList.map(player => (
               <tr key={player.id} className="border-b border-gray-200">
-                <td className="py-2 px-2 sticky left-0 bg-producer text-white">
+                <td className="py-2 px-2 sticky-column bg-producer text-white">
                   <div className="text-xs font-medium">{player.name}</div>
                 </td>
                 {backNine.map(hole => {
