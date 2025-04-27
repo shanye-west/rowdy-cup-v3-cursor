@@ -266,13 +266,6 @@ const EnhancedMatchScorecard = ({
     }
   };
   
-  // Get match status for a hole (e.g., "1↑", "AS", etc.)
-  const getMatchStatus = (holeNumber: number): string => {
-    const score = getScore(holeNumber);
-    if (!score || !score.matchStatus) return "-";
-    return score.matchStatus;
-  };
-  
   // Calculate which player is the best score for a hole
   const isLowestScore = (holeNumber: number, playerName: string, teamId: string): boolean => {
     if (!isBestBall) return true; // Not applicable for non-Best Ball matches
@@ -327,9 +320,9 @@ const EnhancedMatchScorecard = ({
     if (lead === 0) {
       return { text: 'AS', color: 'text-gray-400' }; // All Square in light grey
     } else if (aviatorWins > producerWins) {
-      return { text: `${lead}↑`, color: 'text-aviator' }; // Aviators up
+      return { text: `${lead}↑`, color: 'text-aviator font-bold' }; // Aviators up, bold text
     } else {
-      return { text: `${lead}↑`, color: 'text-producer' }; // Producers up
+      return { text: `${lead}↑`, color: 'text-producer font-bold' }; // Producers up, bold text
     }
   };
   
@@ -450,12 +443,12 @@ const EnhancedMatchScorecard = ({
             </tr>
             
             {/* Match Status Row */}
-            <tr className="border-b border-gray-200">
+            <tr className="border-b border-gray-200 bg-gray-50">
               <td className="py-2 px-2 font-semibold sticky left-0 bg-gray-100">Status</td>
               {frontNine.map(hole => {
                 const status = generateMatchStatus(hole.number);
                 return (
-                  <td key={hole.number} className={`py-2 px-2 text-center font-semibold ${status.color}`}>
+                  <td key={hole.number} className={`py-2 px-2 text-center text-lg font-bold ${status.color}`}>
                     {status.text}
                   </td>
                 );
@@ -538,12 +531,12 @@ const EnhancedMatchScorecard = ({
             </tr>
             
             {/* Match Status Row */}
-            <tr className="border-b border-gray-200">
+            <tr className="border-b border-gray-200 bg-gray-50">
               <td className="py-2 px-2 font-semibold sticky left-0 bg-gray-100">Status</td>
               {backNine.map(hole => {
                 const status = generateMatchStatus(hole.number);
                 return (
-                  <td key={hole.number} className={`py-2 px-2 text-center font-semibold ${status.color}`}>
+                  <td key={hole.number} className={`py-2 px-2 text-center text-lg font-bold ${status.color}`}>
                     {status.text}
                   </td>
                 );
@@ -654,12 +647,12 @@ const EnhancedMatchScorecard = ({
             </tr>
             
             {/* Match Status Row */}
-            <tr className="border-b border-gray-200">
+            <tr className="border-b border-gray-200 bg-gray-50">
               <td className="py-2 px-2 font-semibold sticky left-0 bg-gray-100">Status</td>
               {frontNine.map(hole => {
                 const status = generateMatchStatus(hole.number);
                 return (
-                  <td key={hole.number} className={`py-2 px-2 text-center font-semibold ${status.color}`}>
+                  <td key={hole.number} className={`py-2 px-2 text-center text-lg font-bold ${status.color}`}>
                     {status.text}
                   </td>
                 );
@@ -786,12 +779,12 @@ const EnhancedMatchScorecard = ({
             </tr>
             
             {/* Match Status Row */}
-            <tr className="border-b border-gray-200">
+            <tr className="border-b border-gray-200 bg-gray-50">
               <td className="py-2 px-2 font-semibold sticky left-0 bg-gray-100">Status</td>
               {backNine.map(hole => {
                 const status = generateMatchStatus(hole.number);
                 return (
-                  <td key={hole.number} className={`py-2 px-2 text-center font-semibold ${status.color}`}>
+                  <td key={hole.number} className={`py-2 px-2 text-center text-lg font-bold ${status.color}`}>
                     {status.text}
                   </td>
                 );
