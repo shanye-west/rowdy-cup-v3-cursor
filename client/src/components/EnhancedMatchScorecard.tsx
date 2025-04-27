@@ -534,6 +534,70 @@ const EnhancedMatchScorecard = ({
             </tr>
           </thead>
           <tbody>
+            {/* Aviator Players Rows for Best Ball - displayed above team row */}
+            {isBestBall && (
+              <>
+                {aviatorPlayersList.map(player => (
+                  <tr key={player.id} className="border-b border-gray-200">
+                    <td className="py-2 px-2 sticky-column bg-aviator text-white">
+                      <div className="text-xs font-medium">{player.name}</div>
+                    </td>
+                    {/* Front Nine Aviator Player Scores */}
+                    {frontNine.map(hole => {
+                      const isLowest = isLowestScore(hole.number, player.name, "aviator");
+                      return (
+                        <td key={hole.number} className="py-2 px-2 text-center">
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
+                              ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''} 
+                              ${!isLowest ? 'non-counting-score' : ''}`}
+                            value={getPlayerScoreValue(hole.number, player.name, "aviator")}
+                            onChange={(e) => handlePlayerScoreChange(hole.number, player.name, "aviator", e.target.value)}
+                            min="1"
+                            max="12"
+                            disabled={isHoleGreyedOut(hole.number)}
+                          />
+                        </td>
+                      );
+                    })}
+                    <td className="py-2 px-2 text-center font-semibold bg-gray-100">
+                      {playerFrontNineTotals.get(player.name) || '-'}
+                    </td>
+                    {/* Back Nine Aviator Player Scores */}
+                    {backNine.map(hole => {
+                      const isLowest = isLowestScore(hole.number, player.name, "aviator");
+                      return (
+                        <td key={hole.number} className="py-2 px-2 text-center">
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
+                              ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''} 
+                              ${!isLowest ? 'non-counting-score' : ''}`}
+                            value={getPlayerScoreValue(hole.number, player.name, "aviator")}
+                            onChange={(e) => handlePlayerScoreChange(hole.number, player.name, "aviator", e.target.value)}
+                            min="1"
+                            max="12"
+                            disabled={isHoleGreyedOut(hole.number)}
+                          />
+                        </td>
+                      );
+                    })}
+                    <td className="py-2 px-2 text-center font-semibold bg-gray-100">
+                      {playerBackNineTotals.get(player.name) || '-'}
+                    </td>
+                    <td className="py-2 px-2 text-center font-semibold bg-gray-200">
+                      {playerTotals.get(player.name) || '-'}
+                    </td>
+                  </tr>
+                ))}
+              </>
+            )}
+            
             {/* Team Aviators Row */}
             <tr className="border-b border-gray-200 bg-aviator">
               <td className="py-2 px-2 font-semibold sticky-column bg-aviator text-white">
@@ -706,77 +770,9 @@ const EnhancedMatchScorecard = ({
               </td>
             </tr>
             
-            {/* Individual Player Scores for Best Ball matches */}
+            {/* Producer Players Rows for Best Ball - displayed below team row */}
             {isBestBall && (
               <>
-                {/* Separator Row */}
-                <tr className="border-b border-gray-200 bg-gray-200">
-                  <td colSpan={frontNine.length + backNine.length + 4} className="py-1 text-center font-bold text-sm">
-                    Individual Player Scores
-                  </td>
-                </tr>
-                
-                {/* Aviator Players Rows */}
-                {aviatorPlayersList.map(player => (
-                  <tr key={player.id} className="border-b border-gray-200">
-                    <td className="py-2 px-2 sticky-column bg-aviator text-white">
-                      <div className="text-xs font-medium">{player.name}</div>
-                    </td>
-                    {/* Front Nine Aviator Player Scores */}
-                    {frontNine.map(hole => {
-                      const isLowest = isLowestScore(hole.number, player.name, "aviator");
-                      return (
-                        <td key={hole.number} className="py-2 px-2 text-center">
-                          <input
-                            type="number"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
-                              ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''} 
-                              ${!isLowest ? 'non-counting-score' : ''}`}
-                            value={getPlayerScoreValue(hole.number, player.name, "aviator")}
-                            onChange={(e) => handlePlayerScoreChange(hole.number, player.name, "aviator", e.target.value)}
-                            min="1"
-                            max="12"
-                            disabled={isHoleGreyedOut(hole.number)}
-                          />
-                        </td>
-                      );
-                    })}
-                    <td className="py-2 px-2 text-center font-semibold bg-gray-100">
-                      {playerFrontNineTotals.get(player.name) || '-'}
-                    </td>
-                    {/* Back Nine Aviator Player Scores */}
-                    {backNine.map(hole => {
-                      const isLowest = isLowestScore(hole.number, player.name, "aviator");
-                      return (
-                        <td key={hole.number} className="py-2 px-2 text-center">
-                          <input
-                            type="number"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
-                              ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''} 
-                              ${!isLowest ? 'non-counting-score' : ''}`}
-                            value={getPlayerScoreValue(hole.number, player.name, "aviator")}
-                            onChange={(e) => handlePlayerScoreChange(hole.number, player.name, "aviator", e.target.value)}
-                            min="1"
-                            max="12"
-                            disabled={isHoleGreyedOut(hole.number)}
-                          />
-                        </td>
-                      );
-                    })}
-                    <td className="py-2 px-2 text-center font-semibold bg-gray-100">
-                      {playerBackNineTotals.get(player.name) || '-'}
-                    </td>
-                    <td className="py-2 px-2 text-center font-semibold bg-gray-200">
-                      {playerTotals.get(player.name) || '-'}
-                    </td>
-                  </tr>
-                ))}
-                
-                {/* Producer Players Rows */}
                 {producerPlayersList.map(player => (
                   <tr key={player.id} className="border-b border-gray-200">
                     <td className="py-2 px-2 sticky-column bg-producer text-white">
