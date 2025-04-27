@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
-import aviatorsLogo from "../assets/aviators-logo.svg";
-import producersLogo from "../assets/producers-logo.svg";
+import aviatorsLogo from "../assets/Aviators.svg";
+import producersLogo from "../assets/Producers.svg";
 
 interface RoundHeaderProps {
   id: number;
