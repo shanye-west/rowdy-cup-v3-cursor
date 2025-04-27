@@ -160,10 +160,13 @@ input[type="number"].score-input::-webkit-inner-spin-button {
   width: 100%;
   overflow-x: auto;
   padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
 
 .scorecard-table {
   min-width: max-content; /* Forces table to be at least as wide as needed */
+  border-collapse: separate; /* Needed for proper sticky positioning */
+  border-spacing: 0;
 }
 
 .sticky-column {
@@ -171,6 +174,7 @@ input[type="number"].score-input::-webkit-inner-spin-button {
   left: 0;
   z-index: 10;
   background-color: inherit;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Add shadow to sticky column */
 }
 
 /* Force page to scroll to top on navigation */
