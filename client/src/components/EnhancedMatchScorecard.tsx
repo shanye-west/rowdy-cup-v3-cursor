@@ -506,7 +506,7 @@ const EnhancedMatchScorecard = ({
     return (
       <>
         {/* Front Nine */}
-        <table className="w-full text-sm">
+        <table className="w-full text-sm scorecard-table">
           <thead>
             <tr className="bg-gray-100">
               <th className="py-2 px-2 text-left font-semibold sticky left-0 bg-gray-100">Hole</th>
@@ -589,7 +589,7 @@ const EnhancedMatchScorecard = ({
         </table>
         
         {/* Back Nine */}
-        <table className="w-full text-sm mt-3">
+        <table className="w-full text-sm scorecard-table mt-3">
           <thead>
             <tr className="bg-gray-100">
               <th className="py-2 px-2 text-left font-semibold sticky left-0 bg-gray-100">Hole</th>
@@ -688,7 +688,7 @@ const EnhancedMatchScorecard = ({
     return (
       <>
         {/* Front Nine */}
-        <table className="w-full text-sm">
+        <table className="w-full text-sm scorecard-table">
           <thead>
             <tr className="bg-gray-100">
               <th className="py-2 px-2 text-left font-semibold sticky left-0 bg-gray-100">Hole</th>
@@ -818,7 +818,7 @@ const EnhancedMatchScorecard = ({
         </table>
         
         {/* Back Nine */}
-        <table className="w-full text-sm mt-3">
+        <table className="w-full text-sm scorecard-table mt-3">
           <thead>
             <tr className="bg-gray-100">
               <th className="py-2 px-2 text-left font-semibold sticky left-0 bg-gray-100">Hole</th>
@@ -964,7 +964,7 @@ const EnhancedMatchScorecard = ({
         <p className="text-sm text-muted-foreground">{matchType}</p>
       </div>
       
-      <div className="p-3 scorecard-container">
+      <div className="p-3 scorecard-container overflow-x-auto">
         {isBestBall ? renderBestBallScorecard() : renderRegularScorecard()}
       </div>
     </div>
