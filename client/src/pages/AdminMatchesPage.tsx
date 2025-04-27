@@ -67,7 +67,7 @@ export default function AdminMatchesPage() {
       const res = await apiRequest("POST", "/api/matches", {
         ...matchData,
         roundId,
-        status: "in_progress",
+        status: "upcoming",
       });
       return await res.json();
     },
@@ -110,8 +110,12 @@ export default function AdminMatchesPage() {
     addMatchMutation.mutate(matchFormData);
   };
 
-  const handleEditScorecard = (matchId: number) => {
+  const handleEditMatch = (matchId: number) => {
     window.location.href = `/admin/matches/${matchId}/edit`;
+  };
+  
+  const handleViewScorecard = (matchId: number) => {
+    window.location.href = `/matches/${matchId}?admin=true`;
   };
 
   if (!isAdmin) {
@@ -218,15 +222,25 @@ export default function AdminMatchesPage() {
                     </div>
                   )}
                 </CardContent>
-                <CardFooter className="pt-2">
+                <CardFooter className="pt-2 flex flex-col space-y-2">
                   <Button 
                     variant="outline" 
                     className="w-full flex items-center"
-                    onClick={() => handleEditScorecard(match.id)}
+                    onClick={() => handleEditMatch(match.id)}
                     disabled={match.status === 'deleted'}
                   >
                     <PenSquare className="h-4 w-4 mr-2" />
-                    Edit Scorecard
+                    Edit Match
+                  </Button>
+                  
+                  <Button 
+                    variant="default" 
+                    className="w-full flex items-center"
+                    onClick={() => handleViewScorecard(match.id)}
+                    disabled={match.status === 'deleted'}
+                  >
+                    <PenSquare className="h-4 w-4 mr-2" />
+                    View Scorecard
                   </Button>
                 </CardFooter>
               </Card>

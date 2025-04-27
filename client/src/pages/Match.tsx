@@ -5,6 +5,7 @@ import MatchHeader from "@/components/MatchHeader";
 import EnhancedMatchScorecard from "@/components/EnhancedMatchScorecard";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { ChevronLeft, Edit, Settings } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,6 +65,7 @@ interface ScoreData {
 const Match = ({ id }: MatchProps) => {
   const { toast } = useToast();
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [isAdminMode, setIsAdminMode] = useState(false);
   const [matchSummary, setMatchSummary] = useState({
     aviatorTotal: 0,
     producerTotal: 0,
@@ -71,6 +73,12 @@ const Match = ({ id }: MatchProps) => {
     leadingTeam: '',
     matchPlayResult: ''
   });
+  
+  // Check if admin mode is enabled via URL parameter
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    setIsAdminMode(urlParams.get('admin') === 'true');
+  }, []);
 
   // Fetch match data
   const { data: match, isLoading: isMatchLoading } = useQuery<MatchData>({
@@ -243,6 +251,32 @@ const Match = ({ id }: MatchProps) => {
     updateScoreMutation.mutate(scoreData);
   };
 
+  // Update match status from "upcoming" to "in_progress" when first score is entered
+  useEffect(() => {
+    if (!match || !scores || match.status !== "upcoming") return;
+    
+    // Check if any scores exist
+    const hasScores = scores.some(score => 
+      score.aviatorScore !== null || score.producerScore !== null
+    );
+    
+    // If scores exist, update match status to in_progress
+    if (hasScores) {
+      updateMatchMutation.mutate({
+        id: match.id,
+        status: "in_progress"
+      });
+    }
+  }, [scores, match]);
+  
+  const handleBackToAdminMatches = () => {
+    if (match && match.roundId) {
+      window.location.href = `/admin/rounds/${match.roundId}/matches`;
+    } else {
+      window.location.href = "/admin";
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-6">
       {isLoading || !match ? (
@@ -256,6 +290,30 @@ const Match = ({ id }: MatchProps) => {
         </>
       ) : (
         <>
+          {/* Admin Header if in Admin mode */}
+          {isAdminMode && (
+            <div className="mb-4 flex items-center justify-between">
+              <button 
+                className="flex items-center text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
+                onClick={handleBackToAdminMatches}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" /> Back to Admin Matches
+              </button>
+              
+              <div className="flex items-center space-x-2">
+                <button 
+                  className="flex items-center text-sm bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded"
+                  onClick={() => window.location.href = `/admin/matches/${id}/edit`}
+                >
+                  <Edit className="h-4 w-4 mr-1" /> Edit Match
+                </button>
+                <div className="bg-amber-100 text-amber-800 px-3 py-1 rounded text-xs font-medium">
+                  Admin View
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* Match Header */}
           <MatchHeader 
             id={match.id}
