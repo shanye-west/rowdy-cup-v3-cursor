@@ -50,6 +50,10 @@ const EnhancedMatchScorecard = ({
   const isBestBall = matchType.includes("Best Ball");
   
   // For Best Ball, we need to track individual player scores
+  // Debug logging
+  console.log('Match Type:', matchType);
+  console.log('Aviator Players:', aviatorPlayers);
+  console.log('Is Best Ball:', isBestBall);
   const [playerScores, setPlayerScores] = useState<Map<string, BestBallPlayerScore[]>>(new Map());
   
   // Setup player arrays from the comma-separated strings
