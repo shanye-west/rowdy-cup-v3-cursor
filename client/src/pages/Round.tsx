@@ -15,6 +15,8 @@ interface RoundData {
   startTime: string;
   aviatorScore: number;
   producerScore: number;
+  pendingAviatorScore?: number;
+  pendingProducerScore?: number;
   date: string;
   isComplete: boolean;
 }
@@ -72,6 +74,8 @@ const Round = ({ id }: RoundProps) => {
                 startTime={round.startTime || ''}
                 aviatorScore={round.aviatorScore || 0}
                 producerScore={round.producerScore || 0}
+                pendingAviatorScore={round.pendingAviatorScore || 0}
+                pendingProducerScore={round.pendingProducerScore || 0}
                 date={round.date}
                 matchCount={matches?.length || 0}
               />

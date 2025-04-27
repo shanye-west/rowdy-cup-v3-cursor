@@ -15,6 +15,8 @@ const Home = () => {
     year: number;
     aviatorScore: number;
     producerScore: number;
+    pendingAviatorScore?: number;
+    pendingProducerScore?: number;
   }
 
   interface Round {
@@ -77,6 +79,8 @@ const Home = () => {
           <TournamentScore 
             aviatorScore={tournament?.aviatorScore || 0} 
             producerScore={tournament?.producerScore || 0} 
+            pendingAviatorScore={tournament?.pendingAviatorScore || 0}
+            pendingProducerScore={tournament?.pendingProducerScore || 0}
           />
           
           

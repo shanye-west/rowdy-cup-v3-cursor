@@ -9,6 +9,8 @@ interface Round {
   startTime: string;
   aviatorScore: number;
   producerScore: number;
+  pendingAviatorScore?: number;
+  pendingProducerScore?: number;
   isComplete: boolean;
 }
 
@@ -40,10 +42,24 @@ const RoundsList = ({ rounds }: RoundsListProps) => {
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <div className="w-3 h-3 rounded-full bg-aviator mr-2"></div>
-                <span className="font-semibold">{round.aviatorScore}</span>
+                <div className="relative">
+                  <span className="font-semibold">{round.aviatorScore}</span>
+                  {round.pendingAviatorScore && round.pendingAviatorScore > 0 && (
+                    <span className="absolute text-gray-400 text-xs font-normal bottom-0 -right-4" title="Pending points">
+                      +{round.pendingAviatorScore}
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="flex items-center">
-                <span className="font-semibold">{round.producerScore}</span>
+                <div className="relative">
+                  <span className="font-semibold">{round.producerScore}</span>
+                  {round.pendingProducerScore && round.pendingProducerScore > 0 && (
+                    <span className="absolute text-gray-400 text-xs font-normal bottom-0 -left-4" title="Pending points">
+                      +{round.pendingProducerScore}
+                    </span>
+                  )}
+                </div>
                 <div className="w-3 h-3 rounded-full bg-producer ml-2"></div>
               </div>
             </div>
