@@ -68,6 +68,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const tournament = await storage.getTournament();
     res.json(tournament);
   });
+  
+  app.put("/api/tournament/:id", async (req, res) => {
+    try {
+      const tournamentId = parseInt(req.params.id);
+      const tournament = await storage.getTournament();
+      
+      if (!tournament || tournament.id !== tournamentId) {
+        return res.status(404).json({ message: "Tournament not found" });
+      }
+      
+      // For security, don't allow direct updates to scores - they should be calculated
+      const { aviatorScore, producerScore, ...safeData } = req.body;
+      
+      const updatedTournament = await storage.updateTournament(tournamentId, safeData);
+      broadcast("tournament-updated", updatedTournament);
+      return res.json(updatedTournament);
+    } catch (error) {
+      console.error("Tournament update error:", error);
+      return res.status(500).json({ message: "Failed to update tournament" });
+    }
+  });
 
   // Rounds API
   app.get("/api/rounds", async (req, res) => {
@@ -85,6 +106,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     const scores = await storage.calculateRoundScores(roundId);
     res.json({ ...round, ...scores });
+  });
+  
+  app.post("/api/rounds", async (req, res) => {
+    try {
+      const roundData = insertRoundSchema.parse(req.body);
+      const round = await storage.createRound(roundData);
+      broadcast("round-created", round);
+      res.json(round);
+    } catch (error) {
+      console.error("Round creation error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid round data", details: error.errors });
+      }
+      return res.status(500).json({ message: "Failed to create round" });
+    }
+  });
+  
+  app.put("/api/rounds/:id", async (req, res) => {
+    try {
+      const roundId = parseInt(req.params.id);
+      const round = await storage.getRound(roundId);
+      
+      if (!round) {
+        return res.status(404).json({ message: "Round not found" });
+      }
+      
+      const updatedRound = await storage.updateRound(roundId, req.body);
+      broadcast("round-updated", updatedRound);
+      res.json(updatedRound);
+    } catch (error) {
+      console.error("Round update error:", error);
+      return res.status(500).json({ message: "Failed to update round" });
+    }
   });
 
   // Matches API
@@ -109,6 +163,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     res.json(match);
+  });
+  
+  app.put("/api/matches/:id", async (req, res) => {
+    try {
+      const matchId = parseInt(req.params.id);
+      const match = await storage.getMatch(matchId);
+      
+      if (!match) {
+        return res.status(404).json({ message: "Match not found" });
+      }
+      
+      const updatedMatch = await storage.updateMatch(matchId, req.body);
+      broadcast("match-updated", updatedMatch);
+      res.json(updatedMatch);
+    } catch (error) {
+      console.error("Match update error:", error);
+      return res.status(500).json({ message: "Failed to update match" });
+    }
   });
 
   // Scores API
