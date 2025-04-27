@@ -667,8 +667,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Recalculate round scores
       const rounds = await storage.getRounds();
       for (const round of rounds) {
-        const scores = await storage.calculateRoundScores(round.id);
-        await storage.updateRound(round.id, scores);
+        const { aviatorScore, producerScore } = await storage.calculateRoundScores(round.id);
+        await storage.updateRound(round.id, { 
+          aviatorScore, 
+          producerScore 
+        });
       }
       
       // Recalculate tournament scores

@@ -56,6 +56,8 @@ export const rounds = pgTable("rounds", {
   startTime: text("start_time").notNull(),
   isComplete: boolean("is_complete").default(false),
   status: text("status"), // "active", "deleted", etc.
+  aviatorScore: integer("aviator_score").default(0),
+  producerScore: integer("producer_score").default(0),
 });
 
 export const insertRoundSchema = createInsertSchema(rounds);
