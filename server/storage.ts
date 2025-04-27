@@ -735,8 +735,7 @@ export class MemStorage implements IStorage {
 
     // Sample data removed
 
-    await this.createMatch({
-      roundId: round4.id,
+    // Remove sample match creation
       name: "Match 3",
       status: "in_progress",
       aviatorPlayers: "M. Scott, N. Baker, P. Adams, Q. Hall",
