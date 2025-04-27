@@ -721,7 +721,7 @@ const EnhancedMatchScorecard = ({
                         pattern="[0-9]*"
                         className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
                           ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''} 
-                          ${!isLowest ? 'opacity-60' : ''}`}
+                          ${!isLowest ? 'non-counting-score' : ''}`}
                         value={getPlayerScoreValue(hole.number, player.name, "producer")}
                         onChange={(e) => handlePlayerScoreChange(hole.number, player.name, "producer", e.target.value)}
                         min="1"
@@ -775,7 +775,7 @@ const EnhancedMatchScorecard = ({
                         pattern="[0-9]*"
                         className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
                           ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''} 
-                          ${!isLowest ? 'opacity-60' : ''}`}
+                          ${!isLowest ? 'non-counting-score' : ''}`}
                         value={getPlayerScoreValue(hole.number, player.name, "aviator")}
                         onChange={(e) => handlePlayerScoreChange(hole.number, player.name, "aviator", e.target.value)}
                         min="1"
@@ -857,7 +857,7 @@ const EnhancedMatchScorecard = ({
                         pattern="[0-9]*"
                         className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
                           ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''} 
-                          ${!isLowest ? 'opacity-60' : ''}`}
+                          ${!isLowest ? 'non-counting-score' : ''}`}
                         value={getPlayerScoreValue(hole.number, player.name, "producer")}
                         onChange={(e) => handlePlayerScoreChange(hole.number, player.name, "producer", e.target.value)}
                         min="1"
