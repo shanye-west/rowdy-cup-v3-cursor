@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Loader2, Settings, UserPlus, Calendar, Users, Trophy } from "lucide-react";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
+import { useState, useEffect } from "react";
 
 // Define types for our data
 type Tournament = {
@@ -52,14 +53,34 @@ type User = {
 // Tournament Management Tab
 function TournamentTab() {
   const { toast } = useToast();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    year: new Date().getFullYear(),
+    aviatorScore: 0,
+    producerScore: 0
+  });
+  
   const { data: tournament, isLoading } = useQuery<Tournament>({
     queryKey: ['/api/tournament'],
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
+  // Update form data when tournament data is loaded
+  useEffect(() => {
+    if (tournament) {
+      setFormData({
+        name: tournament.name,
+        year: tournament.year,
+        aviatorScore: tournament.aviatorScore || 0,
+        producerScore: tournament.producerScore || 0
+      });
+    }
+  }, [tournament]);
+
   const updateTournamentMutation = useMutation({
     mutationFn: async (tournamentData: any) => {
-      const res = await apiRequest("POST", "/api/admin/tournament", tournamentData);
+      const res = await apiRequest("PUT", `/api/tournament/${tournament?.id}`, tournamentData);
       return await res.json();
     },
     onSuccess: () => {
@@ -69,6 +90,7 @@ function TournamentTab() {
         description: "Tournament settings have been saved successfully",
         duration: 1000,
       });
+      setIsEditDialogOpen(false);
     },
     onError: (error: Error) => {
       toast({
@@ -79,6 +101,27 @@ function TournamentTab() {
       });
     },
   });
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateTournamentMutation.mutate(formData);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: name === 'year' ? parseInt(value) : value,
+    });
+  };
+
+  const handleScoreChange = (e: React.ChangeEvent<HTMLInputElement>, team: 'aviatorScore' | 'producerScore') => {
+    const value = parseInt(e.target.value) || 0;
+    setFormData({
+      ...formData,
+      [team]: value
+    });
+  };
 
   if (isLoading) {
     return (
@@ -115,12 +158,108 @@ function TournamentTab() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button variant="outline" className="w-full">
+          <Button 
+            variant="outline" 
+            className="w-full"
+            onClick={() => setIsEditDialogOpen(true)}
+          >
             <Settings className="mr-2 h-4 w-4" />
             Edit Tournament Settings
           </Button>
         </CardFooter>
       </Card>
+
+      {/* Edit Tournament Dialog */}
+      {isEditDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">Edit Tournament</h2>
+            
+            <form onSubmit={handleFormSubmit}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Tournament Name
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border rounded-md"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Year
+                  </label>
+                  <input
+                    type="number"
+                    name="year"
+                    value={formData.year}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border rounded-md"
+                    min="2000"
+                    max="2099"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Aviator Score
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.aviatorScore}
+                    onChange={(e) => handleScoreChange(e, 'aviatorScore')}
+                    className="w-full px-3 py-2 border rounded-md"
+                    min="0"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Producer Score
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.producerScore}
+                    onChange={(e) => handleScoreChange(e, 'producerScore')}
+                    className="w-full px-3 py-2 border rounded-md"
+                    min="0"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end mt-6 space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={updateTournamentMutation.isPending}
+                >
+                  {updateTournamentMutation.isPending ? (
+                    <span className="flex items-center">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </span>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -128,10 +267,128 @@ function TournamentTab() {
 // Rounds Management Tab
 function RoundsTab() {
   const { toast } = useToast();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [currentRound, setCurrentRound] = useState<Round | null>(null);
+  const [roundFormData, setRoundFormData] = useState({
+    name: "",
+    matchType: "Singles Match",
+    courseName: "",
+    date: new Date().toISOString().split('T')[0],
+    startTime: "08:00",
+    isComplete: false
+  });
+  
   const { data: rounds, isLoading } = useQuery<Round[]>({
     queryKey: ['/api/rounds'],
     queryFn: getQueryFn({ on401: "throw" }),
   });
+
+  const addRoundMutation = useMutation({
+    mutationFn: async (roundData: any) => {
+      const res = await apiRequest("POST", "/api/rounds", roundData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/rounds'] });
+      toast({
+        title: "Round added",
+        description: "New round has been added successfully",
+        duration: 1000,
+      });
+      setIsAddDialogOpen(false);
+      resetRoundForm();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to add round",
+        description: error.message,
+        variant: "destructive",
+        duration: 1000,
+      });
+    },
+  });
+
+  const updateRoundMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: any }) => {
+      const res = await apiRequest("PUT", `/api/rounds/${id}`, data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/rounds'] });
+      toast({
+        title: "Round updated",
+        description: "Round has been updated successfully",
+        duration: 1000,
+      });
+      setIsEditDialogOpen(false);
+      setCurrentRound(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update round",
+        description: error.message,
+        variant: "destructive",
+        duration: 1000,
+      });
+    },
+  });
+
+  const handleOpenAddDialog = () => {
+    resetRoundForm();
+    setIsAddDialogOpen(true);
+  };
+
+  const handleOpenEditDialog = (round: Round) => {
+    setCurrentRound(round);
+    setRoundFormData({
+      name: round.name,
+      matchType: round.matchType,
+      courseName: round.courseName,
+      date: round.date,
+      startTime: round.startTime,
+      isComplete: round.isComplete || false
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const resetRoundForm = () => {
+    setRoundFormData({
+      name: "",
+      matchType: "Singles Match",
+      courseName: "",
+      date: new Date().toISOString().split('T')[0],
+      startTime: "08:00",
+      isComplete: false
+    });
+  };
+
+  const handleRoundInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target as HTMLInputElement;
+    setRoundFormData({
+      ...roundFormData,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+    });
+  };
+
+  const handleRoundFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isEditDialogOpen && currentRound) {
+      updateRoundMutation.mutate({ id: currentRound.id, data: roundFormData });
+    } else {
+      addRoundMutation.mutate(roundFormData);
+    }
+  };
+
+  const handleManageMatches = (roundId: number) => {
+    // You would typically navigate to a dedicated matches management page
+    // For now, we'll just show a toast
+    toast({
+      title: "Manage Matches",
+      description: `Navigating to match management for round ${roundId}`,
+      duration: 1000,
+    });
+  };
 
   if (isLoading) {
     return (
@@ -141,18 +398,140 @@ function RoundsTab() {
     );
   }
 
+  // Round form JSX for both add and edit dialogs
+  const roundFormJSX = (
+    <form onSubmit={handleRoundFormSubmit}>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Round Name
+          </label>
+          <input
+            type="text"
+            name="name"
+            value={roundFormData.name}
+            onChange={handleRoundInputChange}
+            className="w-full px-3 py-2 border rounded-md"
+            required
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Match Type
+          </label>
+          <select
+            name="matchType"
+            value={roundFormData.matchType}
+            onChange={handleRoundInputChange}
+            className="w-full px-3 py-2 border rounded-md"
+            required
+          >
+            <option value="Singles Match">Singles Match</option>
+            <option value="2-man Team Scramble">2-man Team Scramble</option>
+            <option value="2-man Best Ball">2-man Best Ball</option>
+            <option value="Alternate Shot">Alternate Shot</option>
+          </select>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Course Name
+          </label>
+          <input
+            type="text"
+            name="courseName"
+            value={roundFormData.courseName}
+            onChange={handleRoundInputChange}
+            className="w-full px-3 py-2 border rounded-md"
+            required
+          />
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Date
+            </label>
+            <input
+              type="date"
+              name="date"
+              value={roundFormData.date}
+              onChange={handleRoundInputChange}
+              className="w-full px-3 py-2 border rounded-md"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Start Time
+            </label>
+            <input
+              type="time"
+              name="startTime"
+              value={roundFormData.startTime}
+              onChange={handleRoundInputChange}
+              className="w-full px-3 py-2 border rounded-md"
+              required
+            />
+          </div>
+        </div>
+        
+        {isEditDialogOpen && (
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="isComplete"
+              name="isComplete"
+              checked={roundFormData.isComplete}
+              onChange={handleRoundInputChange}
+              className="mr-2"
+            />
+            <label htmlFor="isComplete" className="text-sm">
+              Mark as Complete
+            </label>
+          </div>
+        )}
+      </div>
+      
+      <div className="flex justify-end mt-6 space-x-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => isEditDialogOpen ? setIsEditDialogOpen(false) : setIsAddDialogOpen(false)}
+        >
+          Cancel
+        </Button>
+        <Button 
+          type="submit"
+          disabled={addRoundMutation.isPending || updateRoundMutation.isPending}
+        >
+          {(addRoundMutation.isPending || updateRoundMutation.isPending) ? (
+            <span className="flex items-center">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </span>
+          ) : (
+            isEditDialogOpen ? "Update Round" : "Add Round"
+          )}
+        </Button>
+      </div>
+    </form>
+  );
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Tournament Rounds</h2>
-        <Button>
+        <Button onClick={handleOpenAddDialog}>
           <Calendar className="mr-2 h-4 w-4" />
           Add New Round
         </Button>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {rounds?.map((round: any) => (
+        {rounds?.map((round: Round) => (
           <Card key={round.id}>
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">{round.name}</CardTitle>
@@ -174,9 +553,22 @@ function RoundsTab() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="pt-2">
-              <Button variant="outline" size="sm" className="w-full">
-                Manage Matches
+            <CardFooter className="pt-2 flex space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1"
+                onClick={() => handleOpenEditDialog(round)}
+              >
+                Edit
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1"
+                onClick={() => handleManageMatches(round.id)}
+              >
+                Matches
               </Button>
             </CardFooter>
           </Card>
@@ -188,13 +580,36 @@ function RoundsTab() {
             <CardContent className="flex flex-col items-center justify-center py-8">
               <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground text-center">No rounds have been created yet.</p>
-              <Button className="mt-4">
+              <Button 
+                className="mt-4"
+                onClick={handleOpenAddDialog}
+              >
                 Add First Round
               </Button>
             </CardContent>
           </Card>
         )}
       </div>
+      
+      {/* Add Round Dialog */}
+      {isAddDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">Add New Round</h2>
+            {roundFormJSX}
+          </div>
+        </div>
+      )}
+      
+      {/* Edit Round Dialog */}
+      {isEditDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">Edit Round</h2>
+            {roundFormJSX}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -202,6 +617,17 @@ function RoundsTab() {
 // Players Management Tab
 function PlayersTab() {
   const { toast } = useToast();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
+  const [playerFormData, setPlayerFormData] = useState({
+    name: "",
+    teamId: 0,
+    wins: 0,
+    losses: 0,
+    ties: 0
+  });
+  
   const { data: teams, isLoading: isLoadingTeams } = useQuery<Team[]>({
     queryKey: ['/api/teams'],
     queryFn: getQueryFn({ on401: "throw" }),
@@ -212,6 +638,103 @@ function PlayersTab() {
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
+  const addPlayerMutation = useMutation({
+    mutationFn: async (playerData: any) => {
+      const res = await apiRequest("POST", "/api/players", playerData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      toast({
+        title: "Player added",
+        description: "New player has been added successfully",
+        duration: 1000,
+      });
+      setIsAddDialogOpen(false);
+      resetPlayerForm();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to add player",
+        description: error.message,
+        variant: "destructive",
+        duration: 1000,
+      });
+    },
+  });
+
+  const updatePlayerMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: any }) => {
+      const res = await apiRequest("PUT", `/api/players/${id}`, data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      toast({
+        title: "Player updated",
+        description: "Player has been updated successfully",
+        duration: 1000,
+      });
+      setIsEditDialogOpen(false);
+      setCurrentPlayer(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update player",
+        description: error.message,
+        variant: "destructive",
+        duration: 1000,
+      });
+    },
+  });
+
+  const handleOpenAddDialog = () => {
+    resetPlayerForm();
+    if (teams && teams.length > 0) {
+      setPlayerFormData(prev => ({ ...prev, teamId: teams[0].id }));
+    }
+    setIsAddDialogOpen(true);
+  };
+
+  const handleOpenEditDialog = (player: Player) => {
+    setCurrentPlayer(player);
+    setPlayerFormData({
+      name: player.name,
+      teamId: player.teamId,
+      wins: player.wins || 0,
+      losses: player.losses || 0,
+      ties: player.ties || 0
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const resetPlayerForm = () => {
+    setPlayerFormData({
+      name: "",
+      teamId: teams && teams.length > 0 ? teams[0].id : 0,
+      wins: 0,
+      losses: 0,
+      ties: 0
+    });
+  };
+
+  const handlePlayerInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setPlayerFormData({
+      ...playerFormData,
+      [name]: name === 'teamId' ? parseInt(value) : name === 'name' ? value : parseInt(value) || 0
+    });
+  };
+
+  const handlePlayerFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isEditDialogOpen && currentPlayer) {
+      updatePlayerMutation.mutate({ id: currentPlayer.id, data: playerFormData });
+    } else {
+      addPlayerMutation.mutate(playerFormData);
+    }
+  };
+
   if (isLoadingTeams || isLoadingPlayers) {
     return (
       <div className="flex justify-center p-4">
@@ -221,9 +744,9 @@ function PlayersTab() {
   }
 
   // Group players by team
-  const playersByTeam: Record<number, any[]> = {};
+  const playersByTeam: Record<number, Player[]> = {};
   if (players) {
-    players.forEach((player: any) => {
+    players.forEach((player: Player) => {
       if (!playersByTeam[player.teamId]) {
         playersByTeam[player.teamId] = [];
       }
@@ -231,17 +754,124 @@ function PlayersTab() {
     });
   }
 
+  // Player form JSX for both add and edit dialogs
+  const playerFormJSX = (
+    <form onSubmit={handlePlayerFormSubmit}>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Player Name
+          </label>
+          <input
+            type="text"
+            name="name"
+            value={playerFormData.name}
+            onChange={handlePlayerInputChange}
+            className="w-full px-3 py-2 border rounded-md"
+            required
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Team
+          </label>
+          <select
+            name="teamId"
+            value={playerFormData.teamId}
+            onChange={handlePlayerInputChange}
+            className="w-full px-3 py-2 border rounded-md"
+            required
+          >
+            {teams?.map(team => (
+              <option key={team.id} value={team.id}>
+                {team.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Wins
+            </label>
+            <input
+              type="number"
+              name="wins"
+              value={playerFormData.wins}
+              onChange={handlePlayerInputChange}
+              className="w-full px-3 py-2 border rounded-md"
+              min="0"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Losses
+            </label>
+            <input
+              type="number"
+              name="losses"
+              value={playerFormData.losses}
+              onChange={handlePlayerInputChange}
+              className="w-full px-3 py-2 border rounded-md"
+              min="0"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Ties
+            </label>
+            <input
+              type="number"
+              name="ties"
+              value={playerFormData.ties}
+              onChange={handlePlayerInputChange}
+              className="w-full px-3 py-2 border rounded-md"
+              min="0"
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex justify-end mt-6 space-x-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => isEditDialogOpen ? setIsEditDialogOpen(false) : setIsAddDialogOpen(false)}
+        >
+          Cancel
+        </Button>
+        <Button 
+          type="submit"
+          disabled={addPlayerMutation.isPending || updatePlayerMutation.isPending}
+        >
+          {(addPlayerMutation.isPending || updatePlayerMutation.isPending) ? (
+            <span className="flex items-center">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </span>
+          ) : (
+            isEditDialogOpen ? "Update Player" : "Add Player"
+          )}
+        </Button>
+      </div>
+    </form>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Team Players</h2>
-        <Button>
+        <Button onClick={handleOpenAddDialog}>
           <UserPlus className="mr-2 h-4 w-4" />
           Add Player
         </Button>
       </div>
 
-      {teams?.map((team: any) => (
+      {teams?.map((team: Team) => (
         <Card key={team.id}>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center">
@@ -254,7 +884,7 @@ function PlayersTab() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {playersByTeam[team.id]?.map((player: any) => (
+              {playersByTeam[team.id]?.map((player: Player) => (
                 <div 
                   key={player.id} 
                   className="border rounded-md p-3 flex justify-between items-center"
@@ -262,10 +892,16 @@ function PlayersTab() {
                   <div>
                     <div className="font-medium">{player.name}</div>
                     <div className="text-xs text-muted-foreground">
-                      {player.wins}W - {player.losses}L - {player.ties}T
+                      {player.wins || 0}W - {player.losses || 0}L - {player.ties || 0}T
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm">Edit</Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleOpenEditDialog(player)}
+                  >
+                    Edit
+                  </Button>
                 </div>
               ))}
             </div>
@@ -279,6 +915,26 @@ function PlayersTab() {
           </CardContent>
         </Card>
       ))}
+      
+      {/* Add Player Dialog */}
+      {isAddDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">Add New Player</h2>
+            {playerFormJSX}
+          </div>
+        </div>
+      )}
+      
+      {/* Edit Player Dialog */}
+      {isEditDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">Edit Player</h2>
+            {playerFormJSX}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -286,10 +942,113 @@ function PlayersTab() {
 // Users Management Tab (admin only)
 function UsersTab() {
   const { toast } = useToast();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [userFormData, setUserFormData] = useState({
+    username: "",
+    password: "",
+    isAdmin: false
+  });
+  
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ['/api/admin/users'],
     queryFn: getQueryFn({ on401: "throw" }),
   });
+
+  const addUserMutation = useMutation({
+    mutationFn: async (userData: any) => {
+      const res = await apiRequest("POST", "/api/register", userData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      toast({
+        title: "User added",
+        description: "New user has been created successfully",
+        duration: 1000,
+      });
+      setIsAddDialogOpen(false);
+      resetUserForm();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to add user",
+        description: error.message,
+        variant: "destructive",
+        duration: 1000,
+      });
+    },
+  });
+
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: any }) => {
+      const res = await apiRequest("PUT", `/api/admin/users/${id}`, data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      toast({
+        title: "User updated",
+        description: "User has been updated successfully",
+        duration: 1000,
+      });
+      setIsEditDialogOpen(false);
+      setCurrentUser(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update user",
+        description: error.message,
+        variant: "destructive",
+        duration: 1000,
+      });
+    },
+  });
+
+  const handleOpenAddDialog = () => {
+    resetUserForm();
+    setIsAddDialogOpen(true);
+  };
+
+  const handleOpenEditDialog = (user: User) => {
+    setCurrentUser(user);
+    setUserFormData({
+      username: user.username,
+      password: "", // Password field is empty for security
+      isAdmin: user.isAdmin
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const resetUserForm = () => {
+    setUserFormData({
+      username: "",
+      password: "",
+      isAdmin: false
+    });
+  };
+
+  const handleUserInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setUserFormData({
+      ...userFormData,
+      [name]: type === 'checkbox' ? checked : value
+    });
+  };
+
+  const handleUserFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isEditDialogOpen && currentUser) {
+      // Only send password if it's not empty (user changed it)
+      const dataToSend = userFormData.password 
+        ? userFormData 
+        : { username: userFormData.username, isAdmin: userFormData.isAdmin };
+      updateUserMutation.mutate({ id: currentUser.id, data: dataToSend });
+    } else {
+      addUserMutation.mutate(userFormData);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -303,7 +1062,7 @@ function UsersTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">System Users</h2>
-        <Button>
+        <Button onClick={handleOpenAddDialog}>
           <UserPlus className="mr-2 h-4 w-4" />
           Add New User
         </Button>
@@ -320,7 +1079,7 @@ function UsersTab() {
               </tr>
             </thead>
             <tbody>
-              {users?.map((user: any) => (
+              {users?.map((user: User) => (
                 <tr key={user.id} className="border-b">
                   <td className="p-3">{user.username}</td>
                   <td className="p-3">
@@ -329,7 +1088,11 @@ function UsersTab() {
                     </span>
                   </td>
                   <td className="p-3 text-right">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleOpenEditDialog(user)}
+                    >
                       Edit
                     </Button>
                   </td>
@@ -344,6 +1107,159 @@ function UsersTab() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Add User Dialog */}
+      {isAddDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">Add New User</h2>
+            <form onSubmit={handleUserFormSubmit}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    name="username"
+                    value={userFormData.username}
+                    onChange={handleUserInputChange}
+                    className="w-full px-3 py-2 border rounded-md"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={userFormData.password}
+                    onChange={handleUserInputChange}
+                    className="w-full px-3 py-2 border rounded-md"
+                    required
+                  />
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="isAdmin"
+                    name="isAdmin"
+                    checked={userFormData.isAdmin}
+                    onChange={handleUserInputChange}
+                    className="mr-2"
+                  />
+                  <label htmlFor="isAdmin" className="text-sm">
+                    Administrator Access
+                  </label>
+                </div>
+              </div>
+              
+              <div className="flex justify-end mt-6 space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAddDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={addUserMutation.isPending}
+                >
+                  {addUserMutation.isPending ? (
+                    <span className="flex items-center">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </span>
+                  ) : (
+                    "Create User"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      
+      {/* Edit User Dialog */}
+      {isEditDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">Edit User</h2>
+            <form onSubmit={handleUserFormSubmit}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    name="username"
+                    value={userFormData.username}
+                    onChange={handleUserInputChange}
+                    className="w-full px-3 py-2 border rounded-md"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Password <span className="text-xs text-muted-foreground">(Leave blank to keep current)</span>
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={userFormData.password}
+                    onChange={handleUserInputChange}
+                    className="w-full px-3 py-2 border rounded-md"
+                  />
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="isAdminEdit"
+                    name="isAdmin"
+                    checked={userFormData.isAdmin}
+                    onChange={handleUserInputChange}
+                    className="mr-2"
+                  />
+                  <label htmlFor="isAdminEdit" className="text-sm">
+                    Administrator Access
+                  </label>
+                </div>
+              </div>
+              
+              <div className="flex justify-end mt-6 space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={updateUserMutation.isPending}
+                >
+                  {updateUserMutation.isPending ? (
+                    <span className="flex items-center">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating...
+                    </span>
+                  ) : (
+                    "Update User"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
