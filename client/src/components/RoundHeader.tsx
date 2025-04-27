@@ -10,6 +10,8 @@ interface RoundHeaderProps {
   startTime: string;
   aviatorScore: number;
   producerScore: number;
+  pendingAviatorScore?: number;
+  pendingProducerScore?: number;
   date: string;
   matchCount: number;
 }
@@ -21,7 +23,9 @@ const RoundHeader = ({
   courseName,
   startTime, 
   aviatorScore, 
-  producerScore, 
+  producerScore,
+  pendingAviatorScore = 0,
+  pendingProducerScore = 0,
   date,
   matchCount 
 }: RoundHeaderProps) => {

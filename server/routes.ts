@@ -66,7 +66,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Tournament API
   app.get("/api/tournament", async (req, res) => {
     const tournament = await storage.getTournament();
-    res.json(tournament);
+    
+    // If tournament exists, also calculate current scores to ensure they're up to date
+    if (tournament) {
+      const scores = await storage.calculateTournamentScores();
+      res.json({...tournament, ...scores});
+    } else {
+      res.json(tournament);
+    }
   });
   
   app.put("/api/tournament/:id", async (req, res) => {

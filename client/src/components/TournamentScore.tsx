@@ -6,9 +6,16 @@ import producersText from "../assets/producers-text.svg";
 interface TournamentScoreProps {
   aviatorScore: number;
   producerScore: number;
+  pendingAviatorScore?: number;
+  pendingProducerScore?: number;
 }
 
-const TournamentScore = ({ aviatorScore, producerScore }: TournamentScoreProps) => {
+const TournamentScore = ({ 
+  aviatorScore, 
+  producerScore, 
+  pendingAviatorScore = 0, 
+  pendingProducerScore = 0 
+}: TournamentScoreProps) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-6">
       <div className="flex justify-between items-center">
@@ -17,8 +24,13 @@ const TournamentScore = ({ aviatorScore, producerScore }: TournamentScoreProps) 
             <img src={aviatorsLogo} alt="Aviators" className="w-7 h-7 mr-2" />
             <img src={aviatorsText} alt="Aviators" className="w-15 h-15" />
           </div>
-          <div className="text-5xl font-mono font-bold py-4 border-b-2 border-l-2 border-r-2 border-gray-200 rounded-b-lg">
+          <div className="text-5xl font-mono font-bold py-4 border-b-2 border-l-2 border-r-2 border-gray-200 rounded-b-lg relative">
             {aviatorScore}
+            {pendingAviatorScore > 0 && (
+              <span className="absolute text-gray-400 text-lg font-normal bottom-1 right-2" title="Pending points">
+                +{pendingAviatorScore}
+              </span>
+            )}
           </div>
         </div>
         
@@ -29,8 +41,13 @@ const TournamentScore = ({ aviatorScore, producerScore }: TournamentScoreProps) 
             <img src={producersLogo} alt="Producers" className="w-7 h-7 mr-1" />
             <img src={producersText} alt="Producers" className="w-15 h-15" />
           </div>
-          <div className="text-5xl font-mono font-bold py-4 border-b-2 border-l-2 border-r-2 border-gray-200 rounded-b-lg">
+          <div className="text-5xl font-mono font-bold py-4 border-b-2 border-l-2 border-r-2 border-gray-200 rounded-b-lg relative">
             {producerScore}
+            {pendingProducerScore > 0 && (
+              <span className="absolute text-gray-400 text-lg font-normal bottom-1 right-2" title="Pending points">
+                +{pendingProducerScore}
+              </span>
+            )}
           </div>
         </div>
       </div>
