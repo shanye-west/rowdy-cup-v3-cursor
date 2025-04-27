@@ -4,7 +4,7 @@ import { WebSocketServer } from "ws";
 import { storage } from "./storage";
 import { z } from "zod";
 import { insertScoreSchema, insertUserSchema, insertRoundSchema, insertMatchSchema, insertPlayerSchema, User } from "@shared/schema";
-import { setupAuth, isAuthenticated, isAdmin } from "./auth";
+import { setupAuth, isAuthenticated, isAdmin, hashPassword } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -252,9 +252,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isAdmin: true
       });
       
-      // Import hashPassword from auth.ts
-      const { hashPassword } = require('./auth');
-      
       // Hash the password before storing it
       const hashedPassword = await hashPassword(userData.password);
       const userDataWithHashedPassword = {
@@ -283,7 +280,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/users", isAdmin, async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
-      const user = await storage.createUser(userData);
+      
+      // Hash the password before storing it
+      const hashedPassword = await hashPassword(userData.password);
+      const userDataWithHashedPassword = {
+        ...userData,
+        password: hashedPassword
+      };
+      
+      const user = await storage.createUser(userDataWithHashedPassword);
       
       res.status(201).json({
         id: user.id,
