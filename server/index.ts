@@ -54,9 +54,20 @@ app.use((req, res, next) => {
     });
   });
 
-  // Add health check endpoint for /_health path before vite setup
+  // Add health check endpoints - required for Replit deployment
   app.get('/_health', (req, res) => {
     res.status(200).send('OK');
+  });
+  
+  // Special case for the root health check that doesn't interfere with the frontend
+  // This will only trigger for HTTP HEAD requests or when Accept header isn't for HTML
+  app.get('/', (req, res, next) => {
+    // For deployment health checks (HEAD requests or non-HTML accepts)
+    if (req.method === 'HEAD' || !req.accepts('html')) {
+      return res.status(200).send('OK');
+    }
+    // For normal browser requests, continue to the next handler (Vite/static)
+    next();
   });
 
   // importantly only setup vite in development and after
