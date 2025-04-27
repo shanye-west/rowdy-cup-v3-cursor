@@ -557,6 +557,202 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ error: "Internal server error" });
     }
   });
+  
+  // RESET AND DELETE OPERATIONS (Admin only)
+  
+  // Delete all rounds
+  app.delete("/api/admin/rounds/all", isAdmin, async (req, res) => {
+    try {
+      // In a real database implementation, this would use a transaction
+      // Delete all scores first (cascade delete)
+      const scores = await storage.getScores();
+      for (const score of scores) {
+        await storage.updateScore(score.id, { matchId: score.matchId, aviatorScore: null, producerScore: null, winningTeam: null });
+      }
+      
+      // Delete all matches (cascade delete)
+      const matches = await storage.getMatches();
+      for (const match of matches) {
+        await storage.updateMatch(match.id, { status: 'deleted', currentHole: 1, leadingTeam: null, leadAmount: 0, result: null });
+      }
+      
+      // Delete all rounds
+      const rounds = await storage.getRounds();
+      for (const round of rounds) {
+        await storage.updateRound(round.id, { isComplete: false, status: 'deleted' });
+      }
+      
+      // Recalculate tournament scores
+      const tournamentScores = await storage.calculateTournamentScores();
+      const tournament = await storage.getTournament();
+      if (tournament) {
+        await storage.updateTournament(tournament.id, tournamentScores);
+      }
+      
+      broadcast("data-reset", { type: "rounds-deleted" });
+      res.status(200).json({ message: "All rounds have been deleted" });
+    } catch (error) {
+      console.error("Delete all rounds error:", error);
+      return res.status(500).json({ error: "Failed to delete all rounds" });
+    }
+  });
+  
+  // Delete all matches
+  app.delete("/api/admin/matches/all", isAdmin, async (req, res) => {
+    try {
+      // Delete all scores first (cascade delete)
+      const scores = await storage.getScores();
+      for (const score of scores) {
+        await storage.updateScore(score.id, { matchId: score.matchId, aviatorScore: null, producerScore: null, winningTeam: null });
+      }
+      
+      // Delete all matches
+      const matches = await storage.getMatches();
+      for (const match of matches) {
+        await storage.updateMatch(match.id, { status: 'deleted', currentHole: 1, leadingTeam: null, leadAmount: 0, result: null });
+      }
+      
+      // Recalculate round scores
+      const rounds = await storage.getRounds();
+      for (const round of rounds) {
+        const scores = await storage.calculateRoundScores(round.id);
+        await storage.updateRound(round.id, { ...scores, isComplete: false });
+      }
+      
+      // Recalculate tournament scores
+      const tournamentScores = await storage.calculateTournamentScores();
+      const tournament = await storage.getTournament();
+      if (tournament) {
+        await storage.updateTournament(tournament.id, tournamentScores);
+      }
+      
+      broadcast("data-reset", { type: "matches-deleted" });
+      res.status(200).json({ message: "All matches have been deleted" });
+    } catch (error) {
+      console.error("Delete all matches error:", error);
+      return res.status(500).json({ error: "Failed to delete all matches" });
+    }
+  });
+  
+  // Delete all players
+  app.delete("/api/admin/players/all", isAdmin, async (req, res) => {
+    try {
+      const players = await storage.getPlayers();
+      for (const player of players) {
+        await storage.updatePlayer(player.id, { status: 'deleted' });
+      }
+      
+      broadcast("data-reset", { type: "players-deleted" });
+      res.status(200).json({ message: "All players have been deleted" });
+    } catch (error) {
+      console.error("Delete all players error:", error);
+      return res.status(500).json({ error: "Failed to delete all players" });
+    }
+  });
+  
+  // Delete all scores
+  app.delete("/api/admin/scores/all", isAdmin, async (req, res) => {
+    try {
+      const scores = await storage.getScores();
+      for (const score of scores) {
+        await storage.updateScore(score.id, { matchId: score.matchId, aviatorScore: null, producerScore: null, winningTeam: null });
+      }
+      
+      // Reset match stats
+      const matches = await storage.getMatches();
+      for (const match of matches) {
+        await storage.updateMatch(match.id, { currentHole: 1, leadingTeam: null, leadAmount: 0, result: null });
+      }
+      
+      // Recalculate round scores
+      const rounds = await storage.getRounds();
+      for (const round of rounds) {
+        const scores = await storage.calculateRoundScores(round.id);
+        await storage.updateRound(round.id, scores);
+      }
+      
+      // Recalculate tournament scores
+      const tournamentScores = await storage.calculateTournamentScores();
+      const tournament = await storage.getTournament();
+      if (tournament) {
+        await storage.updateTournament(tournament.id, tournamentScores);
+      }
+      
+      broadcast("data-reset", { type: "scores-deleted" });
+      res.status(200).json({ message: "All scores have been deleted" });
+    } catch (error) {
+      console.error("Delete all scores error:", error);
+      return res.status(500).json({ error: "Failed to delete all scores" });
+    }
+  });
+  
+  // Reset all rounds
+  app.put("/api/admin/rounds/reset-all", isAdmin, async (req, res) => {
+    try {
+      const rounds = await storage.getRounds();
+      for (const round of rounds) {
+        await storage.updateRound(round.id, { isComplete: false });
+      }
+      
+      broadcast("data-reset", { type: "rounds-reset" });
+      res.status(200).json({ message: "All rounds have been reset" });
+    } catch (error) {
+      console.error("Reset all rounds error:", error);
+      return res.status(500).json({ error: "Failed to reset all rounds" });
+    }
+  });
+  
+  // Reset all matches
+  app.put("/api/admin/matches/reset-all", isAdmin, async (req, res) => {
+    try {
+      const matches = await storage.getMatches();
+      for (const match of matches) {
+        await storage.updateMatch(match.id, { status: 'in_progress', currentHole: 1, leadingTeam: null, leadAmount: 0, result: null });
+      }
+      
+      // Also reset scores
+      const scores = await storage.getScores();
+      for (const score of scores) {
+        await storage.updateScore(score.id, { matchId: score.matchId, aviatorScore: null, producerScore: null, winningTeam: null, matchStatus: null });
+      }
+      
+      // Recalculate round scores
+      const rounds = await storage.getRounds();
+      for (const round of rounds) {
+        const scores = await storage.calculateRoundScores(round.id);
+        await storage.updateRound(round.id, { ...scores, isComplete: false });
+      }
+      
+      // Recalculate tournament scores
+      const tournamentScores = await storage.calculateTournamentScores();
+      const tournament = await storage.getTournament();
+      if (tournament) {
+        await storage.updateTournament(tournament.id, tournamentScores);
+      }
+      
+      broadcast("data-reset", { type: "matches-reset" });
+      res.status(200).json({ message: "All matches have been reset" });
+    } catch (error) {
+      console.error("Reset all matches error:", error);
+      return res.status(500).json({ error: "Failed to reset all matches" });
+    }
+  });
+  
+  // Reset all player stats
+  app.put("/api/admin/players/reset-all", isAdmin, async (req, res) => {
+    try {
+      const players = await storage.getPlayers();
+      for (const player of players) {
+        await storage.updatePlayer(player.id, { wins: 0, losses: 0, ties: 0 });
+      }
+      
+      broadcast("data-reset", { type: "players-reset" });
+      res.status(200).json({ message: "All player statistics have been reset" });
+    } catch (error) {
+      console.error("Reset all player stats error:", error);
+      return res.status(500).json({ error: "Failed to reset all player statistics" });
+    }
+  });
 
   return httpServer;
 }

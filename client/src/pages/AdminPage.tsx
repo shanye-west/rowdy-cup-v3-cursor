@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, Settings, UserPlus, Calendar, Users, Trophy } from "lucide-react";
+import { Loader2, Settings, UserPlus, Calendar, Users, Trophy, Trash } from "lucide-react";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { useState, useEffect } from "react";
 
@@ -1266,6 +1266,421 @@ function UsersTab() {
   );
 }
 
+// Reset & Delete Tab
+function ResetDeleteTab() {
+  const { toast } = useToast();
+  const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState<{
+    type: 'delete' | 'reset';
+    entity: 'rounds' | 'matches' | 'players' | 'scores';
+    title: string;
+    message: string;
+    action: () => Promise<void>;
+  } | null>(null);
+  
+  const deleteAllRoundsMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("DELETE", "/api/admin/rounds/all", {});
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/rounds'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tournament'] });
+      toast({
+        title: "Success",
+        description: "All rounds have been deleted",
+        duration: 2000,
+      });
+      setConfirmationDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Operation failed",
+        description: error.message,
+        variant: "destructive",
+        duration: 2000,
+      });
+    },
+  });
+  
+  const deleteAllMatchesMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("DELETE", "/api/admin/matches/all", {});
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/matches'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/rounds'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tournament'] });
+      toast({
+        title: "Success",
+        description: "All matches have been deleted",
+        duration: 2000,
+      });
+      setConfirmationDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Operation failed",
+        description: error.message,
+        variant: "destructive",
+        duration: 2000,
+      });
+    },
+  });
+  
+  const deleteAllPlayersMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("DELETE", "/api/admin/players/all", {});
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      toast({
+        title: "Success",
+        description: "All players have been deleted",
+        duration: 2000,
+      });
+      setConfirmationDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Operation failed",
+        description: error.message,
+        variant: "destructive",
+        duration: 2000,
+      });
+    },
+  });
+  
+  const deleteAllScoresMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("DELETE", "/api/admin/scores/all", {});
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/scores'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/matches'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/rounds'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tournament'] });
+      toast({
+        title: "Success",
+        description: "All scores have been deleted",
+        duration: 2000,
+      });
+      setConfirmationDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Operation failed",
+        description: error.message,
+        variant: "destructive",
+        duration: 2000,
+      });
+    },
+  });
+  
+  const resetAllRoundsMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("PUT", "/api/admin/rounds/reset-all", {});
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/rounds'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tournament'] });
+      toast({
+        title: "Success",
+        description: "All rounds have been reset",
+        duration: 2000,
+      });
+      setConfirmationDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Operation failed",
+        description: error.message,
+        variant: "destructive",
+        duration: 2000,
+      });
+    },
+  });
+  
+  const resetAllMatchesMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("PUT", "/api/admin/matches/reset-all", {});
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/matches'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/rounds'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tournament'] });
+      toast({
+        title: "Success",
+        description: "All matches have been reset",
+        duration: 2000,
+      });
+      setConfirmationDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Operation failed",
+        description: error.message,
+        variant: "destructive",
+        duration: 2000,
+      });
+    },
+  });
+  
+  const resetAllPlayersMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("PUT", "/api/admin/players/reset-all", {});
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      toast({
+        title: "Success",
+        description: "All players have been reset",
+        duration: 2000,
+      });
+      setConfirmationDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Operation failed",
+        description: error.message,
+        variant: "destructive",
+        duration: 2000,
+      });
+    },
+  });
+  
+  const handleDeleteConfirmation = async (entity: 'rounds' | 'matches' | 'players' | 'scores') => {
+    let action: () => Promise<void>;
+    let title = "";
+    let message = "";
+    
+    switch (entity) {
+      case 'rounds':
+        action = async () => { await deleteAllRoundsMutation.mutateAsync(); };
+        title = "Delete All Rounds";
+        message = "Are you sure you want to delete all rounds? This will also delete all associated matches and scores. This action cannot be undone.";
+        break;
+      case 'matches':
+        action = async () => { await deleteAllMatchesMutation.mutateAsync(); };
+        title = "Delete All Matches";
+        message = "Are you sure you want to delete all matches? This will also delete all associated scores. This action cannot be undone.";
+        break;
+      case 'players':
+        action = async () => { await deleteAllPlayersMutation.mutateAsync(); };
+        title = "Delete All Players";
+        message = "Are you sure you want to delete all players? This action cannot be undone.";
+        break;
+      case 'scores':
+        action = async () => { await deleteAllScoresMutation.mutateAsync(); };
+        title = "Delete All Scores";
+        message = "Are you sure you want to delete all scores? This will reset all match statistics. This action cannot be undone.";
+        break;
+      default:
+        return;
+    }
+    
+    setConfirmationAction({
+      type: 'delete',
+      entity,
+      title,
+      message,
+      action
+    });
+    setConfirmationDialogOpen(true);
+  };
+  
+  const handleResetConfirmation = async (entity: 'rounds' | 'matches' | 'players') => {
+    let action: () => Promise<void>;
+    let title = "";
+    let message = "";
+    
+    switch (entity) {
+      case 'rounds':
+        action = async () => { await resetAllRoundsMutation.mutateAsync(); };
+        title = "Reset All Rounds";
+        message = "Are you sure you want to reset all rounds? This will set all rounds to their default state. This action cannot be undone.";
+        break;
+      case 'matches':
+        action = async () => { await resetAllMatchesMutation.mutateAsync(); };
+        title = "Reset All Matches";
+        message = "Are you sure you want to reset all matches? This will set all matches to their default state and remove all scores. This action cannot be undone.";
+        break;
+      case 'players':
+        action = async () => { await resetAllPlayersMutation.mutateAsync(); };
+        title = "Reset All Players";
+        message = "Are you sure you want to reset all player statistics? This will set all player wins, losses, and ties to zero. This action cannot be undone.";
+        break;
+      default:
+        return;
+    }
+    
+    setConfirmationAction({
+      type: 'reset',
+      entity,
+      title,
+      message,
+      action
+    });
+    setConfirmationDialogOpen(true);
+  };
+  
+  const isPending = 
+    deleteAllRoundsMutation.isPending || 
+    deleteAllMatchesMutation.isPending || 
+    deleteAllPlayersMutation.isPending || 
+    deleteAllScoresMutation.isPending ||
+    resetAllRoundsMutation.isPending ||
+    resetAllMatchesMutation.isPending ||
+    resetAllPlayersMutation.isPending;
+  
+  return (
+    <div className="space-y-8">
+      <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+        <h3 className="text-lg font-bold text-red-800 mb-2">⚠️ Danger Zone</h3>
+        <p className="text-sm text-red-700 mb-2">
+          The actions below will permanently delete or reset data in the tournament. These actions cannot be undone.
+        </p>
+        <p className="text-sm text-red-700">
+          Make sure you understand the consequences before proceeding.
+        </p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Delete Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">Delete Data</CardTitle>
+            <CardDescription>
+              Permanently remove data from the tournament
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button 
+              variant="destructive" 
+              className="w-full"
+              onClick={() => handleDeleteConfirmation('rounds')}
+              disabled={isPending}
+            >
+              Delete All Rounds
+            </Button>
+            
+            <Button 
+              variant="destructive" 
+              className="w-full"
+              onClick={() => handleDeleteConfirmation('matches')}
+              disabled={isPending}
+            >
+              Delete All Matches
+            </Button>
+            
+            <Button 
+              variant="destructive" 
+              className="w-full"
+              onClick={() => handleDeleteConfirmation('players')}
+              disabled={isPending}
+            >
+              Delete All Players
+            </Button>
+            
+            <Button 
+              variant="destructive" 
+              className="w-full"
+              onClick={() => handleDeleteConfirmation('scores')}
+              disabled={isPending}
+            >
+              Delete All Scores
+            </Button>
+          </CardContent>
+        </Card>
+        
+        {/* Reset Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">Reset Data</CardTitle>
+            <CardDescription>
+              Reset data to its default state without deleting
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button 
+              variant="outline" 
+              className="w-full text-amber-600 border-amber-300 hover:bg-amber-50"
+              onClick={() => handleResetConfirmation('rounds')}
+              disabled={isPending}
+            >
+              Reset All Rounds
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="w-full text-amber-600 border-amber-300 hover:bg-amber-50"
+              onClick={() => handleResetConfirmation('matches')}
+              disabled={isPending}
+            >
+              Reset All Matches
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="w-full text-amber-600 border-amber-300 hover:bg-amber-50"
+              onClick={() => handleResetConfirmation('players')}
+              disabled={isPending}
+            >
+              Reset All Player Stats
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Confirmation Dialog */}
+      {confirmationDialogOpen && confirmationAction && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6">
+            <h2 className="text-xl font-bold mb-2">{confirmationAction.title}</h2>
+            <p className="text-muted-foreground mb-6">{confirmationAction.message}</p>
+            
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setConfirmationDialogOpen(false)}
+                disabled={isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant={confirmationAction.type === 'delete' ? "destructive" : "default"}
+                onClick={async () => {
+                  try {
+                    await confirmationAction.action();
+                  } catch (error) {
+                    console.error('Action failed:', error);
+                  }
+                }}
+                disabled={isPending}
+              >
+                {isPending ? (
+                  <span className="flex items-center">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </span>
+                ) : (
+                  `Confirm ${confirmationAction.type === 'delete' ? 'Delete' : 'Reset'}`
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Main Admin Page Component
 export default function AdminPage() {
   const { user, isAdmin, logoutMutation } = useAuth();
@@ -1301,7 +1716,7 @@ export default function AdminPage() {
       </header>
 
       <Tabs defaultValue="tournament" className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <TabsList className="grid grid-cols-2 md:grid-cols-5 gap-2">
           <TabsTrigger value="tournament" className="flex items-center">
             <Trophy className="mr-2 h-4 w-4" />
             <span className="hidden md:inline">Tournament</span>
@@ -1315,10 +1730,16 @@ export default function AdminPage() {
             <span className="hidden md:inline">Players</span>
           </TabsTrigger>
           {isAdmin && (
-            <TabsTrigger value="users" className="flex items-center">
-              <Settings className="mr-2 h-4 w-4" />
-              <span className="hidden md:inline">Users</span>
-            </TabsTrigger>
+            <>
+              <TabsTrigger value="users" className="flex items-center">
+                <Settings className="mr-2 h-4 w-4" />
+                <span className="hidden md:inline">Users</span>
+              </TabsTrigger>
+              <TabsTrigger value="reset" className="flex items-center bg-red-50 text-red-500 hover:bg-red-100">
+                <Trash className="mr-2 h-4 w-4" />
+                <span className="hidden md:inline">Reset & Delete</span>
+              </TabsTrigger>
+            </>
           )}
         </TabsList>
 
@@ -1335,9 +1756,14 @@ export default function AdminPage() {
         </TabsContent>
 
         {isAdmin && (
-          <TabsContent value="users" className="space-y-4">
-            <UsersTab />
-          </TabsContent>
+          <>
+            <TabsContent value="users" className="space-y-4">
+              <UsersTab />
+            </TabsContent>
+            <TabsContent value="reset" className="space-y-4">
+              <ResetDeleteTab />
+            </TabsContent>
+          </>
         )}
       </Tabs>
     </div>

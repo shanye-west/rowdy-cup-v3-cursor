@@ -39,6 +39,7 @@ export const players = pgTable("players", {
   wins: integer("wins").default(0),
   losses: integer("losses").default(0),
   ties: integer("ties").default(0),
+  status: text("status"), // "active", "deleted", etc.
 });
 
 export const insertPlayerSchema = createInsertSchema(players);
@@ -54,6 +55,7 @@ export const rounds = pgTable("rounds", {
   courseName: text("course_name").notNull(),
   startTime: text("start_time").notNull(),
   isComplete: boolean("is_complete").default(false),
+  status: text("status"), // "active", "deleted", etc.
 });
 
 export const insertRoundSchema = createInsertSchema(rounds);
