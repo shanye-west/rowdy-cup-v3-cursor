@@ -53,18 +53,18 @@ const RoundHeader = ({
         <div className="p-4">
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center">
-              <img src={aviatorsLogo} alt="Aviators" className="w-8 h-8 mr-2" />
-              <span className="font-heading font-bold text-xl">{aviatorScore}</span>
+              <img src={aviatorsLogo} alt="Aviators" className="w-20 h-20 mr-5" />
+              <span className="font-heading font-bold text-3xl">{aviatorScore}</span>
             </div>
+
             <div className="flex items-center">
-              <span className="font-heading font-bold text-xl">{producerScore}</span>
-              <img src={producersLogo} alt="Producers" className="w-8 h-8 ml-2" />
+              <span className="font-heading font-bold text-3xl">{producerScore}</span>
+              <img src={producersLogo} alt="Producers" className="w-20 h-20 ml-5" />
             </div>
           </div>
-          
+
           <div className="text-center text-sm text-gray-500">
-            <p>{matchCount} Matches</p>
-            <p className="mt-1">{date} • {startTime}</p>
+            <p>{date} • {startTime}</p>
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import MainNavigation from "./MainNavigation";
 import FooterNavigation from "./FooterNavigation";
+import RowdyCupLogo from "../assets/rowdy-cup-logo.svg"
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -29,7 +30,7 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Header */}
       <header className="bg-white shadow-md">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <h1 className="font-heading font-bold text-xl text-darkGrey">Rowdy Cup</h1>
+          <img src={RowdyCupLogo} alt="Rowdy Cup" className="h-10" />
           <div className="flex items-center space-x-2">
             <button 
               className="p-1 rounded-full hover:bg-gray-100"

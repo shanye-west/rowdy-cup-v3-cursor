@@ -251,8 +251,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         isAdmin: true
       });
+      
+      // Import hashPassword from auth.ts
+      const { hashPassword } = require('./auth');
+      
+      // Hash the password before storing it
+      const hashedPassword = await hashPassword(userData.password);
+      const userDataWithHashedPassword = {
+        ...userData,
+        password: hashedPassword
+      };
 
-      const user = await storage.createUser(userData);
+      const user = await storage.createUser(userDataWithHashedPassword);
       
       // Return sanitized user (without password)
       res.status(201).json({

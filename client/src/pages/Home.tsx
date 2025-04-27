@@ -71,10 +71,7 @@ const Home = () => {
         </>
       ) : (
         <>
-          {/* Rowdy Cup Logo */}
-          <div className="flex justify-center mb-4">
-            <img src={rowdyCupLogo} alt="Rowdy Cup" className="h-24" />
-          </div>
+
           
           {/* Tournament Score */}
           <TournamentScore 
@@ -82,10 +79,6 @@ const Home = () => {
             producerScore={tournament?.producerScore || 0} 
           />
           
-          {/* Section Title */}
-          <div className="mb-5">
-            <h2 className="font-heading text-xl font-bold">Rounds</h2>
-          </div>
           
           {/* Rounds List */}
           <RoundsList rounds={roundsWithScores || []} />

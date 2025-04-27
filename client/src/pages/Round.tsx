@@ -77,7 +77,6 @@ const Round = ({ id }: RoundProps) => {
               />
             
               {/* Matches List */}
-              <h3 className="font-heading text-lg font-bold mb-3">Matches</h3>
               <MatchesList matches={matches || []} />
             </>
           )}

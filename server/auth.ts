@@ -16,7 +16,7 @@ declare global {
 const scryptAsync = promisify(scrypt);
 
 // Password hashing function
-async function hashPassword(password: string) {
+export async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
@@ -24,7 +24,19 @@ async function hashPassword(password: string) {
 
 // Password comparison function
 async function comparePasswords(supplied: string, stored: string) {
+  // Check if stored password has the expected format (hash.salt)
+  if (!stored || !stored.includes('.')) {
+    console.error('Invalid password format in database: missing salt separator');
+    // Fallback for direct comparison in case the password was stored incorrectly
+    return supplied === stored;
+  }
+  
   const [hashed, salt] = stored.split(".");
+  if (!salt) {
+    console.error('Invalid password format in database: salt is missing');
+    return supplied === stored;
+  }
+  
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
