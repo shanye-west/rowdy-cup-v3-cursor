@@ -582,7 +582,7 @@ export class MemStorage implements IStorage {
   }
 
   async initializeData(): Promise<void> {
-    // Only initialize teams
+    // Initialize teams
     const aviators = await this.createTeam({
       name: "The Aviators",
       shortName: "AVT",
@@ -602,6 +602,15 @@ export class MemStorage implements IStorage {
       venue: "The Idaho Club",
       status: "in_progress"
     });
+
+    // Initialize holes
+    const holePars = [4, 5, 3, 4, 4, 5, 4, 3, 4, 4, 4, 3, 5, 4, 4, 5, 3, 4];
+    for (let i = 0; i < 18; i++) {
+      await this.createHole({
+        number: i + 1,
+        par: holePars[i]
+      });
+    }
   }
 }
 
