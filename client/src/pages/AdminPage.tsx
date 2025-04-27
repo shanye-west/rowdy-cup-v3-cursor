@@ -80,7 +80,10 @@ function TournamentTab() {
 
   const updateTournamentMutation = useMutation({
     mutationFn: async (tournamentData: any) => {
-      const res = await apiRequest("PUT", `/api/tournament/${tournament?.id}`, tournamentData);
+      // We don't include scores in the update since they're calculated on the server
+      const { aviatorScore, producerScore, ...safeData } = tournamentData;
+      
+      const res = await apiRequest("PUT", `/api/tournament/${tournament?.id}`, safeData);
       return await res.json();
     },
     onSuccess: () => {
@@ -209,28 +212,30 @@ function TournamentTab() {
                 
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Aviator Score
+                    Aviator Score (Auto-calculated)
                   </label>
                   <input
                     type="number"
                     value={formData.aviatorScore}
-                    onChange={(e) => handleScoreChange(e, 'aviatorScore')}
-                    className="w-full px-3 py-2 border rounded-md"
-                    min="0"
+                    className="w-full px-3 py-2 border rounded-md bg-gray-100 cursor-not-allowed"
+                    readOnly
+                    disabled
                   />
+                  <p className="text-xs text-muted-foreground mt-1">Score is automatically calculated from match results</p>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Producer Score
+                    Producer Score (Auto-calculated)
                   </label>
                   <input
                     type="number"
                     value={formData.producerScore}
-                    onChange={(e) => handleScoreChange(e, 'producerScore')}
-                    className="w-full px-3 py-2 border rounded-md"
-                    min="0"
+                    className="w-full px-3 py-2 border rounded-md bg-gray-100 cursor-not-allowed"
+                    readOnly
+                    disabled
                   />
+                  <p className="text-xs text-muted-foreground mt-1">Score is automatically calculated from match results</p>
                 </div>
               </div>
               
@@ -381,13 +386,8 @@ function RoundsTab() {
   };
 
   const handleManageMatches = (roundId: number) => {
-    // You would typically navigate to a dedicated matches management page
-    // For now, we'll just show a toast
-    toast({
-      title: "Manage Matches",
-      description: `Navigating to match management for round ${roundId}`,
-      duration: 1000,
-    });
+    // Navigate to the round page where matches can be managed
+    window.location.href = `/rounds/${roundId}`;
   };
 
   if (isLoading) {
