@@ -278,7 +278,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Broadcast updates
       broadcast("score-updated", updatedScore);
-      if (match) broadcast("match-updated", match);
+      
+      if (match) {
+        broadcast("match-updated", match);
+        
+        // Also get and broadcast updated round scores
+        const round = await storage.getRound(match.roundId);
+        if (round) {
+          const roundScores = await storage.calculateRoundScores(match.roundId);
+          broadcast("round-updated", {...round, ...roundScores});
+        }
+      }
       
       // Get updated tournament score
       const tournament = await storage.getTournament();

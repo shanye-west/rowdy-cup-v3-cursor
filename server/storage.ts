@@ -387,7 +387,9 @@ export class MemStorage implements IStorage {
       ...tournament, 
       id,
       aviatorScore: tournament.aviatorScore ?? null,
-      producerScore: tournament.producerScore ?? null
+      producerScore: tournament.producerScore ?? null,
+      pendingAviatorScore: tournament.pendingAviatorScore ?? null,
+      pendingProducerScore: tournament.pendingProducerScore ?? null
     };
     this.tournamentData.set(id, newTournament);
     return newTournament;
@@ -400,7 +402,14 @@ export class MemStorage implements IStorage {
     const tournament = this.tournamentData.get(id);
     if (!tournament) return undefined;
 
-    const updatedTournament: Tournament = { ...tournament, ...tournamentData };
+    // Ensure null values are correctly handled for pending scores
+    const updatedData = {
+      ...tournamentData,
+      pendingAviatorScore: tournamentData.pendingAviatorScore ?? tournament.pendingAviatorScore,
+      pendingProducerScore: tournamentData.pendingProducerScore ?? tournament.pendingProducerScore
+    };
+
+    const updatedTournament: Tournament = { ...tournament, ...updatedData };
     this.tournamentData.set(id, updatedTournament);
     return updatedTournament;
   }
