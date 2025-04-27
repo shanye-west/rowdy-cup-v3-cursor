@@ -2,7 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import MatchHeader from "@/components/MatchHeader";
-import MatchScorecard from "@/components/MatchScorecard";
+import EnhancedMatchScorecard from "@/components/EnhancedMatchScorecard";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -275,13 +275,16 @@ const Match = ({ id }: MatchProps) => {
             result={match.result}
           />
           
-          {/* Match Scorecard */}
-          <MatchScorecard 
+          {/* Enhanced Match Scorecard */}
+          <EnhancedMatchScorecard 
             matchId={id}
             holes={holes || []}
             scores={scores || []}
             onScoreUpdate={handleScoreUpdate}
             matchStatus={match.status}
+            matchType={round?.matchType || ""}
+            aviatorPlayers={match.aviatorPlayers}
+            producerPlayers={match.producerPlayers}
           />
         </>
       )}
