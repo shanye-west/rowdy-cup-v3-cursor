@@ -298,6 +298,12 @@ const EnhancedMatchScorecard = ({
   
   // Generate hole-by-hole match status (e.g., "1↑", "2↑", "AS") for the match status row
   const generateMatchStatus = (holeNumber: number): { text: string, color: string } => {
+    // Check if this hole has been played
+    const thisHoleScore = scores.find(s => s.holeNumber === holeNumber);
+    if (!thisHoleScore || thisHoleScore.aviatorScore === null || thisHoleScore.producerScore === null) {
+      return { text: '-', color: 'text-gray-400' }; // Hole not completed yet
+    }
+    
     const completedScores = scores
       .filter(s => s.holeNumber <= holeNumber && s.aviatorScore !== null && s.producerScore !== null)
       .sort((a, b) => a.holeNumber - b.holeNumber);
@@ -319,7 +325,7 @@ const EnhancedMatchScorecard = ({
     const lead = Math.abs(aviatorWins - producerWins);
     
     if (lead === 0) {
-      return { text: 'AS', color: 'text-gray-600' }; // All Square
+      return { text: 'AS', color: 'text-gray-400' }; // All Square in light grey
     } else if (aviatorWins > producerWins) {
       return { text: `${lead}↑`, color: 'text-aviator' }; // Aviators up
     } else {
@@ -858,8 +864,6 @@ const EnhancedMatchScorecard = ({
       <div className="p-3 overflow-x-auto">
         {isBestBall ? renderBestBallScorecard() : renderRegularScorecard()}
       </div>
-      
-      {/* The CSS for this component is in index.css */}
     </div>
   );
 };
