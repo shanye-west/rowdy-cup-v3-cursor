@@ -534,116 +534,64 @@ const EnhancedMatchScorecard = ({
             </tr>
           </thead>
           <tbody>
-            {/* Match Status Row */}
-            <tr className="border-b border-gray-200">
-              <td className="py-2 px-2 sticky-column bg-gray-100">
-                <div className="text-xs font-medium">Match</div>
-              </td>
-              {/* Front Nine Match Status */}
-              {frontNine.map(hole => {
-                const status = generateMatchStatus(hole.number);
-                return (
-                  <td key={hole.number} className="py-2 px-2 text-center">
-                    <div className={`text-xs font-medium ${status.color}`}>
-                      {status.text}
-                    </div>
-                  </td>
-                );
-              })}
-              <td className="py-2 px-2 text-center bg-gray-100"></td>
-              {/* Back Nine Match Status */}
-              {backNine.map(hole => {
-                const status = generateMatchStatus(hole.number);
-                return (
-                  <td key={hole.number} className="py-2 px-2 text-center">
-                    <div className={`text-xs font-medium ${status.color}`}>
-                      {status.text}
-                    </div>
-                  </td>
-                );
-              })}
-              <td className="py-2 px-2 text-center bg-gray-100"></td>
-              <td className="py-2 px-2 text-center bg-gray-200"></td>
-            </tr>
-            
-            {/* Aviator Players Rows */}
-            {aviatorPlayersList.map(player => (
-              <tr key={player.id} className="border-b border-gray-200">
-                <td className="py-2 px-2 sticky-column bg-aviator text-white">
-                  <div className="text-xs font-medium">{player.name}</div>
-                </td>
-                {/* Front Nine Aviator Player Scores */}
-                {frontNine.map(hole => {
-                  const isLowest = isLowestScore(hole.number, player.name, "aviator");
-                  return (
-                    <td key={hole.number} className="py-2 px-2 text-center">
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
-                          ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''} 
-                          ${!isLowest ? 'non-counting-score' : ''}`}
-                        value={getPlayerScoreValue(hole.number, player.name, "aviator")}
-                        onChange={(e) => handlePlayerScoreChange(hole.number, player.name, "aviator", e.target.value)}
-                        min="1"
-                        max="12"
-                        disabled={isHoleGreyedOut(hole.number)}
-                      />
-                    </td>
-                  );
-                })}
-                <td className="py-2 px-2 text-center font-semibold bg-gray-100">
-                  {playerFrontNineTotals.get(player.name) || '-'}
-                </td>
-                {/* Back Nine Aviator Player Scores */}
-                {backNine.map(hole => {
-                  const isLowest = isLowestScore(hole.number, player.name, "aviator");
-                  return (
-                    <td key={hole.number} className="py-2 px-2 text-center">
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
-                          ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''} 
-                          ${!isLowest ? 'non-counting-score' : ''}`}
-                        value={getPlayerScoreValue(hole.number, player.name, "aviator")}
-                        onChange={(e) => handlePlayerScoreChange(hole.number, player.name, "aviator", e.target.value)}
-                        min="1"
-                        max="12"
-                        disabled={isHoleGreyedOut(hole.number)}
-                      />
-                    </td>
-                  );
-                })}
-                <td className="py-2 px-2 text-center font-semibold bg-gray-100">
-                  {playerBackNineTotals.get(player.name) || '-'}
-                </td>
-                <td className="py-2 px-2 text-center font-semibold bg-gray-200">
-                  {playerTotals.get(player.name) || '-'}
-                </td>
-              </tr>
-            ))}
-            
-            {/* Team Score Row for Aviators */}
+            {/* Team Aviators Row */}
             <tr className="border-b border-gray-200 bg-aviator">
               <td className="py-2 px-2 font-semibold sticky-column bg-aviator text-white">
                 <div>The Aviators</div>
               </td>
-              {/* Front Nine Aviator Team Scores */}
+              
+              {/* Front Nine Aviator Scores */}
               {frontNine.map(hole => (
-                <td key={hole.number} className="py-2 px-2 text-center font-semibold text-white">
-                  {getScoreInputValue(hole.number, 'aviator') || '-'}
+                <td key={hole.number} className="py-2 px-2 text-center">
+                  {isBestBall ? (
+                    // For Best Ball, show the best ball score (lowest score)
+                    <div className="font-semibold text-white">
+                      {getScoreInputValue(hole.number, 'aviator') || '-'}
+                    </div>
+                  ) : (
+                    // For other match types, provide an input field
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
+                        ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''}`}
+                      value={getScoreInputValue(hole.number, 'aviator')}
+                      onChange={(e) => handleScoreChange(hole.number, 'aviator', e.target.value)}
+                      min="1"
+                      max="12"
+                      disabled={isHoleGreyedOut(hole.number)}
+                    />
+                  )}
                 </td>
               ))}
               <td className="py-2 px-2 text-center font-semibold bg-gray-100 text-aviator">
                 {frontNineTotals.aviatorTotal > 0 ? frontNineTotals.aviatorTotal : '-'}
               </td>
-              {/* Back Nine Aviator Team Scores */}
+              
+              {/* Back Nine Aviator Scores */}
               {backNine.map(hole => (
-                <td key={hole.number} className="py-2 px-2 text-center font-semibold text-white">
-                  {getScoreInputValue(hole.number, 'aviator') || '-'}
+                <td key={hole.number} className="py-2 px-2 text-center">
+                  {isBestBall ? (
+                    // For Best Ball, show the best ball score (lowest score)
+                    <div className="font-semibold text-white">
+                      {getScoreInputValue(hole.number, 'aviator') || '-'}
+                    </div>
+                  ) : (
+                    // For other match types, provide an input field
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
+                        ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''}`}
+                      value={getScoreInputValue(hole.number, 'aviator')}
+                      onChange={(e) => handleScoreChange(hole.number, 'aviator', e.target.value)}
+                      min="1"
+                      max="12"
+                      disabled={isHoleGreyedOut(hole.number)}
+                    />
+                  )}
                 </td>
               ))}
               <td className="py-2 px-2 text-center font-semibold bg-gray-100 text-aviator">
@@ -656,84 +604,96 @@ const EnhancedMatchScorecard = ({
               </td>
             </tr>
             
-            {/* Producer Players Rows */}
-            {producerPlayersList.map(player => (
-              <tr key={player.id} className="border-b border-gray-200">
-                <td className="py-2 px-2 sticky-column bg-producer text-white">
-                  <div className="text-xs font-medium">{player.name}</div>
-                </td>
-                {/* Front Nine Producer Player Scores */}
-                {frontNine.map(hole => {
-                  const isLowest = isLowestScore(hole.number, player.name, "producer");
-                  return (
-                    <td key={hole.number} className="py-2 px-2 text-center">
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
-                          ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''} 
-                          ${!isLowest ? 'non-counting-score' : ''}`}
-                        value={getPlayerScoreValue(hole.number, player.name, "producer")}
-                        onChange={(e) => handlePlayerScoreChange(hole.number, player.name, "producer", e.target.value)}
-                        min="1"
-                        max="12"
-                        disabled={isHoleGreyedOut(hole.number)}
-                      />
-                    </td>
-                  );
-                })}
-                <td className="py-2 px-2 text-center font-semibold bg-gray-100">
-                  {playerFrontNineTotals.get(player.name) || '-'}
-                </td>
-                {/* Back Nine Producer Player Scores */}
-                {backNine.map(hole => {
-                  const isLowest = isLowestScore(hole.number, player.name, "producer");
-                  return (
-                    <td key={hole.number} className="py-2 px-2 text-center">
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
-                          ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''} 
-                          ${!isLowest ? 'non-counting-score' : ''}`}
-                        value={getPlayerScoreValue(hole.number, player.name, "producer")}
-                        onChange={(e) => handlePlayerScoreChange(hole.number, player.name, "producer", e.target.value)}
-                        min="1"
-                        max="12"
-                        disabled={isHoleGreyedOut(hole.number)}
-                      />
-                    </td>
-                  );
-                })}
-                <td className="py-2 px-2 text-center font-semibold bg-gray-100">
-                  {playerBackNineTotals.get(player.name) || '-'}
-                </td>
-                <td className="py-2 px-2 text-center font-semibold bg-gray-200">
-                  {playerTotals.get(player.name) || '-'}
-                </td>
-              </tr>
-            ))}
+            {/* Match Status Row - Moved between teams */}
+            <tr className="border-b border-gray-200">
+              <td className="py-2 px-2 sticky-column bg-gray-100">
+                <div className="text-sm font-bold">Match Status</div>
+              </td>
+              {/* Front Nine Match Status */}
+              {frontNine.map(hole => {
+                const status = generateMatchStatus(hole.number);
+                return (
+                  <td key={hole.number} className="py-2 px-2 text-center">
+                    <div className={`text-sm font-bold ${status.color}`}>
+                      {status.text}
+                    </div>
+                  </td>
+                );
+              })}
+              <td className="py-2 px-2 text-center bg-gray-100"></td>
+              {/* Back Nine Match Status */}
+              {backNine.map(hole => {
+                const status = generateMatchStatus(hole.number);
+                return (
+                  <td key={hole.number} className="py-2 px-2 text-center">
+                    <div className={`text-sm font-bold ${status.color}`}>
+                      {status.text}
+                    </div>
+                  </td>
+                );
+              })}
+              <td className="py-2 px-2 text-center bg-gray-100"></td>
+              <td className="py-2 px-2 text-center bg-gray-200"></td>
+            </tr>
             
-            {/* Team Score Row for Producers */}
+            {/* Producer Team Row */}
             <tr className="border-b border-gray-200 bg-producer">
               <td className="py-2 px-2 font-semibold sticky-column bg-producer text-white">
                 <div>The Producers</div>
               </td>
-              {/* Front Nine Producer Team Scores */}
+              
+              {/* Front Nine Producer Scores */}
               {frontNine.map(hole => (
-                <td key={hole.number} className="py-2 px-2 text-center font-semibold text-white">
-                  {getScoreInputValue(hole.number, 'producer') || '-'}
+                <td key={hole.number} className="py-2 px-2 text-center">
+                  {isBestBall ? (
+                    // For Best Ball, show the best ball score (lowest score)
+                    <div className="font-semibold text-white">
+                      {getScoreInputValue(hole.number, 'producer') || '-'}
+                    </div>
+                  ) : (
+                    // For other match types, provide an input field
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
+                        ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''}`}
+                      value={getScoreInputValue(hole.number, 'producer')}
+                      onChange={(e) => handleScoreChange(hole.number, 'producer', e.target.value)}
+                      min="1"
+                      max="12"
+                      disabled={isHoleGreyedOut(hole.number)}
+                    />
+                  )}
                 </td>
               ))}
               <td className="py-2 px-2 text-center font-semibold bg-gray-100 text-producer">
                 {frontNineTotals.producerTotal > 0 ? frontNineTotals.producerTotal : '-'}
               </td>
-              {/* Back Nine Producer Team Scores */}
+              
+              {/* Back Nine Producer Scores */}
               {backNine.map(hole => (
-                <td key={hole.number} className="py-2 px-2 text-center font-semibold text-white">
-                  {getScoreInputValue(hole.number, 'producer') || '-'}
+                <td key={hole.number} className="py-2 px-2 text-center">
+                  {isBestBall ? (
+                    // For Best Ball, show the best ball score (lowest score)
+                    <div className="font-semibold text-white">
+                      {getScoreInputValue(hole.number, 'producer') || '-'}
+                    </div>
+                  ) : (
+                    // For other match types, provide an input field
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
+                        ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''}`}
+                      value={getScoreInputValue(hole.number, 'producer')}
+                      onChange={(e) => handleScoreChange(hole.number, 'producer', e.target.value)}
+                      min="1"
+                      max="12"
+                      disabled={isHoleGreyedOut(hole.number)}
+                    />
+                  )}
                 </td>
               ))}
               <td className="py-2 px-2 text-center font-semibold bg-gray-100 text-producer">
@@ -745,6 +705,138 @@ const EnhancedMatchScorecard = ({
                   : '-'}
               </td>
             </tr>
+            
+            {/* Individual Player Scores for Best Ball matches */}
+            {isBestBall && (
+              <>
+                {/* Separator Row */}
+                <tr className="border-b border-gray-200 bg-gray-200">
+                  <td colSpan={frontNine.length + backNine.length + 4} className="py-1 text-center font-bold text-sm">
+                    Individual Player Scores
+                  </td>
+                </tr>
+                
+                {/* Aviator Players Rows */}
+                {aviatorPlayersList.map(player => (
+                  <tr key={player.id} className="border-b border-gray-200">
+                    <td className="py-2 px-2 sticky-column bg-aviator text-white">
+                      <div className="text-xs font-medium">{player.name}</div>
+                    </td>
+                    {/* Front Nine Aviator Player Scores */}
+                    {frontNine.map(hole => {
+                      const isLowest = isLowestScore(hole.number, player.name, "aviator");
+                      return (
+                        <td key={hole.number} className="py-2 px-2 text-center">
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
+                              ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''} 
+                              ${!isLowest ? 'non-counting-score' : ''}`}
+                            value={getPlayerScoreValue(hole.number, player.name, "aviator")}
+                            onChange={(e) => handlePlayerScoreChange(hole.number, player.name, "aviator", e.target.value)}
+                            min="1"
+                            max="12"
+                            disabled={isHoleGreyedOut(hole.number)}
+                          />
+                        </td>
+                      );
+                    })}
+                    <td className="py-2 px-2 text-center font-semibold bg-gray-100">
+                      {playerFrontNineTotals.get(player.name) || '-'}
+                    </td>
+                    {/* Back Nine Aviator Player Scores */}
+                    {backNine.map(hole => {
+                      const isLowest = isLowestScore(hole.number, player.name, "aviator");
+                      return (
+                        <td key={hole.number} className="py-2 px-2 text-center">
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
+                              ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''} 
+                              ${!isLowest ? 'non-counting-score' : ''}`}
+                            value={getPlayerScoreValue(hole.number, player.name, "aviator")}
+                            onChange={(e) => handlePlayerScoreChange(hole.number, player.name, "aviator", e.target.value)}
+                            min="1"
+                            max="12"
+                            disabled={isHoleGreyedOut(hole.number)}
+                          />
+                        </td>
+                      );
+                    })}
+                    <td className="py-2 px-2 text-center font-semibold bg-gray-100">
+                      {playerBackNineTotals.get(player.name) || '-'}
+                    </td>
+                    <td className="py-2 px-2 text-center font-semibold bg-gray-200">
+                      {playerTotals.get(player.name) || '-'}
+                    </td>
+                  </tr>
+                ))}
+                
+                {/* Producer Players Rows */}
+                {producerPlayersList.map(player => (
+                  <tr key={player.id} className="border-b border-gray-200">
+                    <td className="py-2 px-2 sticky-column bg-producer text-white">
+                      <div className="text-xs font-medium">{player.name}</div>
+                    </td>
+                    {/* Front Nine Producer Player Scores */}
+                    {frontNine.map(hole => {
+                      const isLowest = isLowestScore(hole.number, player.name, "producer");
+                      return (
+                        <td key={hole.number} className="py-2 px-2 text-center">
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
+                              ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''} 
+                              ${!isLowest ? 'non-counting-score' : ''}`}
+                            value={getPlayerScoreValue(hole.number, player.name, "producer")}
+                            onChange={(e) => handlePlayerScoreChange(hole.number, player.name, "producer", e.target.value)}
+                            min="1"
+                            max="12"
+                            disabled={isHoleGreyedOut(hole.number)}
+                          />
+                        </td>
+                      );
+                    })}
+                    <td className="py-2 px-2 text-center font-semibold bg-gray-100">
+                      {playerFrontNineTotals.get(player.name) || '-'}
+                    </td>
+                    {/* Back Nine Producer Player Scores */}
+                    {backNine.map(hole => {
+                      const isLowest = isLowestScore(hole.number, player.name, "producer");
+                      return (
+                        <td key={hole.number} className="py-2 px-2 text-center">
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
+                              ${isHoleGreyedOut(hole.number) ? 'bg-gray-200 cursor-not-allowed' : ''} 
+                              ${!isLowest ? 'non-counting-score' : ''}`}
+                            value={getPlayerScoreValue(hole.number, player.name, "producer")}
+                            onChange={(e) => handlePlayerScoreChange(hole.number, player.name, "producer", e.target.value)}
+                            min="1"
+                            max="12"
+                            disabled={isHoleGreyedOut(hole.number)}
+                          />
+                        </td>
+                      );
+                    })}
+                    <td className="py-2 px-2 text-center font-semibold bg-gray-100">
+                      {playerBackNineTotals.get(player.name) || '-'}
+                    </td>
+                    <td className="py-2 px-2 text-center font-semibold bg-gray-200">
+                      {playerTotals.get(player.name) || '-'}
+                    </td>
+                  </tr>
+                ))}
+              </>
+            )}
           </tbody>
         </table>
       </div>
