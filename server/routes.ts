@@ -8,10 +8,15 @@ import { setupAuth, isAuthenticated, isAdmin, hashPassword } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
-  
+
+  // Health check endpoint for Autoscale Deployments
+  app.get('/', (req, res) => {
+    res.status(200).send('OK');
+  });
+
   // Setup authentication
   setupAuth(app);
-  
+
   // Setup WebSocket server for real-time updates with a specific path
   const wss = new WebSocketServer({ 
     server: httpServer,
