@@ -47,7 +47,7 @@ const EnhancedMatchScorecard = ({
   onScoreUpdate,
   onBestBallScoreUpdate
 }: MatchScorecardProps) => {
-  const isBestBall = matchType === "2-man Best Ball";
+  const isBestBall = matchType.includes("Best Ball");
   
   // For Best Ball, we need to track individual player scores
   const [playerScores, setPlayerScores] = useState<Map<string, BestBallPlayerScore[]>>(new Map());
