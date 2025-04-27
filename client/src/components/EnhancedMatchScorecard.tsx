@@ -94,6 +94,56 @@ const EnhancedMatchScorecard = ({
     return totals;
   }, [playerScores, aviatorPlayersList, producerPlayersList]);
   
+  // Calculate front nine totals for each player
+  const playerFrontNineTotals = useMemo(() => {
+    const totals = new Map<string, number>();
+    
+    // Process all players
+    [...aviatorPlayersList, ...producerPlayersList].forEach(player => {
+      let playerTotal = 0;
+      
+      // Calculate this player's front nine total
+      for (let i = 1; i <= 9; i++) {
+        const key = `${i}-${player.name}`;
+        const playerScoreObj = playerScores.get(key);
+        
+        if (playerScoreObj && playerScoreObj.length > 0 && playerScoreObj[0].score !== null) {
+          playerTotal += playerScoreObj[0].score!;
+        }
+      }
+      
+      // Store the player's front nine total
+      totals.set(player.name, playerTotal);
+    });
+    
+    return totals;
+  }, [playerScores, aviatorPlayersList, producerPlayersList]);
+  
+  // Calculate back nine totals for each player
+  const playerBackNineTotals = useMemo(() => {
+    const totals = new Map<string, number>();
+    
+    // Process all players
+    [...aviatorPlayersList, ...producerPlayersList].forEach(player => {
+      let playerTotal = 0;
+      
+      // Calculate this player's back nine total
+      for (let i = 10; i <= 18; i++) {
+        const key = `${i}-${player.name}`;
+        const playerScoreObj = playerScores.get(key);
+        
+        if (playerScoreObj && playerScoreObj.length > 0 && playerScoreObj[0].score !== null) {
+          playerTotal += playerScoreObj[0].score!;
+        }
+      }
+      
+      // Store the player's back nine total
+      totals.set(player.name, playerTotal);
+    });
+    
+    return totals;
+  }, [playerScores, aviatorPlayersList, producerPlayersList]);
+  
   // Get a score for a specific hole number
   const getScore = (holeNumber: number): Score | undefined => {
     return scores.find(s => s.holeNumber === holeNumber);
