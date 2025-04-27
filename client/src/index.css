@@ -109,11 +109,11 @@ input[type="number"].score-input::-webkit-inner-spin-button {
 
 @layer utilities {
   .bg-aviator {
-    background-color: #003366;
+    background-color: #00214D;
   }
 
   .bg-producer {
-    background-color: #7D0D23;
+    background-color: #BF1238;
   }
 
   .bg-gold {
@@ -121,11 +121,11 @@ input[type="number"].score-input::-webkit-inner-spin-button {
   }
 
   .text-aviator {
-    color: #003366;
+    color: #00214D;
   }
 
   .text-producer {
-    color: #7D0D23;
+    color: #BF1238;
   }
 
   .text-gold {

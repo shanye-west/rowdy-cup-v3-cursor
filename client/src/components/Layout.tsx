@@ -30,7 +30,9 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Header */}
       <header className="bg-white shadow-md">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <img src={RowdyCupLogo} alt="Rowdy Cup" className="h-10" />
+          <a href="https://rowdycup.com" target="_blank" rel="noopener noreferrer" className="flex items-center">
+            <img src={RowdyCupLogo} alt="Rowdy Cup" className="h-10" />
+          </a>
           <div className="flex items-center space-x-2">
             <button 
               className="p-1 rounded-full hover:bg-gray-100"
