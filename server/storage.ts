@@ -81,10 +81,12 @@ export interface IStorage {
   // Aggregate methods
   calculateRoundScores(
     roundId: number,
-  ): Promise<{ aviatorScore: number; producerScore: number }>;
+  ): Promise<{ aviatorScore: number; producerScore: number; pendingAviatorScore: number; pendingProducerScore: number }>;
   calculateTournamentScores(): Promise<{
     aviatorScore: number;
     producerScore: number;
+    pendingAviatorScore: number;
+    pendingProducerScore: number;
   }>;
 
   // Initialization
@@ -159,7 +161,7 @@ export class MemStorage implements IStorage {
     this.users.set(id, user);
     return user;
   }
-  
+
   async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
     const user = this.users.get(id);
     if (!user) return undefined;
@@ -184,7 +186,7 @@ export class MemStorage implements IStorage {
     this.teams.set(id, newTeam);
     return newTeam;
   }
-  
+
   async updateTeam(id: number, teamData: Partial<Team>): Promise<Team | undefined> {
     const team = this.teams.get(id);
     if (!team) return undefined;
@@ -223,7 +225,7 @@ export class MemStorage implements IStorage {
     this.players.set(id, newPlayer);
     return newPlayer;
   }
-  
+
   async updatePlayer(id: number, playerData: Partial<Player>): Promise<Player | undefined> {
     const player = this.players.get(id);
     if (!player) return undefined;
@@ -472,7 +474,7 @@ export class MemStorage implements IStorage {
         pendingAviatorScore, 
         pendingProducerScore 
       } = await this.calculateRoundScores(round.id);
-      
+
       totalAviatorScore += aviatorScore;
       totalProducerScore += producerScore;
       totalPendingAviatorScore += pendingAviatorScore;
@@ -541,13 +543,13 @@ export class MemStorage implements IStorage {
     // Check if match is completed
     let status = match.status;
     let result: string | null = null;
-    
+
     // Count completed holes
     const completedHoles = scores.filter(s => s.aviatorScore !== null && s.producerScore !== null).length;
-    
+
     // Determine if the match should be complete
     const remainingHoles = 18 - lastHoleScored;
-    
+
     if (completedHoles === 18) {
       // All 18 holes completed
       status = "completed";
@@ -580,7 +582,7 @@ export class MemStorage implements IStorage {
   }
 
   async initializeData(): Promise<void> {
-    // Create teams
+    // Only initialize teams
     const aviators = await this.createTeam({
       name: "The Aviators",
       shortName: "AVT",
@@ -592,3 +594,13 @@ export class MemStorage implements IStorage {
       shortName: "PRD",
       colorCode: "#7D0D23",
     });
+
+    const tournament = await this.createTournament({
+      name: "Rowdy Cup 2023",
+      startDate: "2023-08-07",
+      endDate: "2023-08-08",
+      venue: "The Idaho Club",
+      status: "in_progress"
+    });
+  }
+}
