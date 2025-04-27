@@ -31,16 +31,20 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
 
   // Team methods
   getTeams(): Promise<Team[]>;
   getTeam(id: number): Promise<Team | undefined>;
   createTeam(team: InsertTeam): Promise<Team>;
+  updateTeam(id: number, team: Partial<Team>): Promise<Team | undefined>;
 
   // Player methods
   getPlayers(): Promise<Player[]>;
   getPlayersByTeam(teamId: number): Promise<Player[]>;
+  getPlayer(id: number): Promise<Player | undefined>;
   createPlayer(player: InsertPlayer): Promise<Player>;
+  updatePlayer(id: number, player: Partial<Player>): Promise<Player | undefined>;
 
   // Round methods
   getRounds(): Promise<Round[]>;
@@ -155,6 +159,15 @@ export class MemStorage implements IStorage {
     this.users.set(id, user);
     return user;
   }
+  
+  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+
+    const updatedUser: User = { ...user, ...userData };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
 
   // Team methods
   async getTeams(): Promise<Team[]> {
@@ -170,6 +183,15 @@ export class MemStorage implements IStorage {
     const newTeam: Team = { ...team, id };
     this.teams.set(id, newTeam);
     return newTeam;
+  }
+  
+  async updateTeam(id: number, teamData: Partial<Team>): Promise<Team | undefined> {
+    const team = this.teams.get(id);
+    if (!team) return undefined;
+
+    const updatedTeam: Team = { ...team, ...teamData };
+    this.teams.set(id, updatedTeam);
+    return updatedTeam;
   }
 
   // Player methods

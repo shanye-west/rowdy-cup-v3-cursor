@@ -222,6 +222,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     res.json(team);
   });
+  
+  app.put("/api/teams/:id", async (req, res) => {
+    try {
+      const teamId = parseInt(req.params.id);
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      const updatedTeam = await storage.updateTeam(teamId, req.body);
+      broadcast("team-updated", updatedTeam);
+      return res.json(updatedTeam);
+    } catch (error) {
+      console.error("Team update error:", error);
+      return res.status(500).json({ message: "Failed to update team" });
+    }
+  });
 
   // Players API
   app.get("/api/players", async (req, res) => {
@@ -233,6 +251,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } else {
       const players = await storage.getPlayers();
       res.json(players);
+    }
+  });
+  
+  app.post("/api/players", async (req, res) => {
+    try {
+      const playerData = insertPlayerSchema.parse(req.body);
+      const player = await storage.createPlayer(playerData);
+      broadcast("player-created", player);
+      res.status(201).json(player);
+    } catch (error) {
+      console.error("Player creation error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid player data", details: error.errors });
+      }
+      return res.status(500).json({ message: "Failed to create player" });
+    }
+  });
+  
+  app.put("/api/players/:id", async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+      
+      const updatedPlayer = await storage.updatePlayer(playerId, req.body);
+      broadcast("player-updated", updatedPlayer);
+      return res.json(updatedPlayer);
+    } catch (error) {
+      console.error("Player update error:", error);
+      return res.status(500).json({ message: "Failed to update player" });
     }
   });
 
