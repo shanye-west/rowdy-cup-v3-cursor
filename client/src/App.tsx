@@ -10,6 +10,8 @@ import Match from "@/pages/Match";
 import Teams from "@/pages/Teams";
 import AuthPage from "@/pages/AuthPage";
 import AdminPage from "@/pages/AdminPage";
+import AdminMatchesPage from "@/pages/AdminMatchesPage";
+import AdminMatchEditPage from "@/pages/AdminMatchEditPage";
 import Layout from "@/components/Layout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -133,6 +135,8 @@ function Router() {
       <Route path="/teams" component={Teams} />
       <Route path="/auth" component={AuthPage} />
       <ProtectedRoute path="/admin" component={AdminPage} adminOnly={true} />
+      <ProtectedRoute path="/admin/rounds/:roundId/matches" component={AdminMatchesPage} adminOnly={true} />
+      <ProtectedRoute path="/admin/matches/:matchId/edit" component={AdminMatchEditPage} adminOnly={true} />
       <Route component={NotFound} />
     </Switch>
   );

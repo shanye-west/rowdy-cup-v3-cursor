@@ -386,8 +386,8 @@ function RoundsTab() {
   };
 
   const handleManageMatches = (roundId: number) => {
-    // Navigate to the round page where matches can be managed
-    window.location.href = `/rounds/${roundId}`;
+    // Navigate to the admin matches page for this round
+    window.location.href = `/admin/rounds/${roundId}/matches`;
   };
 
   if (isLoading) {
@@ -1551,13 +1551,13 @@ function ResetDeleteTab() {
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="max-w-2xl mx-auto">
         {/* Delete Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">Delete Data</CardTitle>
+            <CardTitle className="text-xl">Tournament Data Management</CardTitle>
             <CardDescription>
-              Permanently remove data from the tournament
+              Delete data from the tournament - these actions cannot be undone
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -1582,58 +1582,24 @@ function ResetDeleteTab() {
             <Button 
               variant="destructive" 
               className="w-full"
+              onClick={() => handleDeleteConfirmation('scores')}
+              disabled={isPending}
+            >
+              Delete All Scores
+            </Button>
+            
+            <Button 
+              variant="destructive" 
+              className="w-full"
               onClick={() => handleDeleteConfirmation('players')}
               disabled={isPending}
             >
               Delete All Players
             </Button>
             
-            <Button 
-              variant="destructive" 
-              className="w-full"
-              onClick={() => handleDeleteConfirmation('scores')}
-              disabled={isPending}
-            >
-              Delete All Scores
-            </Button>
-          </CardContent>
-        </Card>
-        
-        {/* Reset Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">Reset Data</CardTitle>
-            <CardDescription>
-              Reset data to its default state without deleting
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button 
-              variant="outline" 
-              className="w-full text-amber-600 border-amber-300 hover:bg-amber-50"
-              onClick={() => handleResetConfirmation('rounds')}
-              disabled={isPending}
-            >
-              Reset All Rounds
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="w-full text-amber-600 border-amber-300 hover:bg-amber-50"
-              onClick={() => handleResetConfirmation('matches')}
-              disabled={isPending}
-            >
-              Reset All Matches
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="w-full text-amber-600 border-amber-300 hover:bg-amber-50"
-              onClick={() => handleResetConfirmation('players')}
-              disabled={isPending}
-            >
-              Reset All Player Stats
-            </Button>
+            <p className="text-sm text-muted-foreground italic mt-4">
+              Note: Deleting scores will reset match and round statistics automatically.
+            </p>
           </CardContent>
         </Card>
       </div>
