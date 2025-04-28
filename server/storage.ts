@@ -35,10 +35,14 @@ export interface IStorage {
 
   getMatches(): Promise<any[]>;
   getMatch(id: number): Promise<any | undefined>;
+  getMatchWithParticipants(id: number): Promise<any | undefined>;
   getMatchesByRound(roundId: number): Promise<any[]>;
   createMatch(data: any): Promise<any>;
   updateMatch(id: number, data: Partial<any>): Promise<any | undefined>;
   deleteMatch(id: number): Promise<void>;
+
+  getMatchParticipants(matchId: number): Promise<any[]>;
+  createMatchParticipant(data: any): Promise<any>;
 
   getScores(): Promise<any[]>;
   getScore(matchId: number, holeNumber: number): Promise<any | undefined>;

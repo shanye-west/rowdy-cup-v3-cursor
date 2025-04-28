@@ -81,8 +81,9 @@ export const matches = pgTable("matches", {
   leadingTeam: text("leading_team"), // "aviators", "producers", or null if tied
   leadAmount: integer("lead_amount").default(0),
   result: text("result"), // "3&2", "1UP", "AS" (for tied or incomplete)
-  aviatorPlayers: text("aviator_players"),  // Added this field to match the schema
-  producerPlayers: text("producer_players"),  // Added this field to match the schema
+  aviatorPlayers: text("aviator_players"), // For backward compatibility
+  producerPlayers: text("producer_players"), // For backward compatibility
+  locked: boolean("locked").default(false),
 });
 
 export const insertMatchSchema = createInsertSchema(matches);
@@ -121,29 +122,25 @@ export const tournament = pgTable("tournament", {
   name: text("name").notNull(),
   aviatorScore: integer("aviator_score").default(0),
   producerScore: integer("producer_score").default(0),
+  pendingAviatorScore: integer("pending_aviator_score").default(0),
+  pendingProducerScore: integer("pending_producer_score").default(0),
   year: integer("year").notNull(),
 });
 
-// Match Participants Table
-export const match_participants = pgTable("match_participants", {
+// Match Players Table - represents players in matches
+export const match_players = pgTable("match_players", {
   id: serial("id").primaryKey(),
-  matchId: integer("match_id")
-    .notNull()
-    .references(() => matches.id),
-  playerId: integer("player_id")
-    .notNull()
-    .references(() => players.id),
-  teamRole: text("team_role").notNull(),  // "aviator" or "producer"
+  matchId: integer("match_id").notNull(),
+  playerId: integer("player_id").notNull(),
+  team: text("team").notNull(), // "aviators" or "producers"
+  result: text("result"), // Individual player result for the match
 });
 
-export const insertMatchParticipantSchema = createInsertSchema(match_participants);
-export type InsertMatchParticipant = z.infer<typeof insertMatchParticipantSchema>;
-export type MatchParticipant = typeof match_participants.$inferSelect;
+export const insertMatchPlayerSchema = createInsertSchema(match_players);
+export type InsertMatchPlayer = z.infer<typeof insertMatchPlayerSchema>;
+export type MatchPlayer = typeof match_players.$inferSelect;
 
-// Define matchPlayers as an alias for match_participants for backward compatibility
-export const matchPlayers = match_participants;
-export type MatchPlayer = MatchParticipant;
-export type InsertMatchPlayer = InsertMatchParticipant;
+// Note: We no longer have a match_participants table in the schema, using match_players instead
 
 // Tournament schema
 export const insertTournamentSchema = createInsertSchema(tournament);
