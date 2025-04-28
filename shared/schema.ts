@@ -1,7 +1,3 @@
-import { pgTable, serial, integer, text } from "drizzle-orm/pg-core";
-import { InferModel, InferInsertModel } from "drizzle-orm";
-import { matches } from "./path/to/matches"; // adjust the import to wherever your `matches` table is
-import { players } from "./path/to/players"; // same for your `players` table
 import {
   pgTable,
   text,
@@ -69,6 +65,8 @@ export const rounds = pgTable("rounds", {
   status: text("status"), // "active", "deleted", etc.
   aviatorScore: integer("aviator_score").default(0),
   producerScore: integer("producer_score").default(0),
+  pendingAviatorScore: integer("pending_aviator_score").default(0),
+  pendingProducerScore: integer("pending_producer_score").default(0),
 });
 
 export const insertRoundSchema = createInsertSchema(rounds);
@@ -85,6 +83,8 @@ export const matches = pgTable("matches", {
   leadingTeam: text("leading_team"), // "aviators", "producers", or null if tied
   leadAmount: integer("lead_amount").default(0),
   result: text("result"), // "3&2", "1UP", "AS" (for tied or incomplete)
+  aviatorPlayers: text("aviator_players"),  // Added this field to match the schema
+  producerPlayers: text("producer_players"),  // Added this field to match the schema
 });
 
 export const insertMatchSchema = createInsertSchema(matches);
@@ -130,21 +130,26 @@ export const tournament = pgTable("tournament", {
 
 // Match Participants Table
 export const match_participants = pgTable("match_participants", {
+  id: serial("id").primaryKey(),
   matchId: integer("match_id")
     .notNull()
     .references(() => matches.id),
-  userId: integer("user_id")
+  playerId: integer("player_id")
     .notNull()
-    .references(() => users.id),
+    .references(() => players.id),
+  teamRole: text("team_role").notNull(),  // "aviator" or "producer"
 });
 
-// No insert schema needed unless you want strict validation
-
+export const insertMatchParticipantSchema = createInsertSchema(match_participants);
+export type InsertMatchParticipant = z.infer<typeof insertMatchParticipantSchema>;
 export type MatchParticipant = typeof match_participants.$inferSelect;
 
-// Types you’ll use in storage.ts:
-export type MatchPlayer = InferModel<typeof matchPlayers>;
-export type InsertMatchPlayer = InferInsertModel<typeof matchPlayers>;
+// Define matchPlayers as an alias for match_participants for backward compatibility
+export const matchPlayers = match_participants;
+export type MatchPlayer = MatchParticipant;
+export type InsertMatchPlayer = InsertMatchParticipant;
+
+// Tournament schema
 export const insertTournamentSchema = createInsertSchema(tournament);
 export type InsertTournament = z.infer<typeof insertTournamentSchema>;
 export type Tournament = typeof tournament.$inferSelect;
