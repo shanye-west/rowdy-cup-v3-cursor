@@ -92,8 +92,8 @@ export const scores = pgTable("scores", {
   id: serial("id").primaryKey(),
   matchId: integer("match_id").notNull(),
   holeNumber: integer("hole_number").notNull(),
-  aviatorScore: integer("aviator_score"),
-  producerScore: integer("producer_score"),
+  aviatorScore: text("aviator_score"),
+  producerScore: text("producer_score"),
   winningTeam: text("winning_team"),
   matchStatus: text("match_status"),
 });

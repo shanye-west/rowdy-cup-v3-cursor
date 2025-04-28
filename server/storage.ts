@@ -273,7 +273,7 @@ export class DBStorage implements IStorage {
       .filter(mp => mp.team === 'aviators')
       .map(mp => mp.playerName)
       .join(', ');
-      
+
     const producerPlayers = detailedPlayers
       .filter(mp => mp.team === 'producers')
       .map(mp => mp.playerName)
@@ -379,9 +379,11 @@ export class DBStorage implements IStorage {
 
     for (const score of matchScores) {
       if (score.aviatorScore !== null && score.producerScore !== null) {
-        if (score.aviatorScore < score.producerScore) {
+        const aviatorNum = parseFloat(score.aviatorScore);
+        const producerNum = parseFloat(score.producerScore);
+        if (aviatorNum < producerNum) {
           aviatorWins += 1;
-        } else if (score.producerScore < score.aviatorScore) {
+        } else if (producerNum < aviatorNum) {
           producerWins += 1;
         }
 
