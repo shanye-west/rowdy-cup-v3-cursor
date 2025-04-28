@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 // DEFINE INTERFACES
 interface Hole {
@@ -15,6 +17,18 @@ interface Score {
   producerScore: number | null;
   winningTeam: string | null;
   matchStatus: string | null;
+}
+
+interface Player {
+  id: number;
+  name: string;
+  teamId: number;
+}
+
+interface MatchParticipant {
+  userId: number;
+  team: string;
+  player: Player;
 }
 
 interface BestBallPlayerScore {
@@ -52,19 +66,28 @@ const EnhancedMatchScorecard = ({
 }: MatchScorecardProps) => {
   const isBestBall = matchType.includes("Best Ball");
 
+  // Fetch match participants
+  const { data: participants = [] } = useQuery<MatchParticipant[]>({
+    queryKey: [`/api/match-players?matchId=${matchId}`],
+    queryFn: () => apiRequest(`/api/match-players?matchId=${matchId}`),
+  });
+
+  // Split participants into teams
+  const aviatorPlayersList = useMemo(() =>
+    participants.filter((p) => p.team === "aviators").map((p) => p.player),
+    [participants]
+  );
+
+  const producerPlayersList = useMemo(() =>
+    participants.filter((p) => p.team === "producers").map((p) => p.player),
+    [participants]
+  );
+
+
   // For Best Ball, we need to track individual player scores
-  // Debug logging
-  console.log("Match Type:", matchType);
-  console.log("Aviator Players:", aviatorPlayers);
-  console.log("Producer Players:", producerPlayers);
-  console.log("Is Best Ball:", isBestBall);
   const [playerScores, setPlayerScores] = useState<
     Map<string, BestBallPlayerScore[]>
   >(new Map());
-
-  // Log player lists after processing
-  console.log("Aviator Players List:", aviatorPlayersList);
-  console.log("Producer Players List:", producerPlayersList);
 
   const allHoles = [...holes].sort((a, b) => a.number - b.number);
   const frontNine = holes.filter((h) => h.number <= 9);
@@ -724,32 +747,26 @@ const EnhancedMatchScorecard = ({
               {/* Front Nine Aviator Scores */}
               {frontNine.map((hole) => (
                 <td key={hole.number} className="py-2 px-2 text-center">
-                  {isBestBall ? (
-                    // For Best Ball, show the best ball score (lowest score)
-                    <div className="font-semibold text-white">
-                      {getScoreInputValue(hole.number, "aviator") || "-"}
-                    </div>
-                  ) : (
-                    // For other match types, provide an input field
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
-                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
-                      value={getScoreInputValue(hole.number, "aviator")}
-                      onChange={(e) =>
-                        handleScoreChange(
-                          hole.number,
-                          "aviator",
-                          e.target.value,
-                        )
-                      }
-                      min="1"
-                      max="12"
-                      disabled={isHoleGreyedOut(hole.number)}
-                    />
-                  )}
+                  <select
+                    className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
+                      ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
+                    value={getScoreInputValue(hole.number, "aviator")}
+                    onChange={(e) =>
+                      handleScoreChange(
+                        hole.number,
+                        "aviator",
+                        e.target.value,
+                      )
+                    }
+                    disabled={isHoleGreyedOut(hole.number)}
+                  >
+                    <option value="">-</option>
+                    {[...Array(12)].map((_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {i + 1}
+                      </option>
+                    ))}
+                  </select>
                 </td>
               ))}
               <td className="py-2 px-2 text-center font-semibold bg-gray-100 text-aviator">
@@ -761,32 +778,26 @@ const EnhancedMatchScorecard = ({
               {/* Back Nine Aviator Scores */}
               {backNine.map((hole) => (
                 <td key={hole.number} className="py-2 px-2 text-center">
-                  {isBestBall ? (
-                    // For Best Ball, show the best ball score (lowest score)
-                    <div className="font-semibold text-white">
-                      {getScoreInputValue(hole.number, "aviator") || "-"}
-                    </div>
-                  ) : (
-                    // For other match types, provide an input field
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
-                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
-                      value={getScoreInputValue(hole.number, "aviator")}
-                      onChange={(e) =>
-                        handleScoreChange(
-                          hole.number,
-                          "aviator",
-                          e.target.value,
-                        )
-                      }
-                      min="1"
-                      max="12"
-                      disabled={isHoleGreyedOut(hole.number)}
-                    />
-                  )}
+                  <select
+                    className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
+                      ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
+                    value={getScoreInputValue(hole.number, "aviator")}
+                    onChange={(e) =>
+                      handleScoreChange(
+                        hole.number,
+                        "aviator",
+                        e.target.value,
+                      )
+                    }
+                    disabled={isHoleGreyedOut(hole.number)}
+                  >
+                    <option value="">-</option>
+                    {[...Array(12)].map((_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {i + 1}
+                      </option>
+                    ))}
+                  </select>
                 </td>
               ))}
               <td className="py-2 px-2 text-center font-semibold bg-gray-100 text-aviator">
@@ -833,7 +844,7 @@ const EnhancedMatchScorecard = ({
               <td className="py-2 px-2 text-center bg-gray-200"></td>
             </tr>
 
-            {/* Producer Team Row */}
+            {/* Team Producers Row */}
             <tr className="border-b border-gray-200 bg-producer">
               <td className="py-2 px-2 font-semibold sticky-column bg-producer text-white">
                 <div>The Producers</div>
@@ -842,32 +853,26 @@ const EnhancedMatchScorecard = ({
               {/* Front Nine Producer Scores */}
               {frontNine.map((hole) => (
                 <td key={hole.number} className="py-2 px-2 text-center">
-                  {isBestBall ? (
-                    // For Best Ball, show the best ball score (lowest score)
-                    <div className="font-semibold text-white">
-                      {getScoreInputValue(hole.number, "producer") || "-"}
-                    </div>
-                  ) : (
-                    // For other match types, provide an input field
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
-                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
-                      value={getScoreInputValue(hole.number, "producer")}
-                      onChange={(e) =>
-                        handleScoreChange(
-                          hole.number,
-                          "producer",
-                          e.target.value,
-                        )
-                      }
-                      min="1"
-                      max="12"
-                      disabled={isHoleGreyedOut(hole.number)}
-                    />
-                  )}
+                  <select
+                    className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
+                      ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
+                    value={getScoreInputValue(hole.number, "producer")}
+                    onChange={(e) =>
+                      handleScoreChange(
+                        hole.number,
+                        "producer",
+                        e.target.value,
+                      )
+                    }
+                    disabled={isHoleGreyedOut(hole.number)}
+                  >
+                    <option value="">-</option>
+                    {[...Array(12)].map((_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {i + 1}
+                      </option>
+                    ))}
+                  </select>
                 </td>
               ))}
               <td className="py-2 px-2 text-center font-semibold bg-gray-100 text-producer">
@@ -879,32 +884,26 @@ const EnhancedMatchScorecard = ({
               {/* Back Nine Producer Scores */}
               {backNine.map((hole) => (
                 <td key={hole.number} className="py-2 px-2 text-center">
-                  {isBestBall ? (
-                    // For Best Ball, show the best ball score (lowest score)
-                    <div className="font-semibold text-white">
-                      {getScoreInputValue(hole.number, "producer") || "-"}
-                    </div>
-                  ) : (
-                    // For other match types, provide an input field
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
-                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
-                      value={getScoreInputValue(hole.number, "producer")}
-                      onChange={(e) =>
-                        handleScoreChange(
-                          hole.number,
-                          "producer",
-                          e.target.value,
-                        )
-                      }
-                      min="1"
-                      max="12"
-                      disabled={isHoleGreyedOut(hole.number)}
-                    />
-                  )}
+                  <select
+                    className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
+                      ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
+                    value={getScoreInputValue(hole.number, "producer")}
+                    onChange={(e) =>
+                      handleScoreChange(
+                        hole.number,
+                        "producer",
+                        e.target.value,
+                      )
+                    }
+                    disabled={isHoleGreyedOut(hole.number)}
+                  >
+                    <option value="">-</option>
+                    {[...Array(12)].map((_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {i + 1}
+                      </option>
+                    ))}
+                  </select>
                 </td>
               ))}
               <td className="py-2 px-2 text-center font-semibold bg-gray-100 text-producer">
@@ -913,8 +912,7 @@ const EnhancedMatchScorecard = ({
                   : "-"}
               </td>
               <td className="py-2 px-2 text-center font-semibold bg-gray-200 text-producer">
-                {frontNineTotals.producerTotal + backNineTotals.producerTotal >
-                0
+                {frontNineTotals.producerTotal + backNineTotals.producerTotal > 0
                   ? frontNineTotals.producerTotal + backNineTotals.producerTotal
                   : "-"}
               </td>
