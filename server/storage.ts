@@ -81,6 +81,14 @@ export interface IStorage {
     pendingAviatorScore: number;
     pendingProducerScore: number;
   }>;
+ 
+  /**
+   * Compute a single player’s W-L-D for one tournament.
+   */
+  calculatePlayerStats(
+    tournamentId: number,
+    playerId: number,
+  ): Promise<{ wins: number; losses: number; draws: number }>;
 
   initializeData(): Promise<void>;
 }
@@ -133,13 +141,39 @@ export class DBStorage implements IStorage {
     return row;
   }
 
-  /**
-   * Compute a single player’s W-L-D for one tournament.
-   */
-  calculatePlayerStats(
+  // —— Player Stats ——
+  async calculatePlayerStats(
     tournamentId: number,
-    playerId: number,
-  ): Promise<{ wins: number; losses: number; draws: number }>;
+    playerId: number
+  ): Promise<{ wins: number; losses: number; draws: number }> {
+    // First, find all matches in this tournament that this player played.
+    const rows = await db
+      .select({
+        result: matchPlayers.result,    // assuming you have a matchPlayers join table
+        cnt: sql<number>`COUNT(*)`,
+      })
+      .from(matchPlayers)
+      .where(
+        eq(matchPlayers.playerId, playerId),
+        inArray(
+          matchPlayers.matchId,
+          db
+            .select({ mId: matches.id })
+            .from(matches)
+            .where(eq(matches.tournamentId, tournamentId))
+        )
+      )
+      .groupBy(matchPlayers.result)
+      .all();
+
+    const stats = { wins: 0, losses: 0, draws: 0 };
+    for (const r of rows) {
+      if (r.result === "win") stats.wins = r.cnt;
+      else if (r.result === "loss") stats.losses = r.cnt;
+      else if (r.result === "draw") stats.draws = r.cnt;
+    }
+    return stats;
+  }
 
   // —— Rounds ——
   async getRounds() {

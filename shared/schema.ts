@@ -1,4 +1,15 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text } from "drizzle-orm/pg-core";
+import { InferModel, InferInsertModel } from "drizzle-orm";
+import { matches } from "./path/to/matches"; // adjust the import to wherever your `matches` table is
+import { players } from "./path/to/players"; // same for your `players` table
+import {
+  pgTable,
+  text,
+  serial,
+  integer,
+  boolean,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -70,7 +81,7 @@ export const matches = pgTable("matches", {
   roundId: integer("round_id").notNull(),
   name: text("name").notNull(),
   status: text("status").notNull(), // "completed", "in_progress", "upcoming"
-  aviatorPlayers: text("aviator_players").notNull(), // Comma-separated list of player names 
+  aviatorPlayers: text("aviator_players").notNull(), // Comma-separated list of player names
   producerPlayers: text("producer_players").notNull(), // Comma-separated list of player names
   currentHole: integer("current_hole").default(1),
   leadingTeam: text("leading_team"), // "aviators", "producers", or null if tied
@@ -119,6 +130,22 @@ export const tournament = pgTable("tournament", {
   year: integer("year").notNull(),
 });
 
+// A join table that links each player to a match, with their team & result
+export const matchPlayers = pgTable("match_players", {
+  id: serial("id").primaryKey(),
+  matchId: integer("match_id")
+    .notNull()
+    .references(() => matches.id),
+  playerId: integer("player_id")
+    .notNull()
+    .references(() => players.id),
+  team: text("team").notNull(), // "aviators" or "producers"
+  result: text("result").notNull(), // "win" | "loss" | "draw"
+});
+
+// Types you’ll use in storage.ts:
+export type MatchPlayer = InferModel<typeof matchPlayers>;
+export type InsertMatchPlayer = InferInsertModel<typeof matchPlayers>;
 export const insertTournamentSchema = createInsertSchema(tournament);
 export type InsertTournament = z.infer<typeof insertTournamentSchema>;
 export type Tournament = typeof tournament.$inferSelect;
