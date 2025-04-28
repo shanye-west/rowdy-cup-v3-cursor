@@ -1,4 +1,11 @@
+// server/storage.ts
+
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import {
+  users,
+  type User,
+  type InsertUser,
   teams,
   type Team,
   type InsertTeam,
@@ -20,68 +27,55 @@ import {
   tournament,
   type Tournament,
   type InsertTournament,
-  users,
-  type User,
-  type InsertUser,
 } from "@shared/schema";
 
 export interface IStorage {
-  // User methods
   getUsers(): Promise<User[]>;
   getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-  updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
+  createUser(data: InsertUser): Promise<User>;
 
-  // Team methods
   getTeams(): Promise<Team[]>;
   getTeam(id: number): Promise<Team | undefined>;
-  createTeam(team: InsertTeam): Promise<Team>;
-  updateTeam(id: number, team: Partial<Team>): Promise<Team | undefined>;
+  createTeam(data: InsertTeam): Promise<Team>;
 
-  // Player methods
   getPlayers(): Promise<Player[]>;
-  getPlayersByTeam(teamId: number): Promise<Player[]>;
   getPlayer(id: number): Promise<Player | undefined>;
-  createPlayer(player: InsertPlayer): Promise<Player>;
-  updatePlayer(id: number, player: Partial<Player>): Promise<Player | undefined>;
+  createPlayer(data: InsertPlayer): Promise<Player>;
+  updatePlayer(id: number, data: Partial<Player>): Promise<Player | undefined>;
 
-  // Round methods
   getRounds(): Promise<Round[]>;
   getRound(id: number): Promise<Round | undefined>;
-  createRound(round: InsertRound): Promise<Round>;
-  updateRound(id: number, round: Partial<Round>): Promise<Round | undefined>;
+  createRound(data: InsertRound): Promise<Round>;
+  updateRound(id: number, data: Partial<Round>): Promise<Round | undefined>;
 
-  // Match methods
   getMatches(): Promise<Match[]>;
-  getMatchesByRound(roundId: number): Promise<Match[]>;
   getMatch(id: number): Promise<Match | undefined>;
-  createMatch(match: InsertMatch): Promise<Match>;
-  updateMatch(id: number, match: Partial<Match>): Promise<Match | undefined>;
+  createMatch(data: InsertMatch): Promise<Match>;
+  updateMatch(id: number, data: Partial<Match>): Promise<Match | undefined>;
 
-  // Hole methods
   getHoles(): Promise<Hole[]>;
-  createHole(hole: InsertHole): Promise<Hole>;
+  createHole(data: InsertHole): Promise<Hole>;
 
-  // Score methods
   getScores(): Promise<Score[]>;
-  getScoresByMatch(matchId: number): Promise<Score[]>;
   getScore(matchId: number, holeNumber: number): Promise<Score | undefined>;
-  createScore(score: InsertScore): Promise<Score>;
-  updateScore(id: number, score: Partial<Score>): Promise<Score | undefined>;
+  createScore(data: InsertScore): Promise<Score>;
+  updateScore(id: number, data: Partial<Score>): Promise<Score | undefined>;
 
-  // Tournament methods
   getTournament(): Promise<Tournament | undefined>;
-  createTournament(tournament: InsertTournament): Promise<Tournament>;
+  createTournament(data: InsertTournament): Promise<Tournament>;
   updateTournament(
     id: number,
-    tournament: Partial<Tournament>,
+    data: Partial<Tournament>,
   ): Promise<Tournament | undefined>;
 
-  // Aggregate methods
   calculateRoundScores(
     roundId: number,
-  ): Promise<{ aviatorScore: number; producerScore: number; pendingAviatorScore: number; pendingProducerScore: number }>;
+  ): Promise<{
+    aviatorScore: number;
+    producerScore: number;
+    pendingAviatorScore: number;
+    pendingProducerScore: number;
+  }>;
   calculateTournamentScores(): Promise<{
     aviatorScore: number;
     producerScore: number;
@@ -89,369 +83,187 @@ export interface IStorage {
     pendingProducerScore: number;
   }>;
 
-  // Initialization
   initializeData(): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private teams: Map<number, Team>;
-  private players: Map<number, Player>;
-  private rounds: Map<number, Round>;
-  private matches: Map<number, Match>;
-  private holes: Map<number, Hole>;
-  private scores: Map<number, Score>;
-  private tournamentData: Map<number, Tournament>;
-
-  private currentId: {
-    user: number;
-    team: number;
-    player: number;
-    round: number;
-    match: number;
-    hole: number;
-    score: number;
-    tournament: number;
-  };
-
-  constructor() {
-    this.users = new Map();
-    this.teams = new Map();
-    this.players = new Map();
-    this.rounds = new Map();
-    this.matches = new Map();
-    this.holes = new Map();
-    this.scores = new Map();
-    this.tournamentData = new Map();
-
-    this.currentId = {
-      user: 1,
-      team: 1,
-      player: 1,
-      round: 1,
-      match: 1,
-      hole: 1,
-      score: 1,
-      tournament: 1,
-    };
+export class DBStorage implements IStorage {
+  // —— Users ——
+  async getUsers() {
+    return db.select().from(users);
+  }
+  async getUser(id: number) {
+    const [row] = await db.select().from(users).where(eq(users.id, id));
+    return row;
+  }
+  async createUser(data: InsertUser) {
+    const [row] = await db.insert(users).values(data).returning();
+    return row;
   }
 
-  // User methods
-  async getUsers(): Promise<User[]> {
-    return Array.from(this.users.values());
+  // —— Teams ——
+  async getTeams() {
+    return db.select().from(teams);
+  }
+  async getTeam(id: number) {
+    const [row] = await db.select().from(teams).where(eq(teams.id, id));
+    return row;
+  }
+  async createTeam(data: InsertTeam) {
+    const [row] = await db.insert(teams).values(data).returning();
+    return row;
   }
 
-  async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+  // —— Players ——
+  async getPlayers() {
+    return db.select().from(players);
+  }
+  async getPlayer(id: number) {
+    const [row] = await db.select().from(players).where(eq(players.id, id));
+    return row;
+  }
+  async createPlayer(data: InsertPlayer) {
+    const [row] = await db.insert(players).values(data).returning();
+    return row;
+  }
+  async updatePlayer(id: number, data: Partial<Player>) {
+    const [row] = await db
+      .update(players)
+      .set(data)
+      .where(eq(players.id, id))
+      .returning();
+    return row;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  // —— Rounds ——
+  async getRounds() {
+    return db.select().from(rounds);
+  }
+  async getRound(id: number) {
+    const [row] = await db.select().from(rounds).where(eq(rounds.id, id));
+    return row;
+  }
+  async createRound(data: InsertRound) {
+    const [row] = await db.insert(rounds).values(data).returning();
+    return row;
+  }
+  async updateRound(id: number, data: Partial<Round>) {
+    const [row] = await db
+      .update(rounds)
+      .set(data)
+      .where(eq(rounds.id, id))
+      .returning();
+    return row;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId.user++;
-    const user: User = { 
-      ...insertUser, 
-      id,
-      isAdmin: insertUser.isAdmin || false 
-    };
-    this.users.set(id, user);
-    return user;
+  // —— Matches ——
+  async getMatches() {
+    return db.select().from(matches);
+  }
+  async getMatch(id: number) {
+    const [row] = await db.select().from(matches).where(eq(matches.id, id));
+    return row;
+  }
+  async createMatch(data: InsertMatch) {
+    const [row] = await db.insert(matches).values(data).returning();
+    return row;
+  }
+  async updateMatch(id: number, data: Partial<Match>) {
+    const [row] = await db
+      .update(matches)
+      .set(data)
+      .where(eq(matches.id, id))
+      .returning();
+    return row;
   }
 
-  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
-
-    const updatedUser: User = { ...user, ...userData };
-    this.users.set(id, updatedUser);
-    return updatedUser;
+  // —— Holes ——
+  async getHoles() {
+    return db.select().from(holes);
+  }
+  async createHole(data: InsertHole) {
+    const [row] = await db.insert(holes).values(data).returning();
+    return row;
   }
 
-  // Team methods
-  async getTeams(): Promise<Team[]> {
-    return Array.from(this.teams.values());
+  // —— Scores ——
+  async getScores() {
+    return db.select().from(scores);
+  }
+  async getScore(matchId: number, holeNumber: number) {
+    const [row] = await db
+      .select()
+      .from(scores)
+      .where(eq(scores.matchId, matchId), eq(scores.holeNumber, holeNumber));
+    return row;
+  }
+  async createScore(data: InsertScore) {
+    const [row] = await db.insert(scores).values(data).returning();
+    return row;
+  }
+  async updateScore(id: number, data: Partial<Score>) {
+    const [row] = await db
+      .update(scores)
+      .set(data)
+      .where(eq(scores.id, id))
+      .returning();
+    return row;
   }
 
-  async getTeam(id: number): Promise<Team | undefined> {
-    return this.teams.get(id);
+  // —— Tournament ——
+  async getTournament() {
+    const [row] = await db.select().from(tournament).limit(1);
+    return row;
+  }
+  async createTournament(data: InsertTournament) {
+    const [row] = await db.insert(tournament).values(data).returning();
+    return row;
+  }
+  async updateTournament(id: number, data: Partial<Tournament>) {
+    const [row] = await db
+      .update(tournament)
+      .set(data)
+      .where(eq(tournament.id, id))
+      .returning();
+    return row;
   }
 
-  async createTeam(team: InsertTeam): Promise<Team> {
-    const id = this.currentId.team++;
-    const newTeam: Team = { ...team, id };
-    this.teams.set(id, newTeam);
-    return newTeam;
-  }
-
-  async updateTeam(id: number, teamData: Partial<Team>): Promise<Team | undefined> {
-    const team = this.teams.get(id);
-    if (!team) return undefined;
-
-    const updatedTeam: Team = { ...team, ...teamData };
-    this.teams.set(id, updatedTeam);
-    return updatedTeam;
-  }
-
-  // Player methods
-  async getPlayers(): Promise<Player[]> {
-    return Array.from(this.players.values());
-  }
-
-  async getPlayersByTeam(teamId: number): Promise<Player[]> {
-    return Array.from(this.players.values()).filter(
-      (player) => player.teamId === teamId,
-    );
-  }
-
-  async getPlayer(id: number): Promise<Player | undefined> {
-    return this.players.get(id);
-  }
-
-  async createPlayer(player: InsertPlayer): Promise<Player> {
-    const id = this.currentId.player++;
-    // Ensure we have values for nullable fields
-    const newPlayer: Player = { 
-      ...player, 
-      id,
-      status: player.status ?? null,
-      wins: player.wins ?? null,
-      losses: player.losses ?? null,
-      ties: player.ties ?? null
-    };
-    this.players.set(id, newPlayer);
-    return newPlayer;
-  }
-
-  async updatePlayer(id: number, playerData: Partial<Player>): Promise<Player | undefined> {
-    const player = this.players.get(id);
-    if (!player) return undefined;
-
-    const updatedPlayer: Player = { ...player, ...playerData };
-    this.players.set(id, updatedPlayer);
-    return updatedPlayer;
-  }
-
-  // Round methods
-  async getRounds(): Promise<Round[]> {
-    return Array.from(this.rounds.values());
-  }
-
-  async getRound(id: number): Promise<Round | undefined> {
-    return this.rounds.get(id);
-  }
-
-  async createRound(round: InsertRound): Promise<Round> {
-    const id = this.currentId.round++;
-    const newRound: Round = { 
-      ...round, 
-      id,
-      status: round.status ?? null,
-      aviatorScore: round.aviatorScore ?? null,
-      producerScore: round.producerScore ?? null,
-      isComplete: round.isComplete ?? null
-    };
-    this.rounds.set(id, newRound);
-    return newRound;
-  }
-
-  async updateRound(
-    id: number,
-    roundData: Partial<Round>,
-  ): Promise<Round | undefined> {
-    const round = this.rounds.get(id);
-    if (!round) return undefined;
-
-    const updatedRound: Round = { ...round, ...roundData };
-    this.rounds.set(id, updatedRound);
-    return updatedRound;
-  }
-
-  // Match methods
-  async getMatches(): Promise<Match[]> {
-    return Array.from(this.matches.values()).filter(
-      (match) => match.status !== 'deleted'
-    );
-  }
-
-  async getMatchesByRound(roundId: number): Promise<Match[]> {
-    return Array.from(this.matches.values()).filter(
-      (match) => match.roundId === roundId && match.status !== 'deleted'
-    );
-  }
-
-  async getMatch(id: number): Promise<Match | undefined> {
-    const match = this.matches.get(id);
-    // Return undefined if match is deleted or doesn't exist
-    return match && match.status !== 'deleted' ? match : undefined;
-  }
-
-  async createMatch(match: InsertMatch): Promise<Match> {
-    const id = this.currentId.match++;
-    const newMatch: Match = { 
-      ...match, 
-      id,
-      currentHole: match.currentHole ?? null,
-      leadingTeam: match.leadingTeam ?? null,
-      leadAmount: match.leadAmount ?? null,
-      result: match.result ?? null
-    };
-    this.matches.set(id, newMatch);
-    return newMatch;
-  }
-
-  async updateMatch(
-    id: number,
-    matchData: Partial<Match>,
-  ): Promise<Match | undefined> {
-    const match = this.matches.get(id);
-    if (!match) return undefined;
-
-    const updatedMatch: Match = { ...match, ...matchData };
-    this.matches.set(id, updatedMatch);
-    return updatedMatch;
-  }
-
-  // Hole methods
-  async getHoles(): Promise<Hole[]> {
-    return Array.from(this.holes.values());
-  }
-
-  async createHole(hole: InsertHole): Promise<Hole> {
-    const id = this.currentId.hole++;
-    const newHole: Hole = { ...hole, id };
-    this.holes.set(id, newHole);
-    return newHole;
-  }
-
-  // Score methods
-  async getScores(): Promise<Score[]> {
-    return Array.from(this.scores.values());
-  }
-
-  async getScoresByMatch(matchId: number): Promise<Score[]> {
-    return Array.from(this.scores.values()).filter(
-      (score) => score.matchId === matchId,
-    );
-  }
-
-  async getScore(
-    matchId: number,
-    holeNumber: number,
-  ): Promise<Score | undefined> {
-    return Array.from(this.scores.values()).find(
-      (score) => score.matchId === matchId && score.holeNumber === holeNumber,
-    );
-  }
-
-  async createScore(score: InsertScore): Promise<Score> {
-    const id = this.currentId.score++;
-    const newScore: Score = { 
-      ...score, 
-      id,
-      aviatorScore: score.aviatorScore ?? null,
-      producerScore: score.producerScore ?? null,
-      winningTeam: score.winningTeam ?? null,
-      matchStatus: score.matchStatus ?? null
-    };
-    this.scores.set(id, newScore);
-    return newScore;
-  }
-
-  async updateScore(
-    id: number,
-    scoreData: Partial<Score>,
-  ): Promise<Score | undefined> {
-    const score = this.scores.get(id);
-    if (!score) return undefined;
-
-    const updatedScore: Score = { ...score, ...scoreData };
-    this.scores.set(id, updatedScore);
-
-    // Update match state based on scores
-    await this.updateMatchState(score.matchId);
-
-    return updatedScore;
-  }
-
-  // Tournament methods
-  async getTournament(): Promise<Tournament | undefined> {
-    if (this.tournamentData.size === 0) return undefined;
-    return Array.from(this.tournamentData.values())[0];
-  }
-
-  async createTournament(tournament: InsertTournament): Promise<Tournament> {
-    const id = this.currentId.tournament++;
-    const newTournament: Tournament = { 
-      ...tournament, 
-      id,
-      aviatorScore: tournament.aviatorScore ?? null,
-      producerScore: tournament.producerScore ?? null,
-      pendingAviatorScore: tournament.pendingAviatorScore ?? null,
-      pendingProducerScore: tournament.pendingProducerScore ?? null
-    };
-    this.tournamentData.set(id, newTournament);
-    return newTournament;
-  }
-
-  async updateTournament(
-    id: number,
-    tournamentData: Partial<Tournament>,
-  ): Promise<Tournament | undefined> {
-    const tournament = this.tournamentData.get(id);
-    if (!tournament) return undefined;
-
-    // Ensure null values are correctly handled for pending scores
-    const updatedData = {
-      ...tournamentData,
-      pendingAviatorScore: tournamentData.pendingAviatorScore ?? tournament.pendingAviatorScore,
-      pendingProducerScore: tournamentData.pendingProducerScore ?? tournament.pendingProducerScore
-    };
-
-    const updatedTournament: Tournament = { ...tournament, ...updatedData };
-    this.tournamentData.set(id, updatedTournament);
-    return updatedTournament;
-  }
-
-  // Aggregate methods
+  // —— Aggregate scorers ——
   async calculateRoundScores(
     roundId: number,
-  ): Promise<{ aviatorScore: number; producerScore: number; pendingAviatorScore: number; pendingProducerScore: number }> {
-    const matches = await this.getMatchesByRound(roundId);
+  ): Promise<{
+    aviatorScore: number;
+    producerScore: number;
+    pendingAviatorScore: number;
+    pendingProducerScore: number;
+  }> {
+    const matchesByRound = await db
+      .select()
+      .from(matches)
+      .where(eq(matches.roundId, roundId));
     let aviatorScore = 0;
     let producerScore = 0;
     let pendingAviatorScore = 0;
     let pendingProducerScore = 0;
 
-    for (const match of matches) {
+    for (const match of matchesByRound) {
       if (match.status === "completed") {
-        if (match.leadingTeam === "aviators") {
-          aviatorScore += 1;
-        } else if (match.leadingTeam === "producers") {
-          producerScore += 1;
-        } else {
-          // Tied match - half point to each team
+        if (match.leadingTeam === "aviators") aviatorScore += 1;
+        else if (match.leadingTeam === "producers") producerScore += 1;
+        else {
           aviatorScore += 0.5;
           producerScore += 0.5;
         }
       } else if (match.status === "in_progress" && match.leadingTeam) {
-        // Count in-progress matches as pending scores
-        if (match.leadingTeam === "aviators") {
-          pendingAviatorScore += 1;
-        } else if (match.leadingTeam === "producers") {
-          pendingProducerScore += 1;
-        }
+        if (match.leadingTeam === "aviators") pendingAviatorScore += 1;
+        if (match.leadingTeam === "producers") pendingProducerScore += 1;
       }
     }
 
-    return { 
-      aviatorScore, 
-      producerScore, 
-      pendingAviatorScore, 
-      pendingProducerScore 
+    return {
+      aviatorScore,
+      producerScore,
+      pendingAviatorScore,
+      pendingProducerScore,
     };
   }
 
@@ -461,35 +273,27 @@ export class MemStorage implements IStorage {
     pendingAviatorScore: number;
     pendingProducerScore: number;
   }> {
-    const rounds = await this.getRounds();
+    const allRounds = await this.getRounds();
     let totalAviatorScore = 0;
     let totalProducerScore = 0;
     let totalPendingAviatorScore = 0;
     let totalPendingProducerScore = 0;
 
-    for (const round of rounds) {
-      const { 
-        aviatorScore, 
-        producerScore, 
-        pendingAviatorScore, 
-        pendingProducerScore 
-      } = await this.calculateRoundScores(round.id);
-
-      totalAviatorScore += aviatorScore;
-      totalProducerScore += producerScore;
-      totalPendingAviatorScore += pendingAviatorScore;
-      totalPendingProducerScore += pendingProducerScore;
+    for (const round of allRounds) {
+      const scores = await this.calculateRoundScores(round.id);
+      totalAviatorScore += scores.aviatorScore;
+      totalProducerScore += scores.producerScore;
+      totalPendingAviatorScore += scores.pendingAviatorScore;
+      totalPendingProducerScore += scores.pendingProducerScore;
     }
 
-    // Update tournament record
-    const tournament = await this.getTournament();
-    if (tournament) {
-      await this.updateTournament(tournament.id, {
+    const tour = await this.getTournament();
+    if (tour) {
+      await this.updateTournament(tour.id, {
         aviatorScore: totalAviatorScore,
         producerScore: totalProducerScore,
-        // Type cast to ensure TypeScript understands these properties are valid
-        pendingAviatorScore: totalPendingAviatorScore as number,
-        pendingProducerScore: totalPendingProducerScore as number
+        pendingAviatorScore: totalPendingAviatorScore,
+        pendingProducerScore: totalPendingProducerScore,
       });
     }
 
@@ -497,121 +301,42 @@ export class MemStorage implements IStorage {
       aviatorScore: totalAviatorScore,
       producerScore: totalProducerScore,
       pendingAviatorScore: totalPendingAviatorScore,
-      pendingProducerScore: totalPendingProducerScore
+      pendingProducerScore: totalPendingProducerScore,
     };
   }
 
-  private async updateMatchState(matchId: number): Promise<void> {
-    const match = await this.getMatch(matchId);
-    if (!match) return;
+  // —— Initialization ——
+  async initializeData() {
+    const existingTeams = await this.getTeams();
+    if (existingTeams.length === 0) {
+      await this.createTeam({
+        name: "The Aviators",
+        shortName: "Aviators",
+        colorCode: "#0047AB",
+      });
+      await this.createTeam({
+        name: "The Producers",
+        shortName: "Producers",
+        colorCode: "#FF8C00",
+      });
+    }
 
-    const scores = await this.getScoresByMatch(matchId);
-
-    // Sort scores by hole number
-    scores.sort((a, b) => a.holeNumber - b.holeNumber);
-
-    let aviatorWins = 0;
-    let producerWins = 0;
-    let lastHoleScored = 0;
-
-    for (const score of scores) {
-      if (score.aviatorScore !== null && score.producerScore !== null) {
-        if (score.aviatorScore < score.producerScore) {
-          aviatorWins += 1;
-        } else if (score.producerScore < score.aviatorScore) {
-          producerWins += 1;
-        }
-
-        if (score.holeNumber > lastHoleScored) {
-          lastHoleScored = score.holeNumber;
-        }
+    const existingHoles = await this.getHoles();
+    if (existingHoles.length === 0) {
+      const pars = [4, 5, 3, 4, 4, 5, 4, 3, 4, 4, 4, 3, 5, 4, 4, 5, 3, 4];
+      for (let i = 0; i < pars.length; i++) {
+        await this.createHole({ number: i + 1, par: pars[i] });
       }
     }
 
-    // Update match status
-    let leadingTeam: string | null = null;
-    let leadAmount = 0;
-
-    if (aviatorWins > producerWins) {
-      leadingTeam = "aviators";
-      leadAmount = aviatorWins - producerWins;
-    } else if (producerWins > aviatorWins) {
-      leadingTeam = "producers";
-      leadAmount = producerWins - aviatorWins;
-    }
-
-    // Check if match is completed
-    let status = match.status;
-    let result: string | null = null;
-
-    // Count completed holes
-    const completedHoles = scores.filter(s => s.aviatorScore !== null && s.producerScore !== null).length;
-
-    // Determine if the match should be complete
-    const remainingHoles = 18 - lastHoleScored;
-
-    if (completedHoles === 18) {
-      // All 18 holes completed
-      status = "completed";
-      if (leadingTeam) {
-        result = `1UP`; // If someone won after 18 holes, it's "1 UP"
-      } else {
-        result = "AS"; // All square
-      }
-    } else if (leadAmount > remainingHoles) {
-      // Match is decided if lead is greater than remaining holes
-      status = "completed";
-      result = `${leadAmount} UP`; // Format as "3 UP", "2 UP", etc.
-    } else if (lastHoleScored > 0) {
-      status = "in_progress";
-      result = null;
-    }
-
-    // Update match
-    await this.updateMatch(matchId, {
-      leadingTeam,
-      leadAmount,
-      status,
-      result,
-      currentHole: lastHoleScored + 1,
-    });
-
-    // Always recalculate tournament scores when match state changes
-    // This ensures both completed and pending scores are updated
-    await this.calculateTournamentScores();
-  }
-
-  async initializeData(): Promise<void> {
-    // Initialize teams
-    const aviators = await this.createTeam({
-      name: "The Aviators",
-      shortName: "AVT",
-      colorCode: "#003366",
-    });
-
-    const producers = await this.createTeam({
-      name: "The Producers",
-      shortName: "PRD",
-      colorCode: "#7D0D23",
-    });
-
-    const tournament = await this.createTournament({
-      name: "Rowdy Cup 2025",
-      startDate: "2025-08-07",
-      endDate: "2025-08-10",
-      venue: "The Idaho Club",
-      status: "in_progress"
-    });
-
-    // Initialize holes
-    const holePars = [4, 5, 3, 4, 4, 5, 4, 3, 4, 4, 4, 3, 5, 4, 4, 5, 3, 4];
-    for (let i = 0; i < 18; i++) {
-      await this.createHole({
-        number: i + 1,
-        par: holePars[i]
+    const existingTourney = await this.getTournament();
+    if (!existingTourney) {
+      await this.createTournament({
+        name: "Rowdy Cup 2025",
+        year: new Date().getFullYear(),
       });
     }
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DBStorage();
