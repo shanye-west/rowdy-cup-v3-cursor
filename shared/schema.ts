@@ -130,18 +130,19 @@ export const tournament = pgTable("tournament", {
   year: integer("year").notNull(),
 });
 
-// A join table that links each player to a match, with their team & result
-export const matchPlayers = pgTable("match_players", {
-  id: serial("id").primaryKey(),
+// Match Participants Table
+export const match_participants = pgTable("match_participants", {
   matchId: integer("match_id")
     .notNull()
     .references(() => matches.id),
-  playerId: integer("player_id")
+  userId: integer("user_id")
     .notNull()
-    .references(() => players.id),
-  team: text("team").notNull(), // "aviators" or "producers"
-  result: text("result").notNull(), // "win" | "loss" | "draw"
+    .references(() => users.id),
 });
+
+// No insert schema needed unless you want strict validation
+
+export type MatchParticipant = typeof match_participants.$inferSelect;
 
 // Types you’ll use in storage.ts:
 export type MatchPlayer = InferModel<typeof matchPlayers>;
