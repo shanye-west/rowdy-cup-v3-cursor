@@ -247,20 +247,27 @@ export class DBStorage implements IStorage {
     const match = await this.getMatch(id);
     if (!match) return undefined;
 
-    // Get players for this match
-    const matchPlayers = await this.getMatchParticipants(id);
-    
+    // Query to get match participants with player details
+    const matchParticipants = await db
+      .select({
+        match_id: match_players.match_id,
+        player_id: match_players.player_id,
+        team: match_players.team,
+      })
+      .from(match_players)
+      .where(eq(match_players.match_id, id));
+
     // Get full player details
     const detailedPlayers = await Promise.all(
-      matchPlayers.map(async (mp) => {
-        const player = await this.getPlayer(mp.playerId);
+      matchParticipants.map(async (mp) => {
+        const player = await this.getPlayer(mp.player_id);
         return {
           ...mp,
           playerName: player?.name || 'Unknown',
         };
       })
     );
-    
+
     // Group players by team for backward compatibility
     const aviatorPlayers = detailedPlayers
       .filter(mp => mp.team === 'aviators')
@@ -271,14 +278,14 @@ export class DBStorage implements IStorage {
       .filter(mp => mp.team === 'producers')
       .map(mp => mp.playerName)
       .join(', ');
-    
+
     // Return enhanced match with player info
     return {
       ...match,
       aviatorPlayers,
       producerPlayers,
       participants: detailedPlayers
-    } as any; // Use type assertion to bypass TypeScript's type checking
+    };
   }
 
   // Scores
