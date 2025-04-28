@@ -228,7 +228,6 @@ export class DBStorage implements IStorage {
   async getMatchParticipants(matchId: number) {
     return db
       .select({
-        id: match_players.id,
         matchId: match_players.match_id,
         playerId: match_players.player_id,
         team: match_players.team,

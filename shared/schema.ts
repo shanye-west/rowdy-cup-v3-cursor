@@ -31,7 +31,6 @@ export type Hole = typeof holes.$inferSelect;
 
 // Match Players table
 export const match_players = pgTable("match_participants", {
-  id: serial("id").primaryKey(),
   match_id: integer("match_id").notNull(),
   player_id: integer("user_id").notNull(),
   team: text("team").notNull(),
