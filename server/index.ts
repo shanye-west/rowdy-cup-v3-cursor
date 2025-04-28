@@ -1,19 +1,21 @@
 // server/index.ts
 
-// 1) Load your .env so process.env.DATABASE_URL is populated
+// 1) Load .env so process.env.DATABASE_URL is defined
 import "dotenv/config";
 
 import express, { Request, Response, NextFunction } from "express";
-// 2) Import both your Drizzle db and the Neon Pool
+// 2) Import both your Drizzle ORM client and Neon Pool
 import { db, pool } from "./db";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+// Parse JSON and URL-encoded bodies
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// 3) Logging middleware for all /api routes
+// Logging middleware for all /api routes
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -43,25 +45,23 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // 4) Smoke-test your Neon connection on startup using the Pool directly
+  // 3) Smoke-test Neon on startup
   try {
-    const result = await pool.query<{ now: Date }>("SELECT NOW() as now");
+    const result = await pool.query<{ now: Date }>("SELECT NOW() AS now");
     console.log("🗓️  Connected to Neon, server time is", result.rows[0].now);
   } catch (e) {
     console.error("❌  Failed to connect to Neon:", e);
     process.exit(1);
   }
 
-  // 5) Register your API routes
+  // 4) Register your routes and get the underlying HTTP server
   const server = await registerRoutes(app);
 
-  // 6) Global error handler
+  // 5) Global error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
     console.error("Server error:", err);
-
     res.status(status).json({
       message,
       timestamp: new Date().toISOString(),
@@ -71,7 +71,7 @@ app.use((req, res, next) => {
     });
   });
 
-  // 7) Health checks
+  // 6) Health-check endpoints
   app.get("/_health", (_req, res) => res.status(200).send("OK"));
   app.get("/", (req, res, next) => {
     if (req.method === "HEAD" || !req.accepts("html")) {
@@ -80,23 +80,23 @@ app.use((req, res, next) => {
     next();
   });
 
-  // 8) Vite in dev, static in prod
+  // 7) Vite in dev, static in prod
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // 9) Start listening
-  const port = 5000;
+  // 8) Listen on Replit’s PORT or default to 5000
+  const port = Number(process.env.PORT) || 5000;
   server.listen(
     {
-      port,
       host: "0.0.0.0",
+      port,
       reusePort: true,
     },
     () => {
       log(`serving on port ${port}`);
     },
   );
-})();
+})(); // ← Close the IIFE
