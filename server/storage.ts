@@ -49,6 +49,7 @@ export interface IStorage {
   updateRound(id: number, data: Partial<Round>): Promise<Round | undefined>;
 
   getMatches(): Promise<Match[]>;
+  getMatchesByRound(roundId: number): Promise<Match[]>;
   getMatch(id: number): Promise<Match | undefined>;
   createMatch(data: InsertMatch): Promise<Match>;
   updateMatch(id: number, data: Partial<Match>): Promise<Match | undefined>;
@@ -68,9 +69,7 @@ export interface IStorage {
     data: Partial<Tournament>,
   ): Promise<Tournament | undefined>;
 
-  calculateRoundScores(
-    roundId: number,
-  ): Promise<{
+  calculateRoundScores(roundId: number): Promise<{
     aviatorScore: number;
     producerScore: number;
     pendingAviatorScore: number;
@@ -176,6 +175,11 @@ export class DBStorage implements IStorage {
     return row;
   }
 
+  // —— Matches by Round ——
+  async getMatchesByRound(roundId: number): Promise<Match[]> {
+    return db.select().from(matches).where(eq(matches.roundId, roundId));
+  }
+
   // —— Holes ——
   async getHoles() {
     return db.select().from(holes);
@@ -228,9 +232,7 @@ export class DBStorage implements IStorage {
   }
 
   // —— Aggregate scorers ——
-  async calculateRoundScores(
-    roundId: number,
-  ): Promise<{
+  async calculateRoundScores(roundId: number): Promise<{
     aviatorScore: number;
     producerScore: number;
     pendingAviatorScore: number;
