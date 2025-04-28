@@ -8,8 +8,6 @@ interface MatchHeaderProps {
   roundId: number;
   roundName?: string;
   matchType?: string;
-  aviatorPlayers: string;
-  producerPlayers: string;
   leadingTeam: string | null;
   leadAmount: number;
   currentHole: number;

@@ -37,8 +37,6 @@ interface MatchData {
   roundId: number;
   name: string;
   status: string;
-  aviatorPlayers: string;
-  producerPlayers: string;
   currentHole: number;
   leadingTeam: string | null;
   leadAmount: number;

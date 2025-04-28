@@ -81,8 +81,6 @@ export const matches = pgTable("matches", {
   roundId: integer("round_id").notNull(),
   name: text("name").notNull(),
   status: text("status").notNull(), // "completed", "in_progress", "upcoming"
-  aviatorPlayers: text("aviator_players").notNull(), // Comma-separated list of player names
-  producerPlayers: text("producer_players").notNull(), // Comma-separated list of player names
   currentHole: integer("current_hole").default(1),
   leadingTeam: text("leading_team"), // "aviators", "producers", or null if tied
   leadAmount: integer("lead_amount").default(0),
