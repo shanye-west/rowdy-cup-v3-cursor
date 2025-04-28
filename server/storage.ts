@@ -170,10 +170,6 @@ export class DBStorage implements IStorage {
           producerScore++;
         }
       }
-
-        if (participant.teamId === 1) aviatorScore += score.value;
-        else if (participant.teamId === 2) producerScore += score.value;
-      }
     }
 
     return {
