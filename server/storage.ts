@@ -143,6 +143,10 @@ export class DBStorage implements IStorage {
     return row;
   }
 
+  async getScoresByMatch(matchId: number) {
+    return db.select().from(scores).where(eq(scores.matchId, matchId));
+  }
+
   async getTournament() {
     const [row] = await db.select().from(tournament);
     return row;
