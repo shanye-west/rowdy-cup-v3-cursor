@@ -81,7 +81,10 @@ export interface IStorage {
     pendingAviatorScore: number;
     pendingProducerScore: number;
   }>;
- 
+  
+  /** Fetches all scores for a given match (one row per hole) */
+  getScoresByMatch(matchId: number): Promise<Score[]>;
+
   /**
    * Compute a single player’s W-L-D for one tournament.
    */
@@ -253,6 +256,14 @@ export class DBStorage implements IStorage {
       .where(eq(scores.id, id))
       .returning();
     return row;
+  }
+
+  async getScoresByMatch(matchId: number): Promise<Score[]> {
+    return db
+      .select()
+      .from(scores)
+      .where(eq(scores.matchId, matchId))
+      .orderBy(scores.holeNumber);  // optional: to get them in hole order
   }
 
   // —— Tournament ——
