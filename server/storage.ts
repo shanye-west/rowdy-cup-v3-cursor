@@ -158,25 +158,18 @@ export class DBStorage implements IStorage {
     let producerScore = 0;
 
     for (const match of matchesInRound) {
-      const participants = await db
-        .select({
-          userId: match_participants.userId,
-          playerId: users.playerId,
-          teamId: players.teamId,
-        })
-        .from(match_participants)
-        .leftJoin(users, eq(users.id, match_participants.userId))
-        .leftJoin(players, eq(players.id, users.playerId))
-        .where(eq(match_participants.matchId, match.id));
-
       const scoresForMatch = await db
         .select()
         .from(scores)
         .where(eq(scores.matchId, match.id));
 
       for (const score of scoresForMatch) {
-        const participant = participants.find((p) => p.userId === score.userId);
-        if (!participant) continue;
+        if (score.winningTeam === "aviators") {
+          aviatorScore++;
+        } else if (score.winningTeam === "producers") {
+          producerScore++;
+        }
+      }
 
         if (participant.teamId === 1) aviatorScore += score.value;
         else if (participant.teamId === 2) producerScore += score.value;
