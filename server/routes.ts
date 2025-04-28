@@ -305,7 +305,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const round = await storage.getRound(updatedMatch.roundId);
         if (round) {
           const roundScores = await storage.calculateRoundScores(updatedMatch.roundId);
-          broadcast("round-updated", { ...round, ...roundScores });
+          // Add default values for pendingScores to maintain client compatibility
+          const scoresWithDefaults = {
+            ...roundScores,
+            pendingAviatorScore: 0,
+            pendingProducerScore: 0
+          };
+          broadcast("round-updated", { ...round, ...scoresWithDefaults });
         }
       }
 
@@ -360,7 +366,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const round = await storage.getRound(match.roundId);
         if (round) {
           const roundScores = await storage.calculateRoundScores(match.roundId);
-          broadcast("round-updated", { ...round, ...roundScores });
+          // Add default values for pendingScores to maintain client compatibility
+          const scoresWithDefaults = {
+            ...roundScores,
+            pendingAviatorScore: 0,
+            pendingProducerScore: 0
+          };
+          broadcast("round-updated", { ...round, ...scoresWithDefaults });
         }
       }
 
@@ -416,12 +428,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ? parseInt(req.query.teamId as string)
       : undefined;
 
+    // Since getPlayersByTeam doesn't exist in this version, we'll filter the players manually
+    const allPlayers = await storage.getPlayers();
+    
     if (teamId) {
-      const players = await storage.getPlayersByTeam(teamId);
-      res.json(players);
+      const filteredPlayers = allPlayers.filter(player => player.teamId === teamId);
+      res.json(filteredPlayers);
     } else {
-      const players = await storage.getPlayers();
-      res.json(players);
+      res.json(allPlayers);
     }
   });
 

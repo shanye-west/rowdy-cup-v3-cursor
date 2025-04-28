@@ -68,6 +68,7 @@ export interface IStorage {
   ): Promise<{ wins: number; losses: number; draws: number }>;
 
   initializeData(): Promise<void>;
+  createHole(data: any): Promise<any>;
 }
 
 export class DBStorage implements IStorage {
