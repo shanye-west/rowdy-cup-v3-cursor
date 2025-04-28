@@ -14,6 +14,7 @@ import {
 } from "@shared/schema";
 
 export interface IStorage {
+  getHoles(): Promise<any[]>;
   getUsers(): Promise<any[]>;
   getUser(id: number): Promise<any | undefined>;
   createUser(data: any): Promise<any>;
@@ -61,6 +62,29 @@ export interface IStorage {
 }
 
 export class DBStorage implements IStorage {
+  async getHoles() {
+    return [
+      { id: 1, number: 1, par: 4 },
+      { id: 2, number: 2, par: 5 },
+      { id: 3, number: 3, par: 4 },
+      { id: 4, number: 4, par: 3 },
+      { id: 5, number: 5, par: 4 },
+      { id: 6, number: 6, par: 5 },
+      { id: 7, number: 7, par: 3 },
+      { id: 8, number: 8, par: 4 },
+      { id: 9, number: 9, par: 4 },
+      { id: 10, number: 10, par: 4 },
+      { id: 11, number: 11, par: 4 },
+      { id: 12, number: 12, par: 3 },
+      { id: 13, number: 13, par: 5 },
+      { id: 14, number: 14, par: 4 },
+      { id: 15, number: 15, par: 4 },
+      { id: 16, number: 16, par: 3 },
+      { id: 17, number: 17, par: 4 },
+      { id: 18, number: 18, par: 5 },
+    ];
+  }
+
   async getUsers() {
     return db.select().from(users);
   }
