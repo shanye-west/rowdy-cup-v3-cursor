@@ -192,7 +192,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/matches/:id", async (req, res) => {
     const matchId = parseInt(req.params.id);
-    const match = await storage.getMatch(matchId);
+    // Use getMatchWithParticipants instead of getMatch to get all player info
+    const match = await storage.getMatchWithParticipants(matchId);
     // GET /api/matches/:id/scores
     app.get("/api/matches/:id/scores", async (req, res, next) => {
       try {
@@ -471,6 +472,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Player update error:", error);
       return res.status(500).json({ message: "Failed to update player" });
+    }
+  });
+  
+  // Match Players API
+  app.get("/api/match-players", async (req, res) => {
+    const matchId = req.query.matchId
+      ? parseInt(req.query.matchId as string)
+      : undefined;
+    
+    if (!matchId) {
+      return res.status(400).json({ message: "matchId query parameter is required" });
+    }
+    
+    const matchPlayers = await storage.getMatchParticipants(matchId);
+    res.json(matchPlayers);
+  });
+  
+  app.post("/api/match-players", async (req, res) => {
+    try {
+      const playerData = {
+        matchId: req.body.matchId,
+        playerId: req.body.playerId,
+        team: req.body.team,
+      };
+      
+      const matchPlayer = await storage.createMatchParticipant(playerData);
+      
+      // Get the updated match
+      const match = await storage.getMatchWithParticipants(matchPlayer.matchId);
+      if (match) {
+        broadcast("match-updated", match);
+      }
+      
+      res.status(201).json(matchPlayer);
+    } catch (error) {
+      console.error("Match player creation error:", error);
+      return res.status(500).json({ message: "Failed to create match player" });
     }
   });
 

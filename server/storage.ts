@@ -8,7 +8,7 @@ import {
   teams,
   matches,
   scores,
-  match_participants,
+  match_players,
   rounds,
   tournament,
   holes,
@@ -184,6 +184,61 @@ export class DBStorage implements IStorage {
 
   async deleteMatch(id: number) {
     await db.delete(matches).where(eq(matches.id, id));
+  }
+
+  // Match Players (formerly Match Participants)
+  async getMatchParticipants(matchId: number) {
+    return db.select({
+      id: match_players.id,
+      matchId: match_players.matchId,
+      playerId: match_players.playerId,
+      team: match_players.team,
+      result: match_players.result
+    }).from(match_players)
+      .where(eq(match_players.matchId, matchId));
+  }
+
+  async createMatchParticipant(data: any) {
+    const [row] = await db.insert(match_players).values(data).returning();
+    return row;
+  }
+
+  async getMatchWithParticipants(id: number) {
+    const match = await this.getMatch(id);
+    if (!match) return undefined;
+
+    // Get players for this match
+    const matchPlayers = await this.getMatchParticipants(id);
+    
+    // Get full player details
+    const detailedPlayers = await Promise.all(
+      matchPlayers.map(async (mp) => {
+        const player = await this.getPlayer(mp.playerId);
+        return {
+          ...mp,
+          playerName: player?.name || 'Unknown',
+        };
+      })
+    );
+    
+    // Group players by team for backward compatibility
+    const aviatorPlayers = detailedPlayers
+      .filter(mp => mp.team === 'aviators')
+      .map(mp => mp.playerName)
+      .join(', ');
+      
+    const producerPlayers = detailedPlayers
+      .filter(mp => mp.team === 'producers')
+      .map(mp => mp.playerName)
+      .join(', ');
+    
+    // Return enhanced match with player info
+    return {
+      ...match,
+      aviatorPlayers: aviatorPlayers || match.aviatorPlayers || '',
+      producerPlayers: producerPlayers || match.producerPlayers || '',
+      participants: detailedPlayers
+    };
   }
 
   // Scores
