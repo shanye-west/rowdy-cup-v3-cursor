@@ -229,13 +229,13 @@ export class DBStorage implements IStorage {
     return db
       .select({
         id: match_players.id,
-        matchId: match_players.matchId,
-        playerId: match_players.playerId,
+        matchId: match_players.match_id,
+        playerId: match_players.player_id,
         team: match_players.team,
         result: match_players.result,
       })
       .from(match_players)
-      .where(eq(match_players.matchId, matchId));
+      .where(eq(match_players.match_id, matchId));
   }
 
   async createMatchParticipant(data: any) {
