@@ -80,7 +80,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // If tournament exists, also calculate current scores to ensure they're up to date
     if (tournament) {
       const scores = await storage.calculateTournamentScores();
-      res.json({ ...tournament, ...scores });
+      // Add default values for pendingScores to maintain client compatibility
+      const scoresWithDefaults = {
+        ...scores,
+        pendingAviatorScore: 0,
+        pendingProducerScore: 0
+      };
+      res.json({ ...tournament, ...scoresWithDefaults });
     } else {
       res.json(tournament);
     }
@@ -125,7 +131,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     const scores = await storage.calculateRoundScores(roundId);
-    res.json({ ...round, ...scores });
+    // Add default values for pendingScores to maintain client compatibility
+    const scoresWithDefaults = {
+      ...scores,
+      pendingAviatorScore: 0,
+      pendingProducerScore: 0
+    };
+    res.json({ ...round, ...scoresWithDefaults });
   });
 
   app.post("/api/rounds", async (req, res) => {
@@ -393,22 +405,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(team);
   });
 
+  // Teams don't have an update feature in this version
   app.put("/api/teams/:id", async (req, res) => {
-    try {
-      const teamId = parseInt(req.params.id);
-      const team = await storage.getTeam(teamId);
-
-      if (!team) {
-        return res.status(404).json({ message: "Team not found" });
-      }
-
-      const updatedTeam = await storage.updateTeam(teamId, req.body);
-      broadcast("team-updated", updatedTeam);
-      return res.json(updatedTeam);
-    } catch (error) {
-      console.error("Team update error:", error);
-      return res.status(500).json({ message: "Failed to update team" });
-    }
+    return res.status(501).json({ message: "Team update not implemented" });
   });
 
   // Players API
