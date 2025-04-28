@@ -156,16 +156,46 @@ export class DBStorage implements IStorage {
 
   // Matches
   async getMatches() {
-    return db.select().from(matches);
+    return db.select({
+      id: matches.id,
+      roundId: matches.roundId,
+      name: matches.name,
+      status: matches.status,
+      currentHole: matches.currentHole,
+      leadingTeam: matches.leadingTeam,
+      leadAmount: matches.leadAmount,
+      result: matches.result,
+      locked: matches.locked
+    }).from(matches);
   }
 
   async getMatch(id: number) {
-    const [row] = await db.select().from(matches).where(eq(matches.id, id));
+    const [row] = await db.select({
+      id: matches.id,
+      roundId: matches.roundId,
+      name: matches.name,
+      status: matches.status,
+      currentHole: matches.currentHole,
+      leadingTeam: matches.leadingTeam,
+      leadAmount: matches.leadAmount,
+      result: matches.result,
+      locked: matches.locked
+    }).from(matches).where(eq(matches.id, id));
     return row;
   }
 
   async getMatchesByRound(roundId: number) {
-    return db.select().from(matches).where(eq(matches.roundId, roundId));
+    return db.select({
+      id: matches.id,
+      roundId: matches.roundId,
+      name: matches.name,
+      status: matches.status,
+      currentHole: matches.currentHole,
+      leadingTeam: matches.leadingTeam,
+      leadAmount: matches.leadAmount,
+      result: matches.result,
+      locked: matches.locked
+    }).from(matches).where(eq(matches.roundId, roundId));
   }
 
   async createMatch(data: any) {
@@ -235,10 +265,10 @@ export class DBStorage implements IStorage {
     // Return enhanced match with player info
     return {
       ...match,
-      aviatorPlayers: aviatorPlayers || match.aviatorPlayers || '',
-      producerPlayers: producerPlayers || match.producerPlayers || '',
+      aviatorPlayers,
+      producerPlayers,
       participants: detailedPlayers
-    };
+    } as any; // Use type assertion to bypass TypeScript's type checking
   }
 
   // Scores
@@ -416,8 +446,13 @@ export class DBStorage implements IStorage {
 
   // Calculate scores
   async calculateRoundScores(roundId: number) {
+    // Only select the specific columns we need to avoid issues with missing columns
     const matchesByRound = await db
-      .select()
+      .select({
+        id: matches.id,
+        status: matches.status,
+        leadingTeam: matches.leadingTeam
+      })
       .from(matches)
       .where(eq(matches.roundId, roundId));
 
