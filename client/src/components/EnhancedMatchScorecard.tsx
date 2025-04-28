@@ -57,18 +57,18 @@ const EnhancedMatchScorecard = ({
   console.log('Is Best Ball:', isBestBall);
   const [playerScores, setPlayerScores] = useState<Map<string, BestBallPlayerScore[]>>(new Map());
   
-  // Setup player arrays from the comma-separated strings
-  const aviatorPlayersList = aviatorPlayers.split(',').map((name, idx) => ({ 
+  // Setup player arrays from the comma-separated strings, with null/undefined handling
+  const aviatorPlayersList = aviatorPlayers ? aviatorPlayers.split(',').map((name, idx) => ({ 
     name: name.trim(), 
     id: idx,
     team: "aviator" 
-  }));
+  })) : [{ name: "Aviator Player", id: 0, team: "aviator" }];
   
-  const producerPlayersList = producerPlayers.split(',').map((name, idx) => ({ 
+  const producerPlayersList = producerPlayers ? producerPlayers.split(',').map((name, idx) => ({ 
     name: name.trim(), 
     id: idx + 100, // Offset to ensure unique IDs
     team: "producer" 
-  }));
+  })) : [{ name: "Producer Player", id: 100, team: "producer" }];
   
   // Log player lists after processing
   console.log('Aviator Players List:', aviatorPlayersList);
