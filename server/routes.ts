@@ -269,20 +269,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         scoreData.holeNumber,
       );
 
-      // 1) Declare resultScore up front
+      // Use a single variable for result
       let resultScore;
 
       if (existingScore) {
-        // Update existing score
-        resultScore = await storage.updateScore(existingScore.id, scoreData);
+        // Update existing score with automatic match state update
+        resultScore = await storage.updateScoreAndMatch(existingScore.id, scoreData);
         broadcast("score-updated", resultScore);
       } else {
-        // Create new score
-        resultScore = await storage.createScore(scoreData);
+        // Create new score with automatic match state update
+        resultScore = await storage.createScoreAndMatch(scoreData);
         broadcast("score-created", resultScore);
       }
 
-      // 2) Fetch and return the full list of scores for this match
+      // Get the updated match after state changes
+      const updatedMatch = await storage.getMatch(scoreData.matchId);
+      if (updatedMatch) {
+        broadcast("match-updated", updatedMatch);
+      }
+
+      // Get updated round scores
+      if (updatedMatch) {
+        const round = await storage.getRound(updatedMatch.roundId);
+        if (round) {
+          const roundScores = await storage.calculateRoundScores(updatedMatch.roundId);
+          broadcast("round-updated", { ...round, ...roundScores });
+        }
+      }
+
+      // Get updated tournament score
+      const tournament = await storage.getTournament();
+      if (tournament) broadcast("tournament-updated", tournament);
+
+      // Fetch and return all scores for the match
       const allScores = await storage.getScoresByMatch(resultScore.matchId);
       return res.json(allScores);
     } catch (error) {
@@ -310,7 +329,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const scoreData = schema.parse(req.body);
 
-      const updatedScore = await storage.updateScore(scoreId, scoreData);
+      // Use the updateScoreAndMatch method that automatically updates match state
+      const updatedScore = await storage.updateScoreAndMatch(scoreId, scoreData);
 
       if (!updatedScore) {
         return res.status(404).json({ message: "Score not found" });
@@ -321,7 +341,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Broadcast updates
       broadcast("score-updated", updatedScore);
-
       if (match) {
         broadcast("match-updated", match);
 
@@ -337,7 +356,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tournament = await storage.getTournament();
       if (tournament) broadcast("tournament-updated", tournament);
 
-      res.json(updatedScore);
+      // Return the full list of scores for this match to ensure frontend has all data
+      const allScores = await storage.getScoresByMatch(updatedScore.matchId);
+      res.json(allScores);
     } catch (error) {
       console.error("Error processing score update:", error);
       if (error instanceof z.ZodError) {

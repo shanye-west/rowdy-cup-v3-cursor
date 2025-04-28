@@ -1,7 +1,7 @@
 // server/storage.ts
 
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import {
   users,
   type User,
@@ -149,33 +149,24 @@ export class DBStorage implements IStorage {
     tournamentId: number,
     playerId: number
   ): Promise<{ wins: number; losses: number; draws: number }> {
-    // First, find all matches in this tournament that this player played.
-    const rows = await db
-      .select({
-        result: matchPlayers.result,    // assuming you have a matchPlayers join table
-        cnt: sql<number>`COUNT(*)`,
-      })
-      .from(matchPlayers)
-      .where(
-        eq(matchPlayers.playerId, playerId),
-        inArray(
-          matchPlayers.matchId,
-          db
-            .select({ mId: matches.id })
-            .from(matches)
-            .where(eq(matches.tournamentId, tournamentId))
-        )
-      )
-      .groupBy(matchPlayers.result)
-      .all();
-
-    const stats = { wins: 0, losses: 0, draws: 0 };
-    for (const r of rows) {
-      if (r.result === "win") stats.wins = r.cnt;
-      else if (r.result === "loss") stats.losses = r.cnt;
-      else if (r.result === "draw") stats.draws = r.cnt;
-    }
-    return stats;
+    // In the current implementation, we don't have a join table for matchPlayers
+    // This is a placeholder implementation until we implement the full player stats functionality
+    return { wins: 0, losses: 0, draws: 0 };
+  }
+  
+  // Get players by team (implementation was missing)
+  async getPlayersByTeam(teamId: number): Promise<Player[]> {
+    return db.select().from(players).where(eq(players.teamId, teamId));
+  }
+  
+  // Update team (implementation was missing)
+  async updateTeam(id: number, data: Partial<Team>): Promise<Team | undefined> {
+    const [row] = await db
+      .update(teams)
+      .set(data)
+      .where(eq(teams.id, id))
+      .returning();
+    return row;
   }
 
   // —— Rounds ——
@@ -239,11 +230,14 @@ export class DBStorage implements IStorage {
     return db.select().from(scores);
   }
   async getScore(matchId: number, holeNumber: number) {
-    const [row] = await db
+    // Query using separate where clauses to chain conditions
+    const matchingScores = await db
       .select()
       .from(scores)
-      .where(eq(scores.matchId, matchId), eq(scores.holeNumber, holeNumber));
-    return row;
+      .where(eq(scores.matchId, matchId))
+      .where(eq(scores.holeNumber, holeNumber));
+    
+    return matchingScores[0];
   }
   async createScore(data: InsertScore) {
     const [row] = await db.insert(scores).values(data).returning();
@@ -264,6 +258,111 @@ export class DBStorage implements IStorage {
       .from(scores)
       .where(eq(scores.matchId, matchId))
       .orderBy(scores.holeNumber);  // optional: to get them in hole order
+  }
+  
+  // Update score and trigger match state update
+  async updateScoreAndMatch(id: number, data: Partial<Score>): Promise<Score> {
+    const [updatedScore] = await db
+      .update(scores)
+      .set(data)
+      .where(eq(scores.id, id))
+      .returning();
+      
+    // After updating the score, update the match state
+    await this.updateMatchState(updatedScore.matchId);
+    
+    return updatedScore;
+  }
+  
+  // Create score and trigger match state update
+  async createScoreAndMatch(data: InsertScore): Promise<Score> {
+    const [newScore] = await db.insert(scores).values(data).returning();
+    
+    // After creating the score, update the match state
+    await this.updateMatchState(newScore.matchId);
+    
+    return newScore;
+  }
+  
+  // Update match status based on scores
+  private async updateMatchState(matchId: number): Promise<void> {
+    const match = await this.getMatch(matchId);
+    if (!match) return;
+    
+    const matchScores = await this.getScoresByMatch(matchId);
+    
+    // Sort scores by hole number
+    matchScores.sort((a, b) => a.holeNumber - b.holeNumber);
+    
+    let aviatorWins = 0;
+    let producerWins = 0;
+    let lastHoleScored = 0;
+    
+    for (const score of matchScores) {
+      if (score.aviatorScore !== null && score.producerScore !== null) {
+        if (score.aviatorScore < score.producerScore) {
+          aviatorWins += 1;
+        } else if (score.producerScore < score.aviatorScore) {
+          producerWins += 1;
+        }
+        
+        if (score.holeNumber > lastHoleScored) {
+          lastHoleScored = score.holeNumber;
+        }
+      }
+    }
+    
+    // Update match status
+    let leadingTeam: string | null = null;
+    let leadAmount = 0;
+    
+    if (aviatorWins > producerWins) {
+      leadingTeam = "aviators";
+      leadAmount = aviatorWins - producerWins;
+    } else if (producerWins > aviatorWins) {
+      leadingTeam = "producers";
+      leadAmount = producerWins - aviatorWins;
+    }
+    
+    // Check if match is completed
+    let status = match.status;
+    let result: string | null = null;
+    
+    // Count completed holes
+    const completedHoles = matchScores.filter(s => s.aviatorScore !== null && s.producerScore !== null).length;
+    
+    // Determine if the match should be complete
+    const remainingHoles = 18 - lastHoleScored;
+    
+    if (completedHoles === 18) {
+      // All 18 holes completed
+      status = "completed";
+      if (leadingTeam) {
+        result = `1UP`; // If someone won after 18 holes, it's "1 UP"
+      } else {
+        result = "AS"; // All square
+      }
+    } else if (leadAmount > remainingHoles) {
+      // Match is decided if lead is greater than remaining holes
+      status = "completed";
+      result = `${leadAmount} UP`; // Format as "3 UP", "2 UP", etc.
+    } else if (lastHoleScored > 0) {
+      status = "in_progress";
+      result = null;
+    }
+    
+    // Update match
+    await this.updateMatch(matchId, {
+      leadingTeam,
+      leadAmount,
+      status,
+      result,
+      currentHole: lastHoleScored + 1,
+    });
+    
+    // Always recalculate tournament scores when match state changes
+    // This ensures both completed and pending scores are updated
+    await this.calculateTournamentScores();
   }
 
   // —— Tournament ——
