@@ -133,6 +133,14 @@ export class DBStorage implements IStorage {
     return row;
   }
 
+  /**
+   * Compute a single player’s W-L-D for one tournament.
+   */
+  calculatePlayerStats(
+    tournamentId: number,
+    playerId: number,
+  ): Promise<{ wins: number; losses: number; draws: number }>;
+
   // —— Rounds ——
   async getRounds() {
     return db.select().from(rounds);
