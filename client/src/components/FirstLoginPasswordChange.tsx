@@ -3,7 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+import { Loader2, KeyRound } from "lucide-react";
 
 const FirstLoginPasswordChange = ({ onComplete }: { onComplete: () => void }) => {
   const { toast } = useToast();
@@ -12,6 +12,7 @@ const FirstLoginPasswordChange = ({ onComplete }: { onComplete: () => void }) =>
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
   // Only allow digits (0-9) in the PIN
   const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,11 +71,20 @@ const FirstLoginPasswordChange = ({ onComplete }: { onComplete: () => void }) =>
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
-        <h2 className="text-xl font-bold mb-2">Change Your PIN</h2>
-        <p className="text-gray-600 mb-4">
-          You must change your PIN before continuing. Please enter a new 4-digit PIN.
-        </p>
+      <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 m-4">
+        <div className="flex items-center mb-3">
+          <KeyRound className="h-6 w-6 text-blue-500 mr-2" />
+          <h2 className="text-xl font-bold">First Login - Change Your PIN</h2>
+        </div>
+        
+        <div className="text-gray-600 mb-6 text-sm">
+          <p className="mb-2">
+            Welcome to the Rowdy Cup Scoreboard! For security reasons, you must change your PIN before continuing.
+          </p>
+          <p>
+            Please enter a new 4-digit PIN that you'll remember. You'll use this PIN to log in to the application in the future.
+          </p>
+        </div>
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
@@ -84,13 +94,27 @@ const FirstLoginPasswordChange = ({ onComplete }: { onComplete: () => void }) =>
                 type="password"
                 value={newPassword}
                 onChange={handlePinChange}
-                className="w-full px-3 py-2 border rounded-md"
+                onFocus={() => setFocusedInput("new")}
+                onBlur={() => setFocusedInput(null)}
+                className={`w-full px-3 py-2 border rounded-md ${focusedInput === "new" ? "border-blue-500 ring-1 ring-blue-500" : ""}`}
                 placeholder="Enter 4-digit PIN"
                 pattern="\d{4}"
                 maxLength={4}
                 inputMode="numeric"
+                autoComplete="new-password"
                 required
               />
+              <div className="mt-1 text-xs text-gray-500 flex">
+                <span className="mr-1">PIN security:</span>
+                <div className="flex items-center space-x-1">
+                  {[...Array(4)].map((_, i) => (
+                    <div 
+                      key={i} 
+                      className={`h-1 w-5 rounded-full ${i < newPassword.length ? "bg-blue-500" : "bg-gray-200"}`}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div>
@@ -99,26 +123,41 @@ const FirstLoginPasswordChange = ({ onComplete }: { onComplete: () => void }) =>
                 type="password"
                 value={confirmPassword}
                 onChange={handleConfirmPinChange}
-                className="w-full px-3 py-2 border rounded-md"
+                onFocus={() => setFocusedInput("confirm")}
+                onBlur={() => setFocusedInput(null)}
+                className={`w-full px-3 py-2 border rounded-md ${focusedInput === "confirm" ? "border-blue-500 ring-1 ring-blue-500" : ""}
+                  ${confirmPassword && newPassword !== confirmPassword ? "border-red-500" : ""}`}
                 placeholder="Confirm 4-digit PIN"
                 pattern="\d{4}"
                 maxLength={4}
                 inputMode="numeric"
+                autoComplete="new-password"
                 required
               />
+              {confirmPassword && newPassword !== confirmPassword && (
+                <p className="mt-1 text-xs text-red-500">PINs do not match</p>
+              )}
             </div>
 
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            )}
 
             <div className="flex justify-end mt-6">
-              <Button type="submit" disabled={loading}>
+              <Button 
+                type="submit" 
+                disabled={loading || newPassword.length !== 4 || newPassword !== confirmPassword}
+                className="px-5"
+              >
                 {loading ? (
                   <span className="flex items-center">
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Changing...
                   </span>
                 ) : (
-                  "Change PIN"
+                  "Save New PIN"
                 )}
               </Button>
             </div>
