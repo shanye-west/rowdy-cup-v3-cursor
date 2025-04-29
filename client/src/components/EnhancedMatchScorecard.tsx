@@ -67,21 +67,36 @@ const EnhancedMatchScorecard = ({
   const isBestBall = matchType.includes("Best Ball");
 
   // Fetch match participants
-  const { data: participants = [] } = useQuery<MatchParticipant[]>({
+  const { data: participants = [] } = useQuery<any[]>({
     queryKey: [`/api/match-players?matchId=${matchId}`],
     queryFn: () => apiRequest(`/api/match-players?matchId=${matchId}`),
   });
 
-  // Split participants into teams
-  const aviatorPlayersList = useMemo(() =>
-    participants.filter((p) => p.team === "aviators").map((p) => p.player),
-    [participants]
-  );
+  // Fetch all players for reference
+  const { data: allPlayers = [] } = useQuery<Player[]>({
+    queryKey: ["/api/players"],
+  });
 
-  const producerPlayersList = useMemo(() =>
-    participants.filter((p) => p.team === "producers").map((p) => p.player),
-    [participants]
-  );
+  // Split participants into teams
+  const aviatorPlayersList = useMemo(() => {
+    return participants
+      .filter((p) => p.team === "aviators")
+      .map((p) => {
+        // Find the player details from allPlayers
+        const playerDetails = allPlayers.find(player => player.id === p.playerId);
+        return playerDetails || { id: p.playerId, name: `Player ${p.playerId}`, teamId: 1 };
+      });
+  }, [participants, allPlayers]);
+
+  const producerPlayersList = useMemo(() => {
+    return participants
+      .filter((p) => p.team === "producers")
+      .map((p) => {
+        // Find the player details from allPlayers
+        const playerDetails = allPlayers.find(player => player.id === p.playerId);
+        return playerDetails || { id: p.playerId, name: `Player ${p.playerId}`, teamId: 2 };
+      });
+  }, [participants, allPlayers]);
 
 
   // For Best Ball, we need to track individual player scores
