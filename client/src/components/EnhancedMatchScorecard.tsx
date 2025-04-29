@@ -780,7 +780,7 @@ const EnhancedMatchScorecard = ({
             )}
 
             {/* Team Aviators Row */}
-            <tr className="border-b border-gray-200 bg-aviator">
+            <tr className="border-b border-gray-200">
               <td className="py-2 px-2 font-semibold sticky-column bg-aviator text-white">
                 <div>The Aviators</div>
               </td>

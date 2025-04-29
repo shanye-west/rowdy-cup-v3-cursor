@@ -471,12 +471,7 @@ const Match = ({ id }: MatchProps) => {
               </button>
 
               <div className="flex items-center space-x-2">
-                <button
-                  className="flex items-center text-sm bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded"
-                  onClick={handleOpenEditDialog}
-                >
-                  <Edit className="h-4 w-4 mr-1" /> Edit Match
-                </button>
+
                 <div className="bg-amber-100 text-amber-800 px-3 py-1 rounded text-xs font-medium">
                   Admin View
                 </div>

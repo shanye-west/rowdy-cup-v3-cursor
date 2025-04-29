@@ -75,10 +75,7 @@ const MatchesList = ({ matches }: MatchesListProps) => {
     navigate(`/matches/${matchId}`);
   };
   
-  const handleEditClick = (e: React.MouseEvent, matchId: number) => {
-    e.stopPropagation();
-    navigate(`/matches/${matchId}?admin=true`);
-  };
+
   
   const handleDeleteClick = (e: React.MouseEvent, matchId: number) => {
     e.stopPropagation();
@@ -217,14 +214,6 @@ const MatchesList = ({ matches }: MatchesListProps) => {
                     </div>
                   ) : (
                     <div className="flex space-x-1">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-6 w-6"
-                        onClick={(e) => handleEditClick(e, match.id)}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
                       <Button
                         size="icon"
                         variant="ghost"
