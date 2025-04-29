@@ -442,13 +442,23 @@ export class DBStorage implements IStorage {
   }
 
   async deleteMatch(id: number) {
-    // Delete related scores first
-    await db.delete(scores).where(eq(scores.matchId, id));
-    // Delete match participants
-    await db.delete(match_players).where(eq(match_players.matchId, id));
-    // Delete the match itself
-    await db.delete(matches).where(eq(matches.id, id));
-    // Reset sequence
+    await db.transaction(async (tx) => {
+      // Delete all scores for this match
+      await tx.delete(scores)
+        .where(eq(scores.matchId, id));
+      
+      // Delete all match participants
+      await tx.delete(match_players)
+        .where(eq(match_players.matchId, id));
+      
+      // Delete the match itself
+      await tx.delete(matches)
+        .where(eq(matches.id, id));
+    });
+    
+    // Reset sequences
+    await this.resetSequence('scores');
+    await this.resetSequence('match_players');
     await this.resetSequence('matches');
   }
 
