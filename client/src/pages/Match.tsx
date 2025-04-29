@@ -27,6 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface MatchProps {
   id: number;
@@ -148,7 +149,7 @@ const Match = ({ id }: MatchProps) => {
     },
     onSuccess: () => {
       // Invalidate the scores query to refetch the data
-      queryClient.invalidateQueries(`/api/scores?matchId=${id}`);
+      queryClient.invalidateQueries({ queryKey: [`/api/scores?matchId=${id}`] });
     },
     onError: (error) => {
       toast({
@@ -342,26 +343,98 @@ const Match = ({ id }: MatchProps) => {
     setShowEditDialog(true);
   };
 
-  const handleEditMatchSubmit = () => {
+  // Create a mutation for adding match participants
+  const addParticipantMutation = useMutation({
+    mutationFn: async (participantData: any) => {
+      return apiRequest("POST", "/api/match-players", participantData);
+    },
+  });
+
+  // Create a mutation for deleting match participants
+  const deleteParticipantMutation = useMutation({
+    mutationFn: async (participantId: number) => {
+      return apiRequest("DELETE", `/api/match-players/${participantId}`);
+    },
+  });
+
+  const handleEditMatchSubmit = async () => {
     if (!match) return;
 
-    updateMatchMutation.mutate(
-      {
+    try {
+      // First update match name
+      await updateMatchMutation.mutateAsync({
         id: match.id,
         name: editMatchData.name,
-        aviatorPlayers: editMatchData.aviatorPlayers,
-        producerPlayers: editMatchData.producerPlayers,
-      },
-      {
-        onSuccess: () => {
-          setShowEditDialog(false);
-          toast({
-            title: "Match updated",
-            description: "The match details have been updated successfully.",
-          });
-        },
-      },
-    );
+      });
+
+      // Find which players are new vs. existing
+      const existingAviatorPlayerIds = participants
+        .filter((p: any) => p.team === "aviators")
+        .map((p: any) => p.playerId);
+      
+      const existingProducerPlayerIds = participants
+        .filter((p: any) => p.team === "producers")
+        .map((p: any) => p.playerId);
+
+      // Players to add
+      const newAviatorPlayers = selectedAviatorPlayers
+        .filter((p: any) => !existingAviatorPlayerIds.includes(p.id));
+      
+      const newProducerPlayers = selectedProducerPlayers
+        .filter((p: any) => !existingProducerPlayerIds.includes(p.id));
+
+      // Players to remove
+      const aviatorPlayersToRemove = participants
+        .filter((p: any) => 
+          p.team === "aviators" && 
+          !selectedAviatorPlayers.some((s: any) => s.id === p.playerId)
+        );
+      
+      const producerPlayersToRemove = participants
+        .filter((p: any) => 
+          p.team === "producers" && 
+          !selectedProducerPlayers.some((s: any) => s.id === p.playerId)
+        );
+
+      // Remove players that are no longer selected
+      for (const player of [...aviatorPlayersToRemove, ...producerPlayersToRemove]) {
+        await deleteParticipantMutation.mutateAsync(player.id);
+      }
+
+      // Add new aviator players
+      for (const player of newAviatorPlayers) {
+        await addParticipantMutation.mutateAsync({
+          matchId: match.id,
+          playerId: player.id,
+          team: "aviators"
+        });
+      }
+
+      // Add new producer players
+      for (const player of newProducerPlayers) {
+        await addParticipantMutation.mutateAsync({
+          matchId: match.id,
+          playerId: player.id,
+          team: "producers"
+        });
+      }
+
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: [`/api/matches/${match.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/match-players?matchId=${match.id}`] });
+      
+      setShowEditDialog(false);
+      toast({
+        title: "Match updated",
+        description: "The match details have been updated successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to update match",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleBackToAdminMatches = () => {
