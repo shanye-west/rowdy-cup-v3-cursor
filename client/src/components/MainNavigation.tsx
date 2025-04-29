@@ -48,17 +48,7 @@ const MainNavigation = ({ isOpen, onNavigate }: MainNavigationProps) => {
             </button>
           </li>
           
-          {isAdmin && (
-            <li>
-              <button 
-                className="block w-full text-left py-2 hover:bg-gray-100 px-3 rounded text-primary flex items-center"
-                onClick={() => onNavigate('/admin')}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Admin Dashboard
-              </button>
-            </li>
-          )}
+          {/* Admin Dashboard removed as requested */}
           
           {!isAuthenticated && (
             <li>

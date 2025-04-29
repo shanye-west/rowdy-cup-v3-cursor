@@ -9,9 +9,7 @@ import Round from "@/pages/Round";
 import Match from "@/pages/Match";
 import Teams from "@/pages/Teams";
 import AuthPage from "@/pages/AuthPage";
-import AdminPage from "@/pages/AdminPage";
-import AdminMatchesPage from "@/pages/AdminMatchesPage";
-import AdminMatchEditPage from "@/pages/AdminMatchEditPage";
+// Admin pages removed as they're being integrated into regular pages
 import LoginPage from "@/pages/Login";
 import SetPinPage from "@/pages/SetPin";
 import Layout from "@/components/Layout";
@@ -146,17 +144,7 @@ function Router() {
       <Route path="/login" component={LoginPage} />
       <Route path="/set-pin" component={SetPinPage} />
       <Route path="/auth" component={AuthPage} />
-      <ProtectedRoute path="/admin" component={AdminPage} adminOnly={true} />
-      <ProtectedRoute
-        path="/admin/rounds/:roundId/matches"
-        component={AdminMatchesPage}
-        adminOnly={true}
-      />
-      <ProtectedRoute
-        path="/admin/matches/:matchId/edit"
-        component={AdminMatchEditPage}
-        adminOnly={true}
-      />
+      {/* Admin routes removed - functionality moved into regular pages */}
       <Route component={NotFound} />
     </Switch>
   );
