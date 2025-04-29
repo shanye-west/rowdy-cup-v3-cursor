@@ -245,6 +245,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Failed to update round" });
     }
   });
+  
+  app.delete("/api/rounds/:id", isAdmin, async (req, res) => {
+    try {
+      const roundId = parseInt(req.params.id);
+      const round = await storage.getRound(roundId);
+
+      if (!round) {
+        return res.status(404).json({ message: "Round not found" });
+      }
+
+      // Delete the round - this will cascade delete all related matches, scores and match participants
+      await storage.deleteRound(roundId);
+      
+      // Update tournament scores after round deletion
+      const updatedTournament = await storage.getTournament();
+      if (updatedTournament) {
+        broadcast("tournament-updated", updatedTournament);
+      }
+      
+      return res.status(200).json({ message: "Round deleted successfully" });
+    } catch (error) {
+      console.error("Round deletion error:", error);
+      return res.status(500).json({ message: "Failed to delete round" });
+    }
+  });
 
   // Matches API
   app.get("/api/matches", async (req, res) => {

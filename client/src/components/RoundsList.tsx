@@ -87,9 +87,42 @@ const RoundsList = ({ rounds }: RoundsListProps) => {
       {rounds.map((round) => (
         <div 
           key={round.id}
-          className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer"
+          className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer relative"
           onClick={() => handleRoundClick(round.id)}
         >
+          {isAdmin && (
+            <div className="absolute top-2 right-2 z-10" onClick={e => e.stopPropagation()}>
+              {confirmDeleteId === round.id ? (
+                <div className="flex space-x-1">
+                  <Button 
+                    size="sm" 
+                    variant="destructive"
+                    className="h-8 px-2 py-1 text-xs"
+                    onClick={confirmDelete}
+                  >
+                    Confirm
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 px-2 py-1 text-xs"
+                    onClick={cancelDelete}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7"
+                  onClick={(e) => handleDeleteClick(e, round.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          )}
           <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
             <h3 className="font-heading font-bold">{round.name}</h3>
             <p className="text-sm text-gray-600 font-medium">{round.courseName}</p>
