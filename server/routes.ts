@@ -345,6 +345,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Failed to update match" });
     }
   });
+  
+  app.delete("/api/matches/:id", isAdmin, async (req, res) => {
+    try {
+      const matchId = parseInt(req.params.id);
+      const match = await storage.getMatch(matchId);
+
+      if (!match) {
+        return res.status(404).json({ message: "Match not found" });
+      }
+
+      const roundId = match.roundId; // Save roundId before deleting the match
+      
+      // Delete the match
+      await storage.deleteMatch(matchId);
+      
+      // Update round scores
+      const updatedRound = await storage.getRound(roundId);
+      if (updatedRound) {
+        broadcast("round-updated", updatedRound);
+      }
+      
+      // Update tournament scores
+      const updatedTournament = await storage.getTournament();
+      if (updatedTournament) {
+        broadcast("tournament-updated", updatedTournament);
+      }
+      
+      broadcast("match-deleted", { id: matchId });
+      return res.status(200).json({ message: "Match deleted successfully" });
+    } catch (error) {
+      console.error("Match deletion error:", error);
+      return res.status(500).json({ message: "Failed to delete match" });
+    }
+  });
 
   // Scores API
   app.get("/api/scores", async (req, res) => {
