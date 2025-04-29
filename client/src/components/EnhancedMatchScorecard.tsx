@@ -306,6 +306,7 @@ const EnhancedMatchScorecard = ({
     holeNumber: number,
     team: "aviator" | "producer",
     value: string,
+    target: HTMLInputElement,
   ) => {
     let numValue: number | null = null;
 
@@ -325,6 +326,12 @@ const EnhancedMatchScorecard = ({
       const aviatorScore = getScore(holeNumber)?.aviatorScore || null;
       onScoreUpdate(holeNumber, aviatorScore, numValue);
     }
+    //Added Keyboard Closing Logic
+    setTimeout(() => {
+      if (value !== "1" && value !== "") {
+          target.blur();
+      }
+    }, 100);
   };
 
   // Handle individual player score changes for Best Ball
@@ -333,6 +340,7 @@ const EnhancedMatchScorecard = ({
     playerName: string,
     teamId: string,
     value: string,
+    target: HTMLInputElement,
   ) => {
     let numValue = null;
 
@@ -385,6 +393,13 @@ const EnhancedMatchScorecard = ({
 
     // Calculate the best score for each team and update the match
     updateBestBallScores(holeNumber, newPlayerScores);
+
+    //Added Keyboard Closing Logic
+    setTimeout(() => {
+      if (value !== "1" && value !== "") {
+        target.blur();
+      }
+    }, 100);
   };
 
   // Calculate Best Ball scores and update the match
@@ -681,6 +696,7 @@ const EnhancedMatchScorecard = ({
                                 player.name,
                                 "aviator",
                                 e.target.value,
+                                e.target
                               )
                             }
                             min="1"
@@ -720,6 +736,7 @@ const EnhancedMatchScorecard = ({
                                 player.name,
                                 "aviator",
                                 e.target.value,
+                                e.target
                               )
                             }
                             min="1"
@@ -761,6 +778,7 @@ const EnhancedMatchScorecard = ({
                         hole.number,
                         "aviator",
                         e.target.value,
+                        e.target
                       )
                     }
                     min="1"
@@ -790,6 +808,7 @@ const EnhancedMatchScorecard = ({
                         hole.number,
                         "aviator",
                         e.target.value,
+                        e.target
                       )
                     }
                     min="1"
@@ -863,6 +882,7 @@ const EnhancedMatchScorecard = ({
                         hole.number,
                         "producer",
                         e.target.value,
+                        e.target
                       )
                     }
                     min="1"
@@ -892,6 +912,7 @@ const EnhancedMatchScorecard = ({
                         hole.number,
                         "producer",
                         e.target.value,
+                        e.target
                       )
                     }
                     min="1"
@@ -949,6 +970,7 @@ const EnhancedMatchScorecard = ({
                                 player.name,
                                 "producer",
                                 e.target.value,
+                                e.target
                               )
                             }
                             min="1"
@@ -988,6 +1010,7 @@ const EnhancedMatchScorecard = ({
                                 player.name,
                                 "producer",
                                 e.target.value,
+                                e.target
                               )
                             }
                             min="1"
