@@ -605,13 +605,13 @@ export class DBStorage implements IStorage {
     for (const match of matchesByRound) {
       if (match.status === "completed") {
         if (match.leadingTeam === "aviators") {
-          aviatorScore += 100;
+          aviatorScore += 1;
         } else if (match.leadingTeam === "producers") {
-          producerScore += 100;
+          producerScore += 1;
         } else {
           // Tied match
-          aviatorScore += 50;
-          producerScore += 50;
+          aviatorScore += 0.5;
+          producerScore += 0.5;
         }
       } else if (match.status === "in_progress") {
         if (match.leadingTeam === "aviators") {
