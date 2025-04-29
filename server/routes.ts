@@ -475,6 +475,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  app.delete("/api/players/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      
+      // Check if player exists
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+      
+      // Delete player (which will cascade delete associated user)
+      const result = await storage.deletePlayer(playerId);
+      
+      // Notify clients of deletion
+      if (result) {
+        broadcast("player-deleted", { id: playerId });
+      }
+      
+      return res.status(200).json({ success: result });
+    } catch (error) {
+      console.error("Player deletion error:", error);
+      return res.status(500).json({ message: "Failed to delete player" });
+    }
+  });
+  
   // Match Players API
   app.get("/api/match-players", async (req, res) => {
     const matchId = req.query.matchId
@@ -722,6 +747,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(400)
           .json({ error: "Invalid player data", details: error.errors });
       }
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  
+  app.delete("/api/admin/players/:id", isAdmin, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      
+      // Check if player exists
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ error: "Player not found" });
+      }
+      
+      // Delete player with cascading delete of user
+      const result = await storage.deletePlayer(playerId);
+      
+      if (result) {
+        broadcast("player-deleted", { id: playerId });
+        return res.status(200).json({ success: true });
+      } else {
+        return res.status(500).json({ error: "Failed to delete player" });
+      }
+    } catch (error) {
+      console.error("Player deletion error:", error);
       return res.status(500).json({ error: "Internal server error" });
     }
   });
