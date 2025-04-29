@@ -151,13 +151,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // If tournament exists, also calculate current scores to ensure they're up to date
     if (tournament) {
       const scores = await storage.calculateTournamentScores();
-      // Add default values for pendingScores to maintain client compatibility
-      const scoresWithDefaults = {
-        ...scores,
-        pendingAviatorScore: 0,
-        pendingProducerScore: 0
-      };
-      res.json({ ...tournament, ...scoresWithDefaults });
+      // Return the actual calculated scores including pending scores
+      res.json({ ...tournament, ...scores });
     } else {
       res.json(tournament);
     }
@@ -202,13 +197,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     const scores = await storage.calculateRoundScores(roundId);
-    // Add default values for pendingScores to maintain client compatibility
-    const scoresWithDefaults = {
-      ...scores,
-      pendingAviatorScore: 0,
-      pendingProducerScore: 0
-    };
-    res.json({ ...round, ...scoresWithDefaults });
+    // Return the actual calculated scores including pending scores
+    res.json({ ...round, ...scores });
   });
 
   app.post("/api/rounds", async (req, res) => {
@@ -437,13 +427,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const round = await storage.getRound(updatedMatch.roundId);
         if (round) {
           const roundScores = await storage.calculateRoundScores(updatedMatch.roundId);
-          // Add default values for pendingScores to maintain client compatibility
-          const scoresWithDefaults = {
-            ...roundScores,
-            pendingAviatorScore: 0,
-            pendingProducerScore: 0
-          };
-          broadcast("round-updated", { ...round, ...scoresWithDefaults });
+          // Include actual pending scores in the broadcast
+          broadcast("round-updated", { ...round, ...roundScores });
         }
       }
 

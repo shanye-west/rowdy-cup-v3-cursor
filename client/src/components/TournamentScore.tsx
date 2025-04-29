@@ -26,6 +26,11 @@ const TournamentScore = ({
           </div>
           <div className="text-5xl font-mono font-bold py-4 border-b-2 border-l-2 border-r-2 border-gray-200 rounded-b-lg relative">
             {aviatorScore}
+            {pendingAviatorScore > 0 && (
+              <span className="absolute text-gray-400 text-lg font-normal bottom-1 right-2" title="Pending points">
+                +{pendingAviatorScore}
+              </span>
+            )}
           </div>
         </div>
         
@@ -38,6 +43,11 @@ const TournamentScore = ({
           </div>
           <div className="text-5xl font-mono font-bold py-4 border-b-2 border-l-2 border-r-2 border-gray-200 rounded-b-lg relative">
             {producerScore}
+            {pendingProducerScore > 0 && (
+              <span className="absolute text-gray-400 text-lg font-normal bottom-1 right-2" title="Pending points">
+                +{pendingProducerScore}
+              </span>
+            )}
           </div>
         </div>
       </div>
