@@ -307,7 +307,7 @@ const EnhancedMatchScorecard = ({
     team: "aviator" | "producer",
     value: string,
   ) => {
-    let numValue = null;
+    let numValue: number | null = null;
 
     // Only parse if the value is not empty
     if (value !== "") {
