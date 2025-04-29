@@ -559,13 +559,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Hash the password before storing it
-      const hashedPassword = await hashPassword(userData.password);
-      const userDataWithHashedPassword = {
+      const hashedPasscode = await hashPassword(userData.passcode);
+      const userDataWithHashedPasscode = {
         ...userData,
-        password: hashedPassword,
+        passcode: hashedPassword,
       };
 
-      const user = await storage.createUser(userDataWithHashedPassword);
+      const user = await storage.createUser(userDataWithHashedPasscode);
 
       // Return sanitized user (without password)
       res.status(201).json({
@@ -590,13 +590,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userData = insertUserSchema.parse(req.body);
 
       // Hash the password before storing it
-      const hashedPassword = await hashPassword(userData.password);
-      const userDataWithHashedPassword = {
+      const hashedPasscode = await hashPassword(userData.passcode);
+      const userDataWithHashedPasscode = {
         ...userData,
-        password: hashedPassword,
+        passcode: hashedPassword,
       };
 
-      const user = await storage.createUser(userDataWithHashedPassword);
+      const user = await storage.createUser(userDataWithHashedPasscode);
 
       res.status(201).json({
         id: user.id,
