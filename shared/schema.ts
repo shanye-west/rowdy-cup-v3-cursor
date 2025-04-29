@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -31,8 +31,9 @@ export type Hole = typeof holes.$inferSelect;
 
 // Match Players table
 export const match_players = pgTable("match_participants", {
-  match_id: integer("match_id").notNull(),
-  player_id: integer("user_id").notNull(),
+  id: serial("id").primaryKey(),
+  matchId: integer("match_id").notNull(),
+  playerId: integer("user_id").notNull(),
   team: text("team").notNull(),
   result: text("result"),
 });
@@ -80,8 +81,8 @@ export const rounds = pgTable("rounds", {
   startTime: text("start_time").notNull(),
   isComplete: boolean("is_complete").default(false),
   status: text("status"),
-  aviatorScore: integer("aviator_score").default(0),
-  producerScore: integer("producer_score").default(0),
+  aviatorScore: integer("aviator_score"),
+  producerScore: integer("producer_score"),
 });
 export const insertRoundSchema = createInsertSchema(rounds);
 export type InsertRound = z.infer<typeof insertRoundSchema>;
@@ -116,10 +117,10 @@ export type Team = typeof teams.$inferSelect;
 export const tournament = pgTable("tournament", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  aviatorScore: integer("aviator_score").default(0),
-  producerScore: integer("producer_score").default(0),
-  pendingAviatorScore: integer("pending_aviator_score").default(0),
-  pendingProducerScore: integer("pending_producer_score").default(0),
+  aviatorScore: integer("aviator_score"),
+  producerScore: integer("producer_score"),
+  pendingAviatorScore: integer("pending_aviator_score"),
+  pendingProducerScore: integer("pending_producer_score"),
   year: integer("year").notNull(),
 });
 export const insertTournamentSchema = createInsertSchema(tournament);
