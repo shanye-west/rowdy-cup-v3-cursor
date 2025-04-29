@@ -86,9 +86,9 @@ const Match = ({ id }: MatchProps) => {
   });
   const [editMatchData, setEditMatchData] = useState({
     name: "",
-    aviatorPlayers: "",
-    producerPlayers: "",
   });
+  const [selectedAviatorPlayers, setSelectedAviatorPlayers] = useState<any[]>([]);
+  const [selectedProducerPlayers, setSelectedProducerPlayers] = useState<any[]>([]);
 
   // Check if admin mode is enabled via URL parameter
   useEffect(() => {
@@ -117,8 +117,19 @@ const Match = ({ id }: MatchProps) => {
     enabled: !!match?.roundId,
   });
 
+  // Fetch players data for match editing
+  const { data: players = [], isLoading: isPlayersLoading } = useQuery({
+    queryKey: ["/api/players"],
+  });
+
+  // Fetch match participants to populate selected players
+  const { data: participants = [], isLoading: isParticipantsLoading } = useQuery({
+    queryKey: [`/api/match-players?matchId=${id}`],
+    enabled: !!id,
+  });
+
   const isLoading =
-    isMatchLoading || isScoresLoading || isHolesLoading || isRoundLoading;
+    isMatchLoading || isScoresLoading || isHolesLoading || isRoundLoading || isPlayersLoading || isParticipantsLoading;
 
   // Function to update score
   const updateScoreMutation = useMutation({
@@ -303,16 +314,29 @@ const Match = ({ id }: MatchProps) => {
     }
   }, [scores, match]);
 
-  // Handle editing match
+  // Handle editing match - Load participants into selected players
   useEffect(() => {
     if (match) {
       setEditMatchData({
         name: match.name,
-        aviatorPlayers: match.aviatorPlayers,
-        producerPlayers: match.producerPlayers,
       });
     }
-  }, [match]);
+    
+    if (participants && participants.length > 0 && players && players.length > 0) {
+      const aviators = participants
+        .filter((p: any) => p.team === "aviators")
+        .map((p: any) => players.find((player: any) => player.id === p.playerId))
+        .filter(Boolean);
+      
+      const producers = participants
+        .filter((p: any) => p.team === "producers")
+        .map((p: any) => players.find((player: any) => player.id === p.playerId))
+        .filter(Boolean);
+      
+      setSelectedAviatorPlayers(aviators);
+      setSelectedProducerPlayers(producers);
+    }
+  }, [match, participants, players]);
 
   const handleOpenEditDialog = () => {
     setShowEditDialog(true);
@@ -392,8 +416,6 @@ const Match = ({ id }: MatchProps) => {
             roundId={match.roundId}
             roundName={round?.name}
             matchType={round?.matchType}
-            aviatorPlayers={match.aviatorPlayers}
-            producerPlayers={match.producerPlayers}
             leadingTeam={match.leadingTeam}
             leadAmount={match.leadAmount}
             currentHole={match.currentHole}
@@ -409,8 +431,6 @@ const Match = ({ id }: MatchProps) => {
             onScoreUpdate={handleScoreUpdate}
             matchStatus={match.status}
             matchType={round?.matchType || ""}
-            aviatorPlayers={match.aviatorPlayers}
-            producerPlayers={match.producerPlayers}
           />
         </>
       )}
@@ -488,31 +508,59 @@ const Match = ({ id }: MatchProps) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="aviator-players">Aviator Players</Label>
-              <Input
-                id="aviator-players"
-                value={editMatchData.aviatorPlayers}
-                onChange={(e) =>
-                  setEditMatchData({
-                    ...editMatchData,
-                    aviatorPlayers: e.target.value,
-                  })
-                }
-              />
+              <Label>Aviator Players</Label>
+              <div className="grid grid-cols-1 gap-2">
+                {players
+                  ?.filter((p: any) => p.teamId === 1) // Assuming teamId 1 is for Aviators
+                  .map((player: any) => (
+                    <div key={player.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`aviator-${player.id}`}
+                        checked={selectedAviatorPlayers.some(p => p.id === player.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedAviatorPlayers([...selectedAviatorPlayers, player]);
+                          } else {
+                            setSelectedAviatorPlayers(
+                              selectedAviatorPlayers.filter((p) => p.id !== player.id)
+                            );
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`aviator-${player.id}`} className="cursor-pointer">
+                        {player.name}
+                      </Label>
+                    </div>
+                  ))}
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="producer-players">Producer Players</Label>
-              <Input
-                id="producer-players"
-                value={editMatchData.producerPlayers}
-                onChange={(e) =>
-                  setEditMatchData({
-                    ...editMatchData,
-                    producerPlayers: e.target.value,
-                  })
-                }
-              />
+              <Label>Producer Players</Label>
+              <div className="grid grid-cols-1 gap-2">
+                {players
+                  ?.filter((p: any) => p.teamId === 2) // Assuming teamId 2 is for Producers
+                  .map((player: any) => (
+                    <div key={player.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`producer-${player.id}`}
+                        checked={selectedProducerPlayers.some(p => p.id === player.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedProducerPlayers([...selectedProducerPlayers, player]);
+                          } else {
+                            setSelectedProducerPlayers(
+                              selectedProducerPlayers.filter((p) => p.id !== player.id)
+                            );
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`producer-${player.id}`} className="cursor-pointer">
+                        {player.name}
+                      </Label>
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
 

@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import aviatorsLogo from "../assets/aviators-logo.svg";
 import producersLogo from "../assets/producers-logo.svg";
 
@@ -15,14 +16,24 @@ interface MatchHeaderProps {
   result?: string | null;
 }
 
+interface Player {
+  id: number;
+  name: string;
+  teamId: number;
+}
+
+interface MatchParticipant {
+  userId: number;
+  team: string;
+  player: Player;
+}
+
 const MatchHeader = ({
   id,
   name,
   roundId,
   roundName = "Round",
   matchType = "",
-  aviatorPlayers,
-  producerPlayers,
   leadingTeam,
   leadAmount,
   currentHole,
@@ -30,6 +41,22 @@ const MatchHeader = ({
   result = null,
 }: MatchHeaderProps) => {
   const [_, navigate] = useLocation();
+
+  // Fetch match participants
+  const { data: participants = [] } = useQuery({
+    queryKey: [`/api/match-players?matchId=${id}`],
+  });
+
+  // Split participants into teams
+  const aviatorPlayers = participants
+    ?.filter((p: MatchParticipant) => p.team === "aviators")
+    ?.map((p: MatchParticipant) => p.player.name)
+    ?.join(", ") || "";
+
+  const producerPlayers = participants
+    ?.filter((p: MatchParticipant) => p.team === "producers")
+    ?.map((p: MatchParticipant) => p.player.name)
+    ?.join(", ") || "";
 
   const handleBackClick = () => {
     navigate(`/rounds/${roundId}`);
