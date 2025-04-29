@@ -780,7 +780,7 @@ const EnhancedMatchScorecard = ({
             )}
 
             {/* Team Aviators Row */}
-            <tr className="border-b border-gray-200">
+            <tr className="border-b border-gray-200 bg-[#004A7F]">
               <td className="py-2 px-2 font-semibold sticky-column bg-[#004A7F] text-white">
                 <div>The Aviators</div>
               </td>
@@ -896,7 +896,7 @@ const EnhancedMatchScorecard = ({
             </tr>
 
             {/* Team Producers Row */}
-            <tr className="border-b border-gray-200">
+            <tr className="border-b border-gray-200 bg-producer">
               <td className="py-2 px-2 font-semibold sticky-column bg-producer text-white">
                 <div>The Producers</div>
               </td>
