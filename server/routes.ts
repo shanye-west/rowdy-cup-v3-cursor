@@ -13,6 +13,31 @@ import {
 } from "@shared/schema";
 import { setupAuth, isAuthenticated, isAdmin, hashPassword } from "./auth";
 
+/**
+ * Debug helper to log and validate player IDs
+ */
+function validateAndLogId(id: any): number | null {
+  console.log('Validating ID:', id, 'Type:', typeof id);
+
+  // If it's already a number and not NaN, return it
+  if (typeof id === 'number' && !isNaN(id)) {
+    return id;
+  }
+
+  // Try to parse as integer
+  try {
+    const parsedId = parseInt(id);
+    if (!isNaN(parsedId)) {
+      return parsedId;
+    }
+  } catch (e) {
+    console.log('Failed to parse ID:', e);
+  }
+
+  console.log('Invalid ID detected:', id);
+  return null;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
@@ -880,16 +905,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete all players
   app.delete("/api/admin/players/all", isAdmin, async (req, res) => {
     try {
-      const players = await storage.getPlayers();
-      for (const player of players) {
-        await storage.updatePlayer(player.id, { status: "deleted" });
-      }
+      // Skip the individual player operations entirely
+      // Use a direct database update instead
+      await db.update(players)
+        .set({ status: "deleted" })
+        .returning();
 
+      // Log success and broadcast
+      console.log("Successfully marked all players as deleted");
       broadcast("data-reset", { type: "players-deleted" });
-      res.status(200).json({ message: "All players have been deleted" });
+
+      // Return success
+      return res.status(200).json({ 
+        message: "All players have been marked as deleted" 
+      });
     } catch (error) {
       console.error("Delete all players error:", error);
-      return res.status(500).json({ error: "Failed to delete all players" });
+      return res.status(500).json({ 
+        error: "Failed to delete all players" 
+      });
     }
   });
 

@@ -25,6 +25,7 @@ export interface IStorage {
   createPlayer(data: any): Promise<any>;
   updatePlayer(id: number, data: Partial<any>): Promise<any | undefined>;
   deletePlayer(id: number): Promise<boolean>;
+  deleteAllPlayers(): Promise<boolean>;
 
   getTeams(): Promise<any[]>;
   getTeam(id: number): Promise<any | undefined>;
@@ -103,8 +104,19 @@ export class DBStorage implements IStorage {
   }
 
   async getPlayer(id: number) {
-    const [row] = await db.select().from(players).where(eq(players.id, id));
-    return row;
+    // Add validation to ensure id is a valid number before querying
+    if (typeof id !== 'number' || isNaN(id)) {
+      console.error(`Invalid player ID: ${id}`);
+      return undefined;
+    }
+
+    try {
+      const [row] = await db.select().from(players).where(eq(players.id, id));
+      return row;
+    } catch (error) {
+      console.error(`Error getting player ${id}:`, error);
+      return undefined;
+    }
   }
 
   async createPlayer(data: any) {
