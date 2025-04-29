@@ -6,6 +6,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { Loader2, ChevronLeft, Plus, PenSquare } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Round = {
   id: number;
@@ -30,11 +37,35 @@ type Match = {
   result: string | null;
 };
 
+type Player = {
+  id: number;
+  name: string;
+  teamId: number;
+  wins: number;
+  losses: number;
+  ties: number;
+};
+
+type Team = {
+  id: number;
+  name: string;
+  shortName: string;
+  colorCode: string;
+};
+
+type SelectedPlayer = {
+  id: number;
+  name: string;
+  teamId: number;
+};
+
 export default function AdminMatchesPage() {
   const { isAdmin } = useAuth();
   const { toast } = useToast();
   const [roundId, setRoundId] = useState<number | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedAviatorPlayers, setSelectedAviatorPlayers] = useState<SelectedPlayer[]>([]);
+  const [selectedProducerPlayers, setSelectedProducerPlayers] = useState<SelectedPlayer[]>([]);
   const [matchFormData, setMatchFormData] = useState({
     name: "",
     aviatorPlayers: "",
@@ -60,6 +91,16 @@ export default function AdminMatchesPage() {
     queryKey: [`/api/matches?roundId=${roundId}`],
     queryFn: getQueryFn({ on401: "throw" }),
     enabled: !!roundId,
+  });
+  
+  const { data: players, isLoading: isPlayersLoading } = useQuery<Player[]>({
+    queryKey: ['/api/players'],
+    queryFn: getQueryFn({ on401: "throw" }),
+  });
+  
+  const { data: teams, isLoading: isTeamsLoading } = useQuery<Team[]>({
+    queryKey: ['/api/teams'],
+    queryFn: getQueryFn({ on401: "throw" }),
   });
 
   const addMatchMutation = useMutation({
@@ -95,6 +136,8 @@ export default function AdminMatchesPage() {
       aviatorPlayers: "",
       producerPlayers: "",
     });
+    setSelectedAviatorPlayers([]);
+    setSelectedProducerPlayers([]);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -104,9 +147,119 @@ export default function AdminMatchesPage() {
       [name]: value,
     });
   };
+  
+  // Handle selecting an Aviator player
+  const handleAddAviatorPlayer = (playerId: number) => {
+    // Check if player is already selected
+    if (players && roundId) {
+      const player = players.find(p => p.id === Number(playerId));
+      
+      if (player) {
+        // Check if player is already part of another match in this round
+        const isAlreadyInMatch = matches?.some(match => {
+          // Check if the player's name is in the aviatorPlayers or producerPlayers string
+          return match.aviatorPlayers.includes(player.name) || match.producerPlayers.includes(player.name);
+        });
+        
+        if (isAlreadyInMatch) {
+          toast({
+            title: "Player already in a match",
+            description: `${player.name} is already participating in a match in this round.`,
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Add player to selected list if not already there
+        if (!selectedAviatorPlayers.some(p => p.id === player.id)) {
+          setSelectedAviatorPlayers([...selectedAviatorPlayers, player]);
+          
+          // Update form data
+          const playerNames = [...selectedAviatorPlayers, player].map(p => p.name).join(", ");
+          setMatchFormData({
+            ...matchFormData,
+            aviatorPlayers: playerNames,
+          });
+        }
+      }
+    }
+  };
+  
+  // Handle selecting a Producer player
+  const handleAddProducerPlayer = (playerId: number) => {
+    // Check if player is already selected
+    if (players && roundId) {
+      const player = players.find(p => p.id === Number(playerId));
+      
+      if (player) {
+        // Check if player is already part of another match in this round
+        const isAlreadyInMatch = matches?.some(match => {
+          // Check if the player's name is in the aviatorPlayers or producerPlayers string
+          return match.aviatorPlayers.includes(player.name) || match.producerPlayers.includes(player.name);
+        });
+        
+        if (isAlreadyInMatch) {
+          toast({
+            title: "Player already in a match",
+            description: `${player.name} is already participating in a match in this round.`,
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Add player to selected list if not already there
+        if (!selectedProducerPlayers.some(p => p.id === player.id)) {
+          setSelectedProducerPlayers([...selectedProducerPlayers, player]);
+          
+          // Update form data
+          const playerNames = [...selectedProducerPlayers, player].map(p => p.name).join(", ");
+          setMatchFormData({
+            ...matchFormData,
+            producerPlayers: playerNames,
+          });
+        }
+      }
+    }
+  };
+  
+  // Handle removing selected players
+  const removeAviatorPlayer = (playerId: number) => {
+    const updatedPlayers = selectedAviatorPlayers.filter(p => p.id !== playerId);
+    setSelectedAviatorPlayers(updatedPlayers);
+    
+    // Update form data
+    const playerNames = updatedPlayers.map(p => p.name).join(", ");
+    setMatchFormData({
+      ...matchFormData,
+      aviatorPlayers: playerNames,
+    });
+  };
+  
+  const removeProducerPlayer = (playerId: number) => {
+    const updatedPlayers = selectedProducerPlayers.filter(p => p.id !== playerId);
+    setSelectedProducerPlayers(updatedPlayers);
+    
+    // Update form data
+    const playerNames = updatedPlayers.map(p => p.name).join(", ");
+    setMatchFormData({
+      ...matchFormData,
+      producerPlayers: playerNames,
+    });
+  };
 
   const handleAddMatch = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that we have selected players
+    if (!matchFormData.aviatorPlayers || !matchFormData.producerPlayers) {
+      toast({
+        title: "Missing players",
+        description: "Please select players for both teams",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     addMatchMutation.mutate(matchFormData);
   };
 
@@ -122,7 +275,7 @@ export default function AdminMatchesPage() {
     return <div>Access denied. You must be an admin to view this page.</div>;
   }
 
-  if (isRoundLoading || isMatchesLoading || !roundId) {
+  if (isRoundLoading || isMatchesLoading || isPlayersLoading || isTeamsLoading || !roundId) {
     return (
       <div className="flex justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-border" />
@@ -284,32 +437,102 @@ export default function AdminMatchesPage() {
                   <label className="block text-sm font-medium mb-1">
                     Aviator Players
                   </label>
-                  <textarea
-                    name="aviatorPlayers"
-                    value={matchFormData.aviatorPlayers}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-md"
-                    placeholder="e.g., J. Smith, T. Wilson"
-                    rows={2}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Comma-separated list of player names</p>
+                  <div className="space-y-3">
+                    <Select onValueChange={(value) => handleAddAviatorPlayer(Number(value))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select an Aviator player" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {players?.filter(p => p.teamId === 1 && 
+                          !selectedAviatorPlayers.some(sp => sp.id === p.id) &&
+                          !selectedProducerPlayers.some(sp => sp.id === p.id)
+                        ).map(player => (
+                          <SelectItem key={player.id} value={player.id.toString()}>
+                            {player.name} ({player.wins}-{player.losses}-{player.ties})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {/* Selected Aviator Players */}
+                    {selectedAviatorPlayers.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm font-medium mb-1">Selected Aviator Players:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedAviatorPlayers.map(player => (
+                            <div key={player.id} className="flex items-center gap-1 bg-blue-100 p-1 rounded">
+                              <span className="text-sm">{player.name}</span>
+                              <button 
+                                type="button"
+                                onClick={() => removeAviatorPlayer(player.id)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <input
+                      type="hidden"
+                      name="aviatorPlayers"
+                      value={matchFormData.aviatorPlayers}
+                      required
+                    />
+                  </div>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     Producer Players
                   </label>
-                  <textarea
-                    name="producerPlayers"
-                    value={matchFormData.producerPlayers}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-md"
-                    placeholder="e.g., M. Johnson, R. Davis"
-                    rows={2}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Comma-separated list of player names</p>
+                  <div className="space-y-3">
+                    <Select onValueChange={(value) => handleAddProducerPlayer(Number(value))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a Producer player" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {players?.filter(p => p.teamId === 2 && 
+                          !selectedProducerPlayers.some(sp => sp.id === p.id) &&
+                          !selectedAviatorPlayers.some(sp => sp.id === p.id)
+                        ).map(player => (
+                          <SelectItem key={player.id} value={player.id.toString()}>
+                            {player.name} ({player.wins}-{player.losses}-{player.ties})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {/* Selected Producer Players */}
+                    {selectedProducerPlayers.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm font-medium mb-1">Selected Producer Players:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedProducerPlayers.map(player => (
+                            <div key={player.id} className="flex items-center gap-1 bg-red-100 p-1 rounded">
+                              <span className="text-sm">{player.name}</span>
+                              <button 
+                                type="button"
+                                onClick={() => removeProducerPlayer(player.id)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <input
+                      type="hidden"
+                      name="producerPlayers"
+                      value={matchFormData.producerPlayers}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
               
