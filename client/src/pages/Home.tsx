@@ -29,6 +29,8 @@ const Home = () => {
     isComplete: boolean;
     aviatorScore?: number;
     producerScore?: number;
+    pendingAviatorScore?: number;
+    pendingProducerScore?: number;
   }
 
   // Fetch tournament data
@@ -48,11 +50,15 @@ const Home = () => {
     // Get scores for this round from matches
     const aviatorScore = round.aviatorScore || 0;
     const producerScore = round.producerScore || 0;
+    const pendingAviatorScore = round.pendingAviatorScore || 0;
+    const pendingProducerScore = round.pendingProducerScore || 0;
     
     return {
       ...round,
       aviatorScore,
-      producerScore
+      producerScore,
+      pendingAviatorScore,
+      pendingProducerScore
     };
   }) || [];
 

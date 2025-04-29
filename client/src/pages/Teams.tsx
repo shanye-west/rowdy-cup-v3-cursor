@@ -37,7 +37,7 @@ const Teams = () => {
     navigate('/');
   };
 
-  // Group players by team
+  // Group players by team and sort them by record
   const playersByTeam = players?.reduce((acc: Record<number, Player[]>, player: Player) => {
     if (!acc[player.teamId]) {
       acc[player.teamId] = [];
@@ -45,6 +45,35 @@ const Teams = () => {
     acc[player.teamId].push(player);
     return acc;
   }, {});
+  
+  // Calculate win percentage for sorting
+  const calculateWinPercentage = (player: Player) => {
+    const total = player.wins + player.losses + player.ties;
+    if (total === 0) return 0;
+    return (player.wins + player.ties * 0.5) / total;
+  };
+  
+  // Sort players by win percentage, then by wins
+  if (playersByTeam) {
+    Object.keys(playersByTeam).forEach(teamId => {
+      playersByTeam[Number(teamId)].sort((a, b) => {
+        const aPercentage = calculateWinPercentage(a);
+        const bPercentage = calculateWinPercentage(b);
+        
+        if (bPercentage !== aPercentage) {
+          return bPercentage - aPercentage;
+        }
+        
+        // If percentages are equal, sort by number of wins
+        if (b.wins !== a.wins) {
+          return b.wins - a.wins;
+        }
+        
+        // If wins are equal, sort alphabetically
+        return a.name.localeCompare(b.name);
+      });
+    });
+  }
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -95,9 +124,25 @@ const Teams = () => {
                 {playersByTeam?.[team.id]?.map((player: Player) => (
                   <div key={player.id} className="py-3 flex justify-between items-center">
                     <span className="font-medium">{player.name}</span>
-                    <span className="px-3 py-1 bg-gray-100 rounded-md text-gray-800 font-mono">
-                      {player.wins}-{player.losses}-{player.ties}
-                    </span>
+                    <div className="flex items-center space-x-3">
+                      <div className="text-sm text-muted-foreground">
+                        Record:
+                      </div>
+                      <span className={`px-3 py-1 rounded-md text-white font-mono ${
+                        player.wins > player.losses 
+                          ? 'bg-green-600' 
+                          : player.losses > player.wins 
+                            ? 'bg-red-600' 
+                            : 'bg-gray-500'
+                      }`}>
+                        {player.wins}-{player.losses}-{player.ties}
+                      </span>
+                      {player.wins + player.losses + player.ties > 0 && (
+                        <div className="text-xs text-muted-foreground">
+                          {((player.wins / (player.wins + player.losses + player.ties)) * 100).toFixed(0)}%
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
