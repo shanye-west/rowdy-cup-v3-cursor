@@ -46,11 +46,12 @@ const MatchesList = ({ matches }: MatchesListProps) => {
       const match = matches.find(m => m.id === matchId);
       const roundId = match?.roundId;
       
-      // Invalidate the matches query and round data
+      // Force refetch all relevant data to ensure UI is completely in sync
       queryClient.invalidateQueries({ queryKey: [`/api/matches`] });
       if (roundId) {
         queryClient.invalidateQueries({ queryKey: [`/api/matches?roundId=${roundId}`] });
         queryClient.invalidateQueries({ queryKey: [`/api/rounds/${roundId}`] });
+        queryClient.invalidateQueries({ queryKey: [`/api/rounds`] });
       }
       queryClient.invalidateQueries({ queryKey: [`/api/tournament`] });
       
