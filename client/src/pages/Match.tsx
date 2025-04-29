@@ -172,8 +172,8 @@ const Match = ({ id }: MatchProps) => {
   const calculateMatchPlayResult = (completedScores: ScoreData[]): string => {
     if (!completedScores.length) return "";
 
-    let aviatorWins = 0;
-    let producerWins = 0;
+    let aviatorPoints = 0;
+    let producerPoints = 0;
     let ties = 0;
 
     // Sort scores by hole number
@@ -186,16 +186,18 @@ const Match = ({ id }: MatchProps) => {
       if (score.aviatorScore === null || score.producerScore === null) return;
 
       if (score.aviatorScore < score.producerScore) {
-        aviatorWins++;
+        aviatorPoints += 1;
       } else if (score.producerScore < score.aviatorScore) {
-        producerWins++;
+        producerPoints += 1;
       } else {
+        aviatorPoints += 0.5;
+        producerPoints += 0.5;
         ties++;
       }
     });
 
     // Calculate lead and holes remaining
-    const lead = Math.abs(aviatorWins - producerWins);
+    const lead = Math.abs(aviatorPoints - producerPoints);
     const highestHolePlayed = Math.max(
       ...sortedScores.map((s) => s.holeNumber),
     );

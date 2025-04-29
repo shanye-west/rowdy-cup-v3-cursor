@@ -84,8 +84,8 @@ export const rounds = pgTable("rounds", {
   startTime: text("start_time").notNull(),
   isComplete: boolean("is_complete").default(false),
   status: text("status"),
-  aviatorScore: integer("aviator_score"),
-  producerScore: integer("producer_score"),
+  aviatorScore: numeric("aviator_score"),
+  producerScore: numeric("producer_score"),
 });
 export const insertRoundSchema = createInsertSchema(rounds);
 export type InsertRound = z.infer<typeof insertRoundSchema>;
@@ -120,8 +120,8 @@ export type Team = typeof teams.$inferSelect;
 export const tournament = pgTable("tournament", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  aviatorScore: integer("aviator_score"),
-  producerScore: integer("producer_score"),
+  aviatorScore: numeric("aviator_score"),
+  producerScore: numeric("producer_score"),
   pendingAviatorScore: integer("pending_aviator_score"),
   pendingProducerScore: integer("pending_producer_score"),
   year: integer("year").notNull(),
