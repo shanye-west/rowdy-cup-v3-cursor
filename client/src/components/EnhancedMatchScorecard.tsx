@@ -782,8 +782,10 @@ const EnhancedMatchScorecard = ({
             {/* Team Aviators Row */}
             <tr className="border-b border-gray-200">
               <td className="py-2 px-2 font-semibold sticky-column bg-aviator text-white">
-                <div>The Aviators</div>
+                The Aviators
               </td>
+              {/* …the rest of your <td> cells here without bg-aviator… */}
+            </tr>
 
               {/* Front Nine Aviator Scores */}
               {frontNine.map((hole) => (
@@ -864,9 +866,9 @@ const EnhancedMatchScorecard = ({
             </tr>
 
             {/* Match Status Row - Moved between teams */}
-            <tr className="border-b border-gray-200">
+            <tr className="border-b border-black">
               <td className="py-2 px-2 sticky-column bg-gray-100">
-                <div className="text-sm font-bold">Match Status</div>
+                <div className="text-black font-bold">Match Status</div>
               </td>
               {/* Front Nine Match Status */}
               {frontNine.map((hole) => {
@@ -897,7 +899,7 @@ const EnhancedMatchScorecard = ({
 
             {/* Team Producers Row */}
             <tr className="border-b border-gray-200">
-              <td className="py-2 px-2 font-semibold sticky-column bg-producer text-white">
+              <td className="py-2 px-2 font-semibold sticky-column bg-producer text-b">
                 <div>The Producers</div>
               </td>
 
