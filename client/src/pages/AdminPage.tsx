@@ -274,6 +274,8 @@ function RoundsTab() {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
+  const [roundToDelete, setRoundToDelete] = useState<number | null>(null);
   const [currentRound, setCurrentRound] = useState<Round | null>(null);
   const [roundFormData, setRoundFormData] = useState({
     name: "",
@@ -338,6 +340,33 @@ function RoundsTab() {
       });
     },
   });
+  
+  const deleteRoundMutation = useMutation({
+    mutationFn: async (roundId: number) => {
+      const res = await apiRequest("DELETE", `/api/admin/rounds/${roundId}`, {});
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/rounds'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tournament'] });
+      toast({
+        title: "Round deleted",
+        description: "Round and all associated matches have been deleted",
+        duration: 2000,
+      });
+      setConfirmationDialogOpen(false);
+      setRoundToDelete(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete round",
+        description: error.message,
+        variant: "destructive",
+        duration: 2000,
+      });
+      setConfirmationDialogOpen(false);
+    },
+  });
 
   const handleOpenAddDialog = () => {
     resetRoundForm();
@@ -388,6 +417,17 @@ function RoundsTab() {
   const handleManageMatches = (roundId: number) => {
     // Navigate to the admin matches page for this round
     window.location.href = `/admin/rounds/${roundId}/matches`;
+  };
+  
+  const handleDeleteRound = (roundId: number) => {
+    setRoundToDelete(roundId);
+    setConfirmationDialogOpen(true);
+  };
+  
+  const confirmDeleteRound = () => {
+    if (roundToDelete !== null) {
+      deleteRoundMutation.mutate(roundToDelete);
+    }
   };
 
   if (isLoading) {
@@ -617,6 +657,43 @@ function RoundsTab() {
           <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">Edit Round</h2>
             {roundFormJSX}
+          </div>
+        </div>
+      )}
+      
+      {/* Delete Confirmation Dialog */}
+      {confirmationDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6">
+            <h2 className="text-xl font-bold mb-2">Confirm Deletion</h2>
+            <p className="mb-4 text-destructive">
+              Are you sure you want to delete this round? This will also delete all matches, scores, and player assignments associated with this round. This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setConfirmationDialogOpen(false);
+                  setRoundToDelete(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={confirmDeleteRound}
+                disabled={deleteRoundMutation.isPending}
+              >
+                {deleteRoundMutation.isPending ? (
+                  <span className="flex items-center">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </span>
+                ) : (
+                  "Delete Round"
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       )}
