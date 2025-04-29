@@ -192,6 +192,37 @@ export class DBStorage implements IStorage {
     
     return false;
   }
+  
+  async deleteAllPlayers() {
+    try {
+      // Start a transaction for deletion operations
+      await db.transaction(async (tx) => {
+        // First get all player IDs with their userIds for deletion
+        const allPlayers = await tx.select({
+          id: players.id,
+          userId: players.userId
+        }).from(players);
+        
+        // Delete all match participants first (foreign key constraint)
+        await tx.delete(match_players);
+        
+        // Then delete all players
+        await tx.delete(players);
+        
+        // Finally delete all associated users
+        for (const player of allPlayers) {
+          if (player.userId) {
+            await tx.delete(users).where(eq(users.id, player.userId));
+          }
+        }
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Error deleting all players:", error);
+      return false;
+    }
+  }
 
   // Teams
   async getTeams() {

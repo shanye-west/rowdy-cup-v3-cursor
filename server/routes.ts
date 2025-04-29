@@ -905,20 +905,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete all players
   app.delete("/api/admin/players/all", isAdmin, async (req, res) => {
     try {
-      // Skip the individual player operations entirely
-      // Use a direct database update instead
-      await db.update(players)
-        .set({ status: "deleted" })
-        .returning();
+      // Use the storage interface to delete all players
+      const result = await storage.deleteAllPlayers();
+      
+      if (result) {
+        // Log success and broadcast
+        console.log("Successfully deleted all players and associated users");
+        broadcast("data-reset", { type: "players-deleted" });
 
-      // Log success and broadcast
-      console.log("Successfully marked all players as deleted");
-      broadcast("data-reset", { type: "players-deleted" });
-
-      // Return success
-      return res.status(200).json({ 
-        message: "All players have been marked as deleted" 
-      });
+        // Return success
+        return res.status(200).json({ 
+          message: "All players have been deleted" 
+        });
+      } else {
+        return res.status(500).json({ 
+          error: "Failed to delete all players" 
+        });
+      }
     } catch (error) {
       console.error("Delete all players error:", error);
       return res.status(500).json({ 
