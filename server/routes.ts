@@ -776,6 +776,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Delete all players - Must come BEFORE the specific ID endpoint to avoid route conflicts
+  app.delete("/api/admin/players/all", isAdmin, async (req, res) => {
+    try {
+      // Use the storage interface to delete all players
+      const result = await storage.deleteAllPlayers();
+      
+      if (result) {
+        // Log success and broadcast
+        console.log("Successfully deleted all players and associated users");
+        broadcast("data-reset", { type: "players-deleted" });
+
+        // Return success
+        return res.status(200).json({ 
+          message: "All players have been deleted" 
+        });
+      } else {
+        return res.status(500).json({ 
+          error: "Failed to delete all players" 
+        });
+      }
+    } catch (error) {
+      console.error("Delete all players error:", error);
+      return res.status(500).json({ 
+        error: "Failed to delete all players" 
+      });
+    }
+  });
+  
+  // Delete specific player by ID - Must come AFTER the "all" endpoint
   app.delete("/api/admin/players/:id", isAdmin, async (req, res) => {
     try {
       const playerId = parseInt(req.params.id);
@@ -899,34 +928,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete all matches error:", error);
       return res.status(500).json({ error: "Failed to delete all matches" });
-    }
-  });
-
-  // Delete all players
-  app.delete("/api/admin/players/all", isAdmin, async (req, res) => {
-    try {
-      // Use the storage interface to delete all players
-      const result = await storage.deleteAllPlayers();
-      
-      if (result) {
-        // Log success and broadcast
-        console.log("Successfully deleted all players and associated users");
-        broadcast("data-reset", { type: "players-deleted" });
-
-        // Return success
-        return res.status(200).json({ 
-          message: "All players have been deleted" 
-        });
-      } else {
-        return res.status(500).json({ 
-          error: "Failed to delete all players" 
-        });
-      }
-    } catch (error) {
-      console.error("Delete all players error:", error);
-      return res.status(500).json({ 
-        error: "Failed to delete all players" 
-      });
     }
   });
 
