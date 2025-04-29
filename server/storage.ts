@@ -268,7 +268,25 @@ export class DBStorage implements IStorage {
 
   // Rounds
   async getRounds() {
-    return db.select().from(rounds).where(isNull(rounds.status));
+    // First get the basic rounds data
+    const roundsData = await db
+      .select()
+      .from(rounds)
+      .where(isNull(rounds.status));
+      
+    // For each round, calculate and add pending scores
+    const enhancedRounds = await Promise.all(
+      roundsData.map(async (round) => {
+        const scores = await this.calculateRoundScores(round.id);
+        return {
+          ...round,
+          pendingAviatorScore: scores.pendingAviatorScore || 0,
+          pendingProducerScore: scores.pendingProducerScore || 0
+        };
+      })
+    );
+    
+    return enhancedRounds;
   }
 
   async getRound(id: number) {
@@ -405,7 +423,8 @@ export class DBStorage implements IStorage {
   }
 
   async getMatchesByRound(roundId: number) {
-    return db
+    // First get the basic match data
+    const matchesData = await db
       .select({
         id: matches.id,
         roundId: matches.roundId,
@@ -419,6 +438,44 @@ export class DBStorage implements IStorage {
       })
       .from(matches)
       .where(eq(matches.roundId, roundId));
+      
+    // For each match, get the participants and enhance with player names
+    const enhancedMatches = await Promise.all(
+      matchesData.map(async (match) => {
+        const participants = await this.getMatchParticipants(match.id);
+        
+        // Get player details for each participant
+        const detailedPlayers = await Promise.all(
+          participants.map(async (mp) => {
+            const player = await this.getPlayer(mp.playerId);
+            return {
+              ...mp,
+              playerName: player?.name || 'Unknown',
+            };
+          })
+        );
+        
+        // Group players by team
+        const aviatorPlayers = detailedPlayers
+          .filter(mp => mp.team === 'aviators')
+          .map(mp => mp.playerName)
+          .join(', ');
+          
+        const producerPlayers = detailedPlayers
+          .filter(mp => mp.team === 'producers')
+          .map(mp => mp.playerName)
+          .join(', ');
+          
+        // Return enhanced match with player names
+        return {
+          ...match,
+          aviatorPlayers,
+          producerPlayers
+        };
+      })
+    );
+    
+    return enhancedMatches;
   }
 
   async createMatch(data: any) {
