@@ -341,6 +341,11 @@ export class DBStorage implements IStorage {
   }
 
   async deleteMatch(id: number) {
+    // Delete related scores first
+    await db.delete(scores).where(eq(scores.matchId, id));
+    // Delete match participants
+    await db.delete(match_players).where(eq(match_players.matchId, id));
+    // Delete the match itself
     await db.delete(matches).where(eq(matches.id, id));
   }
 

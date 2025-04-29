@@ -900,13 +900,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Delete all matches
       const matches = await storage.getMatches();
       for (const match of matches) {
-        await storage.updateMatch(match.id, {
-          status: "deleted",
-          currentHole: 1,
-          leadingTeam: null,
-          leadAmount: 0,
-          result: null,
-        });
+        await storage.deleteMatch(match.id);
       }
 
       // Recalculate round scores
