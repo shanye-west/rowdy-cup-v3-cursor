@@ -1,4 +1,11 @@
 import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useState } from "react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useMutation } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 interface Round {
   id: number;
@@ -20,9 +27,59 @@ interface RoundsListProps {
 
 const RoundsList = ({ rounds }: RoundsListProps) => {
   const [_, navigate] = useLocation();
+  const { isAdmin } = useAuth();
+  const { toast } = useToast();
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  
+  const deleteRoundMutation = useMutation({
+    mutationFn: async (roundId: number) => {
+      const res = await apiRequest("DELETE", `/api/rounds/${roundId}`);
+      if (res.ok) {
+        return roundId;
+      } else {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to delete round");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/rounds'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tournament'] });
+      toast({
+        title: "Round deleted",
+        description: "Round and all associated matches have been deleted successfully",
+        duration: 1000,
+      });
+      setConfirmDeleteId(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete round",
+        description: error.message,
+        variant: "destructive",
+        duration: 1000,
+      });
+    },
+  });
 
   const handleRoundClick = (roundId: number) => {
     navigate(`/rounds/${roundId}`);
+  };
+  
+  const handleDeleteClick = (e: React.MouseEvent, roundId: number) => {
+    e.stopPropagation();
+    setConfirmDeleteId(roundId);
+  };
+  
+  const confirmDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirmDeleteId !== null) {
+      deleteRoundMutation.mutate(confirmDeleteId);
+    }
+  };
+  
+  const cancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConfirmDeleteId(null);
   };
 
   return (

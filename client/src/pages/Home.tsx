@@ -1,12 +1,34 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import TournamentScore from "@/components/TournamentScore";
 import RoundsList from "@/components/RoundsList";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import rowdyCupLogo from "../assets/rowdy-cup-logo.svg";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { Calendar, Settings, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 
 const Home = () => {
   const [_, navigate] = useLocation();
+  const { isAdmin } = useAuth();
+  const { toast } = useToast();
+  const [isTournamentDialogOpen, setIsTournamentDialogOpen] = useState(false);
+  const [isAddRoundDialogOpen, setIsAddRoundDialogOpen] = useState(false);
+  const [tournamentFormData, setTournamentFormData] = useState({
+    name: "",
+    year: new Date().getFullYear()
+  });
+  const [roundFormData, setRoundFormData] = useState({
+    name: "",
+    matchType: "Singles Match",
+    courseName: "",
+    date: new Date().toISOString().split('T')[0],
+    startTime: "08:00",
+    isComplete: false
+  });
 
   // Define types
   interface Tournament {
@@ -42,6 +64,110 @@ const Home = () => {
   const { data: rounds, isLoading: isRoundsLoading } = useQuery<Round[]>({
     queryKey: ['/api/rounds'],
   });
+
+  // Tournament update mutation
+  const updateTournamentMutation = useMutation({
+    mutationFn: async (tournamentData: any) => {
+      const { aviatorScore, producerScore, ...safeData } = tournamentData;
+      
+      const res = await apiRequest("PUT", `/api/tournament/${tournament?.id}`, safeData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tournament'] });
+      toast({
+        title: "Tournament updated",
+        description: "Tournament settings have been saved successfully",
+        duration: 1000,
+      });
+      setIsTournamentDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+        duration: 1000,
+      });
+    },
+  });
+
+  // Add round mutation
+  const addRoundMutation = useMutation({
+    mutationFn: async (roundData: any) => {
+      const res = await apiRequest("POST", "/api/rounds", roundData);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/rounds'] });
+      toast({
+        title: "Round added",
+        description: "New round has been added successfully",
+        duration: 1000,
+      });
+      setIsAddRoundDialogOpen(false);
+      resetRoundForm();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to add round",
+        description: error.message,
+        variant: "destructive",
+        duration: 1000,
+      });
+    },
+  });
+
+  // Handle form input changes
+  const handleTournamentInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setTournamentFormData({
+      ...tournamentFormData,
+      [name]: name === 'year' ? parseInt(value) : value,
+    });
+  };
+
+  const handleRoundInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target as HTMLInputElement;
+    setRoundFormData({
+      ...roundFormData,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+    });
+  };
+
+  // Form submission handlers
+  const handleTournamentFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateTournamentMutation.mutate(tournamentFormData);
+  };
+
+  const handleRoundFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    addRoundMutation.mutate(roundFormData);
+  };
+
+  // Reset form
+  const resetRoundForm = () => {
+    setRoundFormData({
+      name: "",
+      matchType: "Singles Match",
+      courseName: "",
+      date: new Date().toISOString().split('T')[0],
+      startTime: "08:00",
+      isComplete: false
+    });
+  };
+
+  // Handle opening edit dialog
+  const handleOpenTournamentDialog = () => {
+    if (tournament) {
+      setTournamentFormData({
+        name: tournament.name,
+        year: tournament.year
+      });
+    }
+    setIsTournamentDialogOpen(true);
+  };
 
   const isLoading = isTournamentLoading || isRoundsLoading;
   
@@ -79,7 +205,26 @@ const Home = () => {
         </>
       ) : (
         <>
-
+          {/* Admin Controls */}
+          {isAdmin && (
+            <div className="mb-5 flex justify-between items-center">
+              <Button 
+                onClick={handleOpenTournamentDialog} 
+                variant="outline"
+                className="flex items-center space-x-2"
+              >
+                <Settings className="h-4 w-4" />
+                <span>Edit Tournament</span>
+              </Button>
+              <Button 
+                onClick={() => setIsAddRoundDialogOpen(true)}
+                className="flex items-center space-x-2"
+              >
+                <Calendar className="h-4 w-4" />
+                <span>Add New Round</span>
+              </Button>
+            </div>
+          )}
           
           {/* Tournament Score */}
           <TournamentScore 
@@ -89,9 +234,195 @@ const Home = () => {
             pendingProducerScore={tournament?.pendingProducerScore || 0}
           />
           
-          
           {/* Rounds List */}
-          <RoundsList rounds={roundsWithScores || []} />
+          <div className="mt-6">
+            {isAdmin && (
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-xl font-semibold">Tournament Rounds</h2>
+              </div>
+            )}
+            <RoundsList rounds={roundsWithScores || []} />
+          </div>
+          
+          {/* Tournament Settings Dialog */}
+          {isTournamentDialogOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+                <h2 className="text-xl font-bold mb-4">Edit Tournament</h2>
+                
+                <form onSubmit={handleTournamentFormSubmit}>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Tournament Name
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={tournamentFormData.name}
+                        onChange={handleTournamentInputChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Year
+                      </label>
+                      <input
+                        type="number"
+                        name="year"
+                        value={tournamentFormData.year}
+                        onChange={handleTournamentInputChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                        min="2000"
+                        max="2099"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end mt-6 space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsTournamentDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit"
+                      disabled={updateTournamentMutation.isPending}
+                    >
+                      {updateTournamentMutation.isPending ? (
+                        <span className="flex items-center">
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </span>
+                      ) : (
+                        "Save Changes"
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+          
+          {/* Add Round Dialog */}
+          {isAddRoundDialogOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+                <h2 className="text-xl font-bold mb-4">Add New Round</h2>
+                
+                <form onSubmit={handleRoundFormSubmit}>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Round Name
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={roundFormData.name}
+                        onChange={handleRoundInputChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Match Type
+                      </label>
+                      <select
+                        name="matchType"
+                        value={roundFormData.matchType}
+                        onChange={handleRoundInputChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                        required
+                      >
+                        <option value="Singles Match">Singles Match</option>
+                        <option value="2-man Team Scramble">2-man Team Scramble</option>
+                        <option value="4-man Team Scramble">4-man Team Scramble</option>
+                        <option value="2-man Team Shamble">2-man Team Shamble</option>
+                        <option value="2-man Best Ball">2-man Best Ball</option>
+                        <option value="Alternate Shot">Alternate Shot</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Course Name
+                      </label>
+                      <input
+                        type="text"
+                        name="courseName"
+                        value={roundFormData.courseName}
+                        onChange={handleRoundInputChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          Date
+                        </label>
+                        <input
+                          type="date"
+                          name="date"
+                          value={roundFormData.date}
+                          onChange={handleRoundInputChange}
+                          className="w-full px-3 py-2 border rounded-md"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          Start Time
+                        </label>
+                        <input
+                          type="time"
+                          name="startTime"
+                          value={roundFormData.startTime}
+                          onChange={handleRoundInputChange}
+                          className="w-full px-3 py-2 border rounded-md"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end mt-6 space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsAddRoundDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit"
+                      disabled={addRoundMutation.isPending}
+                    >
+                      {addRoundMutation.isPending ? (
+                        <span className="flex items-center">
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Adding...
+                        </span>
+                      ) : (
+                        "Add Round"
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
