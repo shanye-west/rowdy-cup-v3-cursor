@@ -17,7 +17,7 @@
 }
 
 .scorecard-table td {
-  background-color: white;
+  background-color: inherit;
 }
 
 /* Sticky column styling */

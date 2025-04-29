@@ -780,16 +780,16 @@ const EnhancedMatchScorecard = ({
             )}
 
             {/* Team Aviators Row */}
-            <tr className="border-b border-gray-200 bg-[#004A7F]">
-              <td className="py-2 px-2 font-semibold sticky-column bg-[#004A7F] text-white">
+            <tr className="border-b border-gray-200 bg-aviator">
+              <td className="py-2 px-2 font-semibold sticky-column bg-aviator text-white">
                 <div>The Aviators</div>
               </td>
 
               {/* Front Nine Aviator Scores */}
               {frontNine.map((hole) => (
-                <td key={hole.number} className="py-2 px-2 text-center">
+                <td key={hole.number} className="py-2 px-2 text-center bg-aviator text-white">
                   {isBestBall ? (
-                    <div className="score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded bg-gray-50">
+                    <div className="score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded bg-white text-black">
                       {getScoreInputValue(hole.number, "aviator") || "-"}
                     </div>
                   ) : (
@@ -797,7 +797,7 @@ const EnhancedMatchScorecard = ({
                       type="tel"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
+                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded bg-white text-black
                         ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
                       value={getScoreInputValue(hole.number, "aviator")}
                       onChange={(e) =>
@@ -823,9 +823,9 @@ const EnhancedMatchScorecard = ({
 
               {/* Back Nine Aviator Scores */}
               {backNine.map((hole) => (
-                <td key={hole.number} className="py-2 px-2 text-center">
+                <td key={hole.number} className="py-2 px-2 text-center bg-aviator text-white">
                   {isBestBall ? (
-                    <div className="score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded bg-gray-50">
+                    <div className="score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded bg-white text-black">
                       {getScoreInputValue(hole.number, "aviator") || "-"}
                     </div>
                   ) : (
@@ -833,7 +833,7 @@ const EnhancedMatchScorecard = ({
                       type="tel"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
+                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded bg-white text-black
                         ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
                       value={getScoreInputValue(hole.number, "aviator")}
                       onChange={(e) =>
@@ -903,9 +903,9 @@ const EnhancedMatchScorecard = ({
 
               {/* Front Nine Producer Scores */}
               {frontNine.map((hole) => (
-                <td key={hole.number} className="py-2 px-2 text-center">
+                <td key={hole.number} className="py-2 px-2 text-center bg-producer text-white">
                   {isBestBall ? (
-                    <div className="score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded bg-gray-50">
+                    <div className="score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded bg-white text-black">
                       {getScoreInputValue(hole.number, "producer") || "-"}
                     </div>
                   ) : (
@@ -913,7 +913,7 @@ const EnhancedMatchScorecard = ({
                       type="tel"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
+                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded bg-white text-black
                         ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
                       value={getScoreInputValue(hole.number, "producer")}
                       onChange={(e) =>
@@ -939,9 +939,9 @@ const EnhancedMatchScorecard = ({
 
               {/* Back Nine Producer Scores */}
               {backNine.map((hole) => (
-                <td key={hole.number} className="py-2 px-2 text-center">
+                <td key={hole.number} className="py-2 px-2 text-center bg-producer text-white">
                   {isBestBall ? (
-                    <div className="score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded bg-gray-50">
+                    <div className="score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded bg-white text-black">
                       {getScoreInputValue(hole.number, "producer") || "-"}
                     </div>
                   ) : (
@@ -949,7 +949,7 @@ const EnhancedMatchScorecard = ({
                       type="tel"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
+                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded bg-white text-black
                         ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
                       value={getScoreInputValue(hole.number, "producer")}
                       onChange={(e) =>
