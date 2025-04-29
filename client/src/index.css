@@ -113,27 +113,27 @@ input[type="number"].score-input::-webkit-inner-spin-button {
 
 @layer utilities {
   .bg-aviator {
-    background-color: #00214D;
+    background-color: #00214D !important;
   }
 
   .bg-producer {
-    background-color: #BF1238;
+    background-color: #BF1238 !important;
   }
 
   .bg-gold {
-    background-color: #FFD700;
+    background-color: #FFD700 !important;
   }
 
   .text-aviator {
-    color: #00214D;
+    color: #00214D !important;
   }
 
   .text-producer {
-    color: #BF1238;
+    color: #BF1238 !important;
   }
 
   .text-gold {
-    color: #FFD700;
+    color: #FFD700 !important;
   }
 }
 
@@ -179,6 +179,17 @@ input[type="number"].score-input::-webkit-inner-spin-button {
   z-index: 10;
   background-color: inherit;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Add shadow to sticky column */
+}
+
+/* Special styling for scorecard team rows */
+tr:has(td.bg-aviator) td:not(.bg-gray-100, .bg-gray-200) {
+  background-color: #00214D !important;
+  color: white;
+}
+
+tr:has(td.bg-producer) td:not(.bg-gray-100, .bg-gray-200) {
+  background-color: #BF1238 !important;
+  color: white;
 }
 
 /* Force page to scroll to top on navigation */
