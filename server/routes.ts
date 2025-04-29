@@ -372,7 +372,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         broadcast("tournament-updated", updatedTournament);
       }
       
-      broadcast("match-deleted", { id: matchId });
+      // Add roundId to broadcast to help clients better handle the update
+      broadcast("match-deleted", { id: matchId, roundId });
       return res.status(200).json({ message: "Match deleted successfully" });
     } catch (error) {
       console.error("Match deletion error:", error);
