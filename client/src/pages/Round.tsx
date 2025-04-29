@@ -252,7 +252,7 @@ const Round = ({ id }: RoundProps) => {
 
   const isLoading = isRoundLoading || isMatchesLoading;
 
-const renderMatchStatus = (match: any) => {
+  // Remove duplicate renderMatchStatus function since it's handled in MatchesList
   if (match.status === "completed") {
     return (
       <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
