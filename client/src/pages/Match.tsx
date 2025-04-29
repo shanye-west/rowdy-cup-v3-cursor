@@ -202,7 +202,7 @@ const Match = ({ id }: MatchProps) => {
       ...sortedScores.map((s) => s.holeNumber),
     );
     const holesRemaining = 18 - highestHolePlayed;
-    const totalCompleted = aviatorWins + producerWins + ties;
+    const totalCompleted = sortedScores.length;
 
     // Match play result format
     if (lead === 0 && totalCompleted === 18) {
@@ -210,7 +210,7 @@ const Match = ({ id }: MatchProps) => {
       return "AS";
     } else if (lead > holesRemaining) {
       // Match clinched before 18 holes
-      const leadingTeam = aviatorWins > producerWins ? "aviators" : "producers";
+      const leadingTeam = aviatorPoints > producerPoints ? "aviators" : "producers";
       return `${lead} UP`;
     } else if (lead > 0 && totalCompleted === 18) {
       // Match completed with a winner after 18 holes
