@@ -69,31 +69,38 @@ const EnhancedMatchScorecard = ({
   // Fetch match participants
   const { data: participants = [] } = useQuery<any[]>({
     queryKey: [`/api/match-players?matchId=${matchId}`],
-    queryFn: () => apiRequest(`/api/match-players?matchId=${matchId}`),
   });
 
   // Fetch all players for reference
-  const { data: allPlayers = [] } = useQuery<Player[]>({
+  const { data: allPlayers = [] } = useQuery<any[]>({
     queryKey: ["/api/players"],
   });
 
   // Split participants into teams
   const aviatorPlayersList = useMemo(() => {
+    if (!Array.isArray(participants)) return [];
+    
     return participants
-      .filter((p) => p.team === "aviators")
-      .map((p) => {
+      .filter((p: any) => p.team === "aviators")
+      .map((p: any) => {
+        if (!Array.isArray(allPlayers)) return { id: p.playerId, name: `Player ${p.playerId}`, teamId: 1 };
+        
         // Find the player details from allPlayers
-        const playerDetails = allPlayers.find(player => player.id === p.playerId);
+        const playerDetails = allPlayers.find((player: any) => player.id === p.playerId);
         return playerDetails || { id: p.playerId, name: `Player ${p.playerId}`, teamId: 1 };
       });
   }, [participants, allPlayers]);
 
   const producerPlayersList = useMemo(() => {
+    if (!Array.isArray(participants)) return [];
+    
     return participants
-      .filter((p) => p.team === "producers")
-      .map((p) => {
+      .filter((p: any) => p.team === "producers")
+      .map((p: any) => {
+        if (!Array.isArray(allPlayers)) return { id: p.playerId, name: `Player ${p.playerId}`, teamId: 2 };
+        
         // Find the player details from allPlayers
-        const playerDetails = allPlayers.find(player => player.id === p.playerId);
+        const playerDetails = allPlayers.find((player: any) => player.id === p.playerId);
         return playerDetails || { id: p.playerId, name: `Player ${p.playerId}`, teamId: 2 };
       });
   }, [participants, allPlayers]);
@@ -386,8 +393,8 @@ const EnhancedMatchScorecard = ({
       teamId,
       playerId:
         teamId === "aviator"
-          ? aviatorPlayersList.find((p) => p.name === playerName)?.id || 0
-          : producerPlayersList.find((p) => p.name === playerName)?.id || 0,
+          ? aviatorPlayersList.find((p: any) => p.name === playerName)?.id || 0
+          : producerPlayersList.find((p: any) => p.name === playerName)?.id || 0,
     };
 
     if (playerIndex >= 0) {
@@ -677,7 +684,7 @@ const EnhancedMatchScorecard = ({
             {/* Aviator Players Rows for Best Ball - displayed above team row */}
             {isBestBall && (
               <>
-                {aviatorPlayersList.map((player) => (
+                {aviatorPlayersList.map((player: any) => (
                   <tr key={player.id} className="border-b border-gray-200">
                     <td className="py-2 px-2 sticky-column bg-white border-l-4 border-aviator">
                       <div className="text-xs font-medium text-black">
