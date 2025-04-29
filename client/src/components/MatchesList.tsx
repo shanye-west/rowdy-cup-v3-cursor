@@ -1,4 +1,11 @@
 import { useLocation } from "wouter";
+import { Edit, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import { useState } from "react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useMutation } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 interface Match {
   id: number;
@@ -10,6 +17,7 @@ interface Match {
   leadAmount: number;
   result: string | null;
   currentHole?: number;
+  roundId: number;
 }
 
 interface MatchesListProps {
@@ -18,9 +26,75 @@ interface MatchesListProps {
 
 const MatchesList = ({ matches }: MatchesListProps) => {
   const [_, navigate] = useLocation();
-
+  const { isAdmin } = useAuth();
+  const { toast } = useToast();
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  
+  // Delete match mutation
+  const deleteMatchMutation = useMutation({
+    mutationFn: async (matchId: number) => {
+      const res = await apiRequest("DELETE", `/api/matches/${matchId}`);
+      if (res.ok) {
+        return matchId;
+      } else {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to delete match");
+      }
+    },
+    onSuccess: (matchId) => {
+      // Get the round ID before the match is removed from the matches array
+      const match = matches.find(m => m.id === matchId);
+      const roundId = match?.roundId;
+      
+      // Invalidate the matches query and round data
+      queryClient.invalidateQueries({ queryKey: [`/api/matches`] });
+      if (roundId) {
+        queryClient.invalidateQueries({ queryKey: [`/api/matches?roundId=${roundId}`] });
+        queryClient.invalidateQueries({ queryKey: [`/api/rounds/${roundId}`] });
+      }
+      queryClient.invalidateQueries({ queryKey: [`/api/tournament`] });
+      
+      toast({
+        title: "Match deleted",
+        description: "Match and all associated scores have been deleted successfully",
+        duration: 3000,
+      });
+      setConfirmDeleteId(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete match",
+        description: error.message,
+        variant: "destructive",
+        duration: 3000,
+      });
+    },
+  });
+  
   const handleMatchClick = (matchId: number) => {
     navigate(`/matches/${matchId}`);
+  };
+  
+  const handleEditClick = (e: React.MouseEvent, matchId: number) => {
+    e.stopPropagation();
+    navigate(`/admin/matches/${matchId}/edit`);
+  };
+  
+  const handleDeleteClick = (e: React.MouseEvent, matchId: number) => {
+    e.stopPropagation();
+    setConfirmDeleteId(matchId);
+  };
+  
+  const confirmDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirmDeleteId !== null) {
+      deleteMatchMutation.mutate(confirmDeleteId);
+    }
+  };
+  
+  const cancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConfirmDeleteId(null);
   };
 
   const renderMatchStatus = (match: Match) => {
@@ -114,9 +188,53 @@ const MatchesList = ({ matches }: MatchesListProps) => {
       {matches.map((match) => (
         <div 
           key={match.id}
-          className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer"
+          className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer relative"
           onClick={() => handleMatchClick(match.id)}
         >
+          {isAdmin && (
+            <div className="absolute top-2 right-2 z-10" onClick={e => e.stopPropagation()}>
+              {confirmDeleteId === match.id ? (
+                <div className="flex space-x-1">
+                  <Button 
+                    size="sm" 
+                    variant="destructive"
+                    className="h-8 px-2 py-1 text-xs"
+                    onClick={confirmDelete}
+                  >
+                    Confirm
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 px-2 py-1 text-xs"
+                    onClick={cancelDelete}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex space-x-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7"
+                    onClick={(e) => handleEditClick(e, match.id)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7"
+                    onClick={(e) => handleDeleteClick(e, match.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+          
           <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
             <h4 className="font-heading font-bold">{match.name}</h4>
             {renderMatchStatus(match)}
