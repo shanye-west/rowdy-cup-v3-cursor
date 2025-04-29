@@ -595,6 +595,8 @@ export class DBStorage implements IStorage {
 
     let aviatorScore = 0;
     let producerScore = 0;
+    let pendingAviatorScore = 0;
+    let pendingProducerScore = 0;
 
     for (const match of matchesByRound) {
       if (match.status === "completed") {
@@ -607,12 +609,20 @@ export class DBStorage implements IStorage {
           aviatorScore += 0.5;
           producerScore += 0.5;
         }
+      } else if (match.status === "in_progress") {
+        if (match.leadingTeam === "aviators") {
+          pendingAviatorScore += 1;
+        } else if (match.leadingTeam === "producers") {
+          pendingProducerScore += 1;
+        }
       }
     }
 
     return {
       aviatorScore,
       producerScore,
+      pendingAviatorScore,
+      pendingProducerScore,
     };
   }
 
@@ -621,16 +631,22 @@ export class DBStorage implements IStorage {
 
     let aviatorScore = 0;
     let producerScore = 0;
+    let pendingAviatorScore = 0;
+    let pendingProducerScore = 0;
 
     for (const round of allRounds) {
       const roundScores = await this.calculateRoundScores(round.id);
       aviatorScore += roundScores.aviatorScore;
       producerScore += roundScores.producerScore;
+      pendingAviatorScore += roundScores.pendingAviatorScore;
+      pendingProducerScore += roundScores.pendingProducerScore;
     }
 
     return {
       aviatorScore,
       producerScore,
+      pendingAviatorScore,
+      pendingProducerScore,
     };
   }
 
