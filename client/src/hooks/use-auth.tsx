@@ -11,6 +11,7 @@ type User = {
   id: number;
   username: string;
   isAdmin: boolean;
+  needsPasswordChange?: boolean;
 };
 
 type AuthContextType = {
