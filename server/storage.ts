@@ -382,6 +382,35 @@ export class DBStorage implements IStorage {
   }
 
   async createMatchParticipant(data: any) {
+    // Check if player is already participating in a match in this round
+    const match = await this.getMatch(data.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+    
+    const roundId = match.roundId;
+    
+    // Get all matches in this round
+    const matchesInRound = await this.getMatchesByRound(roundId);
+    
+    // Get all match participants for matches in this round
+    let playerAlreadyInRound = false;
+    for (const roundMatch of matchesInRound) {
+      const participants = await this.getMatchParticipants(roundMatch.id);
+      
+      // Check if player is already participating in any match in this round
+      const existingParticipant = participants.find(p => p.playerId === data.playerId);
+      if (existingParticipant) {
+        playerAlreadyInRound = true;
+        break;
+      }
+    }
+    
+    if (playerAlreadyInRound) {
+      throw new Error("Player is already participating in a match in this round");
+    }
+    
+    // If not already participating, add the player to the match
     const [row] = await db.insert(match_players).values(data).returning();
     return row;
   }
@@ -523,8 +552,9 @@ export class DBStorage implements IStorage {
 
     for (const score of matchScores) {
       if (score.aviatorScore !== null && score.producerScore !== null) {
-        const aviatorNum = parseFloat(score.aviatorScore);
-        const producerNum = parseFloat(score.producerScore);
+        // Use Number() to convert to numeric without type errors
+        const aviatorNum = Number(score.aviatorScore);
+        const producerNum = Number(score.producerScore);
         if (aviatorNum < producerNum) {
           aviatorWins += 1;
         } else if (producerNum < aviatorNum) {
@@ -586,6 +616,36 @@ export class DBStorage implements IStorage {
       result,
       currentHole: lastHoleScored + 1,
     });
+
+    // If the match was just completed, update player stats
+    if (status === "completed" && match.status !== "completed") {
+      // Get all participants in this match
+      const participants = await this.getMatchParticipants(matchId);
+      
+      // Update each player's stats
+      for (const participant of participants) {
+        const player = await this.getPlayer(participant.playerId);
+        if (player) {
+          let wins = player.wins || 0;
+          let losses = player.losses || 0;
+          let ties = player.ties || 0;
+          
+          if (leadingTeam === participant.team) {
+            // Player's team won
+            wins++;
+          } else if (leadingTeam === null) {
+            // Match was tied
+            ties++;
+          } else {
+            // Player's team lost
+            losses++;
+          }
+          
+          // Update player stats
+          await this.updatePlayer(player.id, { wins, losses, ties });
+        }
+      }
+    }
 
     // Update round scores
     await this.updateRoundScores(match.roundId);
@@ -682,9 +742,39 @@ export class DBStorage implements IStorage {
     const player = await this.getPlayer(playerId);
     if (!player) throw new Error("Player not found");
 
-    // This is a simplified method as we don't have a tournamentId field in matches
-    // and the matchParticipant structure has changed
-    return { wins: 0, losses: 0, draws: 0 };
+    // Find all matches the player participated in
+    const playerMatches = await db
+      .select({
+        matchId: match_players.matchId,
+        team: match_players.team,
+      })
+      .from(match_players)
+      .where(eq(match_players.playerId, playerId));
+      
+    let wins = 0;
+    let losses = 0;
+    let ties = 0;
+    
+    // Go through each match and check the result
+    for (const participation of playerMatches) {
+      const match = await this.getMatch(participation.matchId);
+      
+      // Only count completed matches
+      if (match && match.status === "completed") {
+        if (match.leadingTeam === participation.team) {
+          // Player's team won
+          wins++;
+        } else if (match.leadingTeam === null) {
+          // Match was tied
+          ties++;
+        } else {
+          // Player's team lost
+          losses++;
+        }
+      }
+    }
+    
+    return { wins, losses, draws: ties };
   }
 
   async initializeData() {
