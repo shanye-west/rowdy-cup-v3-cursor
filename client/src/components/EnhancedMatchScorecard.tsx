@@ -782,84 +782,10 @@ const EnhancedMatchScorecard = ({
             {/* Team Aviators Row */}
             <tr className="border-b border-gray-200">
               <td className="py-2 px-2 font-semibold sticky-column bg-aviator text-white">
-                The Aviators
+                <div>The Aviators</div>
               </td>
+
               {/* Front Nine Aviator Scores */}
-              {frontNine.map((hole) => (
-                <td key={hole.number} className="py-2 px-2 text-center">
-                  {isBestBall ? (
-                    <div className="score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded bg-gray-50">
-                      {getScoreInputValue(hole.number, "aviator") || "-"}
-                    </div>
-                  ) : (
-                    <input
-                      type="tel"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
-                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
-                      value={getScoreInputValue(hole.number, "aviator")}
-                      onChange={(e) =>
-                        handleScoreChange(
-                          hole.number,
-                          "aviator",
-                          e.target.value,
-                          e.target
-                        )
-                      }
-                      min="1"
-                      max="12"
-                      disabled={isHoleGreyedOut(hole.number)}
-                    />
-                  )}
-                </td>
-              ))}
-              <td className="py-2 px-2 text-center font-semibold bg-gray-100 text-aviator">
-                {frontNineTotals.aviatorTotal > 0
-                  ? frontNineTotals.aviatorTotal
-                  : "-"}
-              </td>
-              {/* Back Nine Aviator Scores */}
-              {backNine.map((hole) => (
-                <td key={hole.number} className="py-2 px-2 text-center">
-                  {isBestBall ? (
-                    <div className="score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded bg-gray-50">
-                      {getScoreInputValue(hole.number, "aviator") || "-"}
-                    </div>
-                  ) : (
-                    <input
-                      type="tel"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
-                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
-                      value={getScoreInputValue(hole.number, "aviator")}
-                      onChange={(e) =>
-                        handleScoreChange(
-                          hole.number,
-                          "aviator",
-                          e.target.value,
-                          e.target
-                        )
-                      }
-                      min="1"
-                      max="12"
-                      disabled={isHoleGreyedOut(hole.number)}
-                    />
-                  )}
-                </td>
-              ))}
-              <td className="py-2 px-2 text-center font-semibold bg-gray-100 text-aviator">
-                {backNineTotals.aviatorTotal > 0
-                  ? backNineTotals.aviatorTotal
-                  : "-"}
-              </td>
-              <td className="py-2 px-2 text-center font-semibold bg-gray-200 text-aviator">
-                {frontNineTotals.aviatorTotal + backNineTotals.aviatorTotal > 0
-                  ? frontNineTotals.aviatorTotal + backNineTotals.aviatorTotal
-                  : "-"}
-              </td>
-            </tr>
               {frontNine.map((hole) => (
                 <td key={hole.number} className="py-2 px-2 text-center">
                   {isBestBall ? (
@@ -938,9 +864,9 @@ const EnhancedMatchScorecard = ({
             </tr>
 
             {/* Match Status Row - Moved between teams */}
-            <tr className="border-b border-black">
+            <tr className="border-b border-gray-200">
               <td className="py-2 px-2 sticky-column bg-gray-100">
-                <div className="text-black font-bold">Match Status</div>
+                <div className="text-sm font-bold">Match Status</div>
               </td>
               {/* Front Nine Match Status */}
               {frontNine.map((hole) => {
@@ -971,7 +897,7 @@ const EnhancedMatchScorecard = ({
 
             {/* Team Producers Row */}
             <tr className="border-b border-gray-200">
-              <td className="py-2 px-2 font-semibold sticky-column bg-producer text-b">
+              <td className="py-2 px-2 font-semibold sticky-column bg-producer text-white">
                 <div>The Producers</div>
               </td>
 
