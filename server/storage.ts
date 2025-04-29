@@ -1,7 +1,7 @@
 // server/storage.ts
 
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import {
   users,
   players,
@@ -36,6 +36,8 @@ export interface IStorage {
   getRound(id: number): Promise<any | undefined>;
   createRound(data: any): Promise<any>;
   updateRound(id: number, data: Partial<any>): Promise<any | undefined>;
+  deleteRound(id: number): Promise<void>;
+  deleteAllRounds(): Promise<void>;
 
   getMatches(): Promise<any[]>;
   getMatch(id: number): Promise<any | undefined>;
@@ -266,7 +268,7 @@ export class DBStorage implements IStorage {
 
   // Rounds
   async getRounds() {
-    return db.select().from(rounds);
+    return db.select().from(rounds).where(isNull(rounds.status));
   }
 
   async getRound(id: number) {
