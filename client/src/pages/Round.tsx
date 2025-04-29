@@ -150,16 +150,17 @@ const Round = ({ id }: RoundProps) => {
   // Set the required players per team based on the match type
   useEffect(() => {
     if (round) {
-      if (round.matchType.includes("4-man")) {
-        // 4-player formats
+      if (round.matchType === "4-man Team Scramble") {
         setPlayersPerTeam(4);
-      } else if (round.matchType.includes("2-man") || 
-                round.matchType.includes("Team Shamble") || 
-                round.matchType.includes("Best Ball")) {
-        // 2-player formats
+      } else if (
+        round.matchType === "2-man Team Scramble" || 
+        round.matchType === "2-man Team Shamble" || 
+        round.matchType === "2-man Best Ball" ||
+        round.matchType === "Alternate Shot"
+      ) {
         setPlayersPerTeam(2);
       } else {
-        // Singles or default
+        // Singles Match
         setPlayersPerTeam(1);
       }
     }
