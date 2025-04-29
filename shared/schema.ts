@@ -122,8 +122,8 @@ export const tournament = pgTable("tournament", {
   name: text("name").notNull(),
   aviatorScore: numeric("aviator_score"),
   producerScore: numeric("producer_score"),
-  pendingAviatorScore: integer("pending_aviator_score"),
-  pendingProducerScore: integer("pending_producer_score"),
+  pendingAviatorScore: numeric("pending_aviator_score"),
+  pendingProducerScore: numeric("pending_producer_score"),
   year: integer("year").notNull(),
 });
 export const insertTournamentSchema = createInsertSchema(tournament);
