@@ -572,6 +572,14 @@ function RoundsTab() {
               >
                 Matches
               </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-none"
+                onClick={() => handleDeleteRound(round.id)}
+              >
+                <Trash className="h-4 w-4 text-red-500" />
+              </Button>
             </CardFooter>
           </Card>
         ))}

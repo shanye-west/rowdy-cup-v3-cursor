@@ -891,6 +891,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ error: "Failed to delete all rounds" });
     }
   });
+  
+  // Delete a single round
+  app.delete("/api/admin/rounds/:id", isAdmin, async (req, res) => {
+    try {
+      const roundId = parseInt(req.params.id);
+      const round = await storage.getRound(roundId);
+      
+      if (!round) {
+        return res.status(404).json({ error: "Round not found" });
+      }
+      
+      // Use the new deleteRound method to fully remove the round from the database
+      await storage.deleteRound(roundId);
+      
+      // Recalculate tournament scores
+      const tournamentScores = await storage.calculateTournamentScores();
+      const tournament = await storage.getTournament();
+      if (tournament) {
+        await storage.updateTournament(tournament.id, tournamentScores);
+      }
+      
+      broadcast("round-deleted", { id: roundId });
+      res.status(200).json({ message: "Round has been deleted" });
+    } catch (error) {
+      console.error("Delete round error:", error);
+      return res.status(500).json({ error: "Failed to delete round" });
+    }
+  });
 
   // Delete all matches
   app.delete("/api/admin/matches/all", isAdmin, async (req, res) => {
