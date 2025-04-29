@@ -9,12 +9,14 @@ export const users = pgTable("users", {
   passcode: text("passcode").notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
   playerId: integer("player_id"),
+  needsPasswordChange: boolean("needs_password_change").default(true).notNull(),
 });
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   passcode: true,
   isAdmin: true,
   playerId: true,
+  needsPasswordChange: true,
 });
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;

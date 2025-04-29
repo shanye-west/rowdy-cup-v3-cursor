@@ -24,6 +24,12 @@ export async function hashPassword(password: string) {
 
 // Password comparison function
 async function comparePasswords(supplied: string, stored: string) {
+  // Check if we're dealing with a plain 4-digit PIN
+  if (stored === "1111" || (!stored.includes('.') && stored.length === 4)) {
+    // Direct comparison for 4-digit PIN
+    return supplied === stored;
+  }
+  
   // Check if stored password has the expected format (hash.salt)
   if (!stored || !stored.includes('.')) {
     console.error('Invalid password format in database: missing salt separator');

@@ -18,6 +18,7 @@ export interface IStorage {
   getHoles(): Promise<any[]>;
   getUsers(): Promise<any[]>;
   getUser(id: number): Promise<any | undefined>;
+  getUserByUsername(username: string): Promise<any | undefined>;
   createUser(data: any): Promise<any>;
 
   getPlayers(): Promise<any[]>;
@@ -93,6 +94,11 @@ export class DBStorage implements IStorage {
     return row;
   }
 
+  async getUserByUsername(username: string) {
+    const [row] = await db.select().from(users).where(eq(users.username, username));
+    return row;
+  }
+
   async createUser(data: any) {
     const [row] = await db.insert(users).values(data).returning();
     return row;
@@ -122,11 +128,16 @@ export class DBStorage implements IStorage {
   async createPlayer(data: any) {
     // Start a transaction to ensure both player and user are created together
     const result = await db.transaction(async (tx) => {
+      // Format username as firstnamelastname (all lowercase, no spaces)
+      const name = data.name || '';
+      const username = name.toLowerCase().replace(/\s+/g, '');
+      
       // First create a user for this player
       const [user] = await tx.insert(users).values({
-        username: `player_${Date.now()}`, // Generate unique username based on timestamp
-        passcode: Math.random().toString(36).slice(-8), // Generate random password
+        username: username, // Username as firstnamelastname
+        passcode: "1111", // Default 4-digit PIN
         isAdmin: false,
+        needsPasswordChange: true, // Require password change on first login
       }).returning();
       
       // Then create the player with reference to the user
@@ -155,9 +166,10 @@ export class DBStorage implements IStorage {
     
     // If player name has changed, update the associated user's name too
     if (data.name && updatedPlayer.userId) {
+      const username = data.name.toLowerCase().replace(/\s+/g, '');
       await db
         .update(users)
-        .set({ username: `${data.name.replace(/\s+/g, '_').toLowerCase()}_${updatedPlayer.id}` })
+        .set({ username: username })
         .where(eq(users.id, updatedPlayer.userId));
     }
     
