@@ -5,6 +5,9 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
+import { db } from "./db";
+import { users } from "@shared/schema";
+import { eq } from "drizzle-orm";
 import { User as SelectUser } from "@shared/schema";
 
 declare global {
@@ -98,7 +101,7 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
+        if (!user || !(await comparePasswords(password, user.passcode))) {
           return done(null, false);
         }
         return done(null, user);
@@ -139,9 +142,43 @@ export function setupAuth(app: Express) {
           id: user.id,
           username: user.username,
           isAdmin: user.isAdmin,
+          needsPasswordChange: user.needsPasswordChange,
+          playerId: user.playerId
         });
       });
     })(req, res, next);
+  });
+  
+  // Password change endpoint
+  app.post("/api/change-password", isAuthenticated, async (req, res) => {
+    try {
+      // Validate the request
+      const { newPassword } = req.body;
+      
+      if (!req.user) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      // Validate that new password is a 4-digit PIN
+      if (!/^\d{4}$/.test(newPassword)) {
+        return res.status(400).json({ error: "Password must be exactly 4 digits" });
+      }
+      
+      // Update the user's password
+      const hashedPassword = await hashPassword(newPassword);
+      await db.update(users)
+        .set({ 
+          passcode: hashedPassword,
+          needsPasswordChange: false 
+        })
+        .where(eq(users.id, req.user.id))
+        .returning();
+      
+      res.status(200).json({ message: "Password changed successfully" });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ error: "Error changing password" });
+    }
   });
 
   app.post("/api/logout", (req, res) => {
@@ -163,6 +200,8 @@ export function setupAuth(app: Express) {
         id: 999,
         username: "test-admin",
         isAdmin: true,
+        needsPasswordChange: false,
+        playerId: null
       },
     });
     
@@ -177,6 +216,8 @@ export function setupAuth(app: Express) {
         id: req.user.id,
         username: req.user.username,
         isAdmin: req.user.isAdmin,
+        needsPasswordChange: req.user.needsPasswordChange,
+        playerId: req.user.playerId
       },
     });
     */
