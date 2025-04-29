@@ -483,13 +483,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const round = await storage.getRound(match.roundId);
         if (round) {
           const roundScores = await storage.calculateRoundScores(match.roundId);
-          // Add default values for pendingScores to maintain client compatibility
-          const scoresWithDefaults = {
-            ...roundScores,
-            pendingAviatorScore: 0,
-            pendingProducerScore: 0
-          };
-          broadcast("round-updated", { ...round, ...scoresWithDefaults });
+          // Include actual pending scores in the broadcast
+          broadcast("round-updated", { ...round, ...roundScores });
         }
       }
 
