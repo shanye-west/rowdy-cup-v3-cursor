@@ -601,13 +601,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const matchId = req.query.matchId
       ? parseInt(req.query.matchId as string)
       : undefined;
+    const roundId = req.query.roundId
+      ? parseInt(req.query.roundId as string)
+      : undefined;
     
-    if (!matchId) {
-      return res.status(400).json({ message: "matchId query parameter is required" });
+    if (!matchId && !roundId) {
+      return res.status(400).json({ message: "Either matchId or roundId query parameter is required" });
     }
     
-    const matchPlayers = await storage.getMatchParticipants(matchId);
-    res.json(matchPlayers);
+    if (matchId) {
+      const matchPlayers = await storage.getMatchParticipants(matchId);
+      return res.json(matchPlayers);
+    } else if (roundId) {
+      // Get all matches in this round
+      const matches = await storage.getMatchesByRound(roundId);
+      
+      // Get players for each match
+      const playersInRound = [];
+      for (const match of matches) {
+        const matchPlayers = await storage.getMatchParticipants(match.id);
+        playersInRound.push(...matchPlayers);
+      }
+      
+      return res.json(playersInRound);
+    }
   });
   
   app.post("/api/match-players", async (req, res) => {

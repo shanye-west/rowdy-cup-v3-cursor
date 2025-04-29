@@ -77,8 +77,8 @@ const Round = ({ id }: RoundProps) => {
   });
 
   // Fetch match participants for this round
-  const { data: matchParticipants = [], isLoading: isParticipantsLoading } = useQuery<any[]>({
-    queryKey: [`/api/match-players`],
+  const { data: roundParticipants = [], isLoading: isParticipantsLoading } = useQuery<any[]>({
+    queryKey: [`/api/match-players?roundId=${id}`],
     enabled: isAdmin && isCreateMatchDialogOpen,
   });
 
@@ -234,12 +234,12 @@ const Round = ({ id }: RoundProps) => {
     });
   };
 
+  // Get a list of players already participating in matches in this round from the API
+  const playersInRound = roundParticipants.map(participant => participant.playerId);
+  
   // Check if a player is already participating in any match in this round
   const isPlayerInRound = (playerId: number) => {
-    return matchParticipants.some(mp => 
-      mp.playerId === playerId && 
-      matches.some(m => m.id === mp.matchId)
-    );
+    return playersInRound.includes(playerId);
   };
 
   // Get player name by ID
