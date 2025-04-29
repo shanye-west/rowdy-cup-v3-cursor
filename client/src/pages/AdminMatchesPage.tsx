@@ -148,28 +148,32 @@ export default function AdminMatchesPage() {
     });
   };
   
+  // Check if a player is already participating in a match in this round
+  const isPlayerInAnyMatch = (playerId: number): boolean => {
+    if (!matches || !players) return false;
+    
+    const player = players.find(p => p.id === playerId);
+    if (!player) return false;
+    
+    // Check each active match
+    return matches.some(match => {
+      // Skip deleted matches
+      if (match.status === 'deleted') return false;
+      
+      // Check both teams for the player
+      return (
+        (match.aviatorPlayers && match.aviatorPlayers.includes(player.name)) ||
+        (match.producerPlayers && match.producerPlayers.includes(player.name))
+      );
+    });
+  };
+  
   // Handle selecting an Aviator player
   const handleAddAviatorPlayer = (playerId: number) => {
-    // Check if player is already selected
     if (players && roundId) {
       const player = players.find(p => p.id === Number(playerId));
       
       if (player) {
-        // Check if player is already part of another match in this round
-        const isAlreadyInMatch = matches?.some(match => {
-          // Check if the player's name is in the aviatorPlayers or producerPlayers string
-          return match.aviatorPlayers.includes(player.name) || match.producerPlayers.includes(player.name);
-        });
-        
-        if (isAlreadyInMatch) {
-          toast({
-            title: "Player already in a match",
-            description: `${player.name} is already participating in a match in this round.`,
-            variant: "destructive",
-          });
-          return;
-        }
-        
         // Add player to selected list if not already there
         if (!selectedAviatorPlayers.some(p => p.id === player.id)) {
           setSelectedAviatorPlayers([...selectedAviatorPlayers, player]);
@@ -187,26 +191,10 @@ export default function AdminMatchesPage() {
   
   // Handle selecting a Producer player
   const handleAddProducerPlayer = (playerId: number) => {
-    // Check if player is already selected
     if (players && roundId) {
       const player = players.find(p => p.id === Number(playerId));
       
       if (player) {
-        // Check if player is already part of another match in this round
-        const isAlreadyInMatch = matches?.some(match => {
-          // Check if the player's name is in the aviatorPlayers or producerPlayers string
-          return match.aviatorPlayers.includes(player.name) || match.producerPlayers.includes(player.name);
-        });
-        
-        if (isAlreadyInMatch) {
-          toast({
-            title: "Player already in a match",
-            description: `${player.name} is already participating in a match in this round.`,
-            variant: "destructive",
-          });
-          return;
-        }
-        
         // Add player to selected list if not already there
         if (!selectedProducerPlayers.some(p => p.id === player.id)) {
           setSelectedProducerPlayers([...selectedProducerPlayers, player]);
@@ -292,9 +280,9 @@ export default function AdminMatchesPage() {
               variant="outline" 
               size="sm" 
               className="flex items-center"
-              onClick={() => window.location.href = "/admin"}
+              onClick={() => window.location.href = "/rounds"}
             >
-              <ChevronLeft className="h-4 w-4 mr-1" /> Back to Admin
+              <ChevronLeft className="h-4 w-4 mr-1" /> Back to Rounds
             </Button>
             <h1 className="text-2xl font-bold">Manage Matches</h1>
           </div>
@@ -327,77 +315,75 @@ export default function AdminMatchesPage() {
         <h2 className="text-xl font-semibold mt-4">Match List</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {matches && matches.length > 0 ? (
-            matches.map((match) => (
-              <Card key={match.id} className={match.status === 'deleted' ? 'opacity-50' : ''}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">{match.name}</CardTitle>
-                  <CardDescription>
-                    Status: {match.status === 'completed' ? 
-                      <span className="text-green-600">Completed</span> : 
-                      match.status === 'in_progress' ? 
-                      <span className="text-amber-600">In Progress</span> : 
-                      match.status === 'deleted' ? 
-                      <span className="text-red-600">Deleted</span> :
-                      <span className="text-blue-600">Upcoming</span>
-                    }
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pb-2">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-blue-600">The Aviators</p>
-                      <p className="text-sm text-muted-foreground">{match.aviatorPlayers}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-red-600">The Producers</p>
-                      <p className="text-sm text-muted-foreground">{match.producerPlayers}</p>
-                    </div>
-                  </div>
-                  {match.status !== 'upcoming' && (
-                    <div className="flex justify-between mt-2">
+          {matches && matches.filter(m => m.status !== 'deleted').length > 0 ? (
+            matches
+              .filter(m => m.status !== 'deleted')
+              .map((match) => (
+                <Card key={match.id}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">{match.name}</CardTitle>
+                    <CardDescription>
+                      Status: {match.status === 'completed' ? 
+                        <span className="text-green-600">Completed</span> : 
+                        match.status === 'in_progress' ? 
+                        <span className="text-amber-600">In Progress</span> : 
+                        <span className="text-blue-600">Upcoming</span>
+                      }
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pb-2">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <span className="text-sm">
-                          {match.leadingTeam ? 
-                            `${match.leadingTeam === 'aviator' ? 'Aviators' : 'Producers'} lead by ${match.leadAmount}` : 
-                            'Match is tied'
-                          }
-                        </span>
+                        <p className="text-sm font-medium text-blue-600">The Aviators</p>
+                        <p className="text-sm text-muted-foreground">{match.aviatorPlayers}</p>
                       </div>
                       <div>
-                        <span className="text-sm">
-                          {match.status === 'completed' ? 
-                            (match.result ? `Result: ${match.result}` : 'Completed') : 
-                            `Hole: ${match.currentHole}/18`
-                          }
-                        </span>
+                        <p className="text-sm font-medium text-red-600">The Producers</p>
+                        <p className="text-sm text-muted-foreground">{match.producerPlayers}</p>
                       </div>
                     </div>
-                  )}
-                </CardContent>
-                <CardFooter className="pt-2 flex flex-col space-y-2">
-                  <Button 
-                    variant="outline" 
-                    className="w-full flex items-center"
-                    onClick={() => handleEditMatch(match.id)}
-                    disabled={match.status === 'deleted'}
-                  >
-                    <PenSquare className="h-4 w-4 mr-2" />
-                    Edit Match
-                  </Button>
-                  
-                  <Button 
-                    variant="default" 
-                    className="w-full flex items-center"
-                    onClick={() => handleViewScorecard(match.id)}
-                    disabled={match.status === 'deleted'}
-                  >
-                    <PenSquare className="h-4 w-4 mr-2" />
-                    View Scorecard
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))
+                    {match.status !== 'upcoming' && (
+                      <div className="flex justify-between mt-2">
+                        <div>
+                          <span className="text-sm">
+                            {match.leadingTeam ? 
+                              `${match.leadingTeam === 'aviator' ? 'Aviators' : 'Producers'} lead by ${match.leadAmount}` : 
+                              'Match is tied'
+                            }
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-sm">
+                            {match.status === 'completed' ? 
+                              (match.result ? `Result: ${match.result}` : 'Completed') : 
+                              `Hole: ${match.currentHole}/18`
+                            }
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                  <CardFooter className="pt-2 flex flex-col space-y-2">
+                    <Button 
+                      variant="outline" 
+                      className="w-full flex items-center"
+                      onClick={() => handleEditMatch(match.id)}
+                    >
+                      <PenSquare className="h-4 w-4 mr-2" />
+                      Edit Match
+                    </Button>
+                    
+                    <Button 
+                      variant="default" 
+                      className="w-full flex items-center"
+                      onClick={() => handleViewScorecard(match.id)}
+                    >
+                      <PenSquare className="h-4 w-4 mr-2" />
+                      View Scorecard
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))
           ) : (
             <Card className="col-span-full">
               <CardContent className="flex flex-col items-center justify-center p-8">
@@ -443,9 +429,14 @@ export default function AdminMatchesPage() {
                         <SelectValue placeholder="Select an Aviator player" />
                       </SelectTrigger>
                       <SelectContent>
-                        {players?.filter(p => p.teamId === 1 && 
+                        {players?.filter(p => 
+                          // Only show Aviator players
+                          p.teamId === 1 && 
+                          // Not already selected in this form
                           !selectedAviatorPlayers.some(sp => sp.id === p.id) &&
-                          !selectedProducerPlayers.some(sp => sp.id === p.id)
+                          !selectedProducerPlayers.some(sp => sp.id === p.id) &&
+                          // Not already in another match in this round
+                          !isPlayerInAnyMatch(p.id)
                         ).map(player => (
                           <SelectItem key={player.id} value={player.id.toString()}>
                             {player.name} ({player.wins}-{player.losses}-{player.ties})
@@ -494,9 +485,14 @@ export default function AdminMatchesPage() {
                         <SelectValue placeholder="Select a Producer player" />
                       </SelectTrigger>
                       <SelectContent>
-                        {players?.filter(p => p.teamId === 2 && 
+                        {players?.filter(p => 
+                          // Only show Producer players
+                          p.teamId === 2 && 
+                          // Not already selected in this form
                           !selectedProducerPlayers.some(sp => sp.id === p.id) &&
-                          !selectedAviatorPlayers.some(sp => sp.id === p.id)
+                          !selectedAviatorPlayers.some(sp => sp.id === p.id) &&
+                          // Not already in another match in this round
+                          !isPlayerInAnyMatch(p.id)
                         ).map(player => (
                           <SelectItem key={player.id} value={player.id.toString()}>
                             {player.name} ({player.wins}-{player.losses}-{player.ties})
