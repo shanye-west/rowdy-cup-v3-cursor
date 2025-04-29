@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 import MainNavigation from "./MainNavigation";
 import FooterNavigation from "./FooterNavigation";
+import FirstLoginPasswordChange from "./FirstLoginPasswordChange";
 import RowdyCupLogo from "../assets/rowdy-cup-logo.svg"
 
 interface LayoutProps {
@@ -10,7 +12,18 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const [isNavOpen, setIsNavOpen] = useState(false);
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [_, navigate] = useLocation();
+  const { user, isAuthenticated } = useAuth();
+  
+  // Show password change dialog if user is authenticated and needs password change
+  useEffect(() => {
+    if (isAuthenticated && user && user.needsPasswordChange) {
+      setShowPasswordChange(true);
+    } else {
+      setShowPasswordChange(false);
+    }
+  }, [isAuthenticated, user]);
 
   const toggleNav = () => {
     setIsNavOpen(!isNavOpen);
@@ -56,6 +69,13 @@ const Layout = ({ children }: LayoutProps) => {
 
       {/* Footer Navigation */}
       <FooterNavigation onNavigate={handleNavigation} />
+      
+      {/* First Login Password Change Dialog */}
+      {showPasswordChange && (
+        <FirstLoginPasswordChange 
+          onComplete={() => setShowPasswordChange(false)} 
+        />
+      )}
     </div>
   );
 };

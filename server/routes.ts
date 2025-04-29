@@ -622,7 +622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hashedPasscode = await hashPassword(userData.passcode);
       const userDataWithHashedPasscode = {
         ...userData,
-        passcode: hashedPassword,
+        passcode: hashedPasscode,
       };
 
       const user = await storage.createUser(userDataWithHashedPasscode);
@@ -653,7 +653,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hashedPasscode = await hashPassword(userData.passcode);
       const userDataWithHashedPasscode = {
         ...userData,
-        passcode: hashedPassword,
+        passcode: hashedPasscode,
       };
 
       const user = await storage.createUser(userDataWithHashedPasscode);
