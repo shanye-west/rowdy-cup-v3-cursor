@@ -958,7 +958,7 @@ const EnhancedMatchScorecard = ({
             {/* Producer Players Rows for Best Ball - displayed below team row */}
             {isBestBall && (
               <>
-                {producerPlayersList.map((player) => (
+                {producerPlayersList.map((player: any) => (
                   <tr key={player.id} className="border-b border-gray-200">
                     <td className="py-2 px-2 sticky-column bg-white border-l-4 border-producer">
                       <div className="text-xs font-medium text-black">

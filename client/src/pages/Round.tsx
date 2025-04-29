@@ -44,6 +44,7 @@ interface Match {
   leadAmount: number;
   result: string | null;
   currentHole: number;
+  roundId: number;
 }
 
 interface MatchFormData {
