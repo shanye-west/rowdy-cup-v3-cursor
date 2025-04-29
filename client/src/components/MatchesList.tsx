@@ -237,7 +237,7 @@ const MatchesList = ({ matches }: MatchesListProps) => {
                   <div className="w-3 h-3 rounded-full bg-aviator mr-2"></div>
                   <span className="font-semibold text-sm">AVIATORS</span>
                 </div>
-                <div className="text-sm">{match.aviatorPlayers}</div>
+                <div className="text-sm text-gray-600">{match.aviatorPlayers}</div>
               </div>
               
               <div className="w-1/2 pl-3">
@@ -245,7 +245,7 @@ const MatchesList = ({ matches }: MatchesListProps) => {
                   <div className="w-3 h-3 rounded-full bg-producer mr-2"></div>
                   <span className="font-semibold text-sm">PRODUCERS</span>
                 </div>
-                <div className="text-sm">{match.producerPlayers}</div>
+                <div className="text-sm text-gray-600">{match.producerPlayers}</div>
               </div>
             </div>
             
