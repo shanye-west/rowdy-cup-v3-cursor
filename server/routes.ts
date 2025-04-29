@@ -48,6 +48,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Setup authentication
   setupAuth(app);
+  
+  // Change password endpoint - requires authentication
+  app.post('/api/change-password', isAuthenticated, async (req, res) => {
+    try {
+      const { newPassword } = req.body;
+      
+      // Validate new password (must be 4 digits)
+      if (!newPassword || !/^\d{4}$/.test(newPassword)) {
+        return res.status(400).json({ message: "PIN must be exactly 4 digits" });
+      }
+      
+      // Get current user from session
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      // Hash the new password
+      const hashedPasscode = await hashPassword(newPassword);
+      
+      // Update the user with new password and mark first login complete
+      const updatedUser = await storage.updateUser(req.user.id, { 
+        passcode: hashedPasscode,
+        needsPasswordChange: false
+      });
+      
+      if (!updatedUser) {
+        return res.status(500).json({ message: "Failed to update PIN" });
+      }
+      
+      return res.status(200).json({ message: "PIN updated successfully" });
+    } catch (error) {
+      console.error("Error changing PIN:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
   // Setup WebSocket server for real-time updates with a specific path
   const wss = new WebSocketServer({
