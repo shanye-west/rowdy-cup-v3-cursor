@@ -43,20 +43,39 @@ const MatchHeader = ({
   const [_, navigate] = useLocation();
 
   // Fetch match participants
-  const { data: participants = [] } = useQuery({
+  const { data: participants = [] } = useQuery<any[]>({
     queryKey: [`/api/match-players?matchId=${id}`],
   });
 
-  // Split participants into teams
-  const aviatorPlayers = participants
-    ?.filter((p: MatchParticipant) => p.team === "aviators")
-    ?.map((p: MatchParticipant) => p.player.name)
-    ?.join(", ") || "";
+  // Fetch all players for reference
+  const { data: allPlayers = [] } = useQuery<any[]>({
+    queryKey: ["/api/players"],
+  });
 
-  const producerPlayers = participants
-    ?.filter((p: MatchParticipant) => p.team === "producers")
-    ?.map((p: MatchParticipant) => p.player.name)
-    ?.join(", ") || "";
+  // Split participants into teams
+  const aviatorPlayers = Array.isArray(participants) 
+    ? participants
+        .filter((p: any) => p.team === "aviators")
+        .map((p: any) => {
+          const player = Array.isArray(allPlayers) 
+            ? allPlayers.find((player: any) => player.id === p.playerId)
+            : null;
+          return player ? player.name : `Player ${p.playerId}`;
+        })
+        .join(", ") 
+    : "";
+
+  const producerPlayers = Array.isArray(participants)
+    ? participants
+        .filter((p: any) => p.team === "producers")
+        .map((p: any) => {
+          const player = Array.isArray(allPlayers)
+            ? allPlayers.find((player: any) => player.id === p.playerId)
+            : null;
+          return player ? player.name : `Player ${p.playerId}`;
+        })
+        .join(", ")
+    : "";
 
   const handleBackClick = () => {
     navigate(`/rounds/${roundId}`);
