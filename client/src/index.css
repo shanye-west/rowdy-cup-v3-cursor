@@ -16,6 +16,10 @@
   border-spacing: 0;
 }
 
+.scorecard-table td {
+  background-color: white;
+}
+
 /* Sticky column styling */
 .sticky-column {
   position: sticky;
