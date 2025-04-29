@@ -49,6 +49,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   setupAuth(app);
   
+  // Initialize the application data - can be called to repair data
+  app.get("/api/initialize", async (req, res) => {
+    try {
+      await storage.initializeData();
+      res.json({ success: true, message: "Application data initialized successfully" });
+    } catch (error) {
+      console.error("Initialization error:", error);
+      res.status(500).json({ success: false, message: "Failed to initialize application data" });
+    }
+  });
+  
   // Change password endpoint - requires authentication
   app.post('/api/change-password', isAuthenticated, async (req, res) => {
     try {

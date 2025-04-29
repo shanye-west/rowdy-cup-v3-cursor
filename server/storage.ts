@@ -811,6 +811,42 @@ export class DBStorage implements IStorage {
         year: new Date().getFullYear(),
       });
     }
+    
+    // Create teams if they don't exist
+    const existingTeams = await this.getTeams();
+    if (existingTeams.length === 0) {
+      await db.insert(teams).values({
+        name: "The Aviators",
+        shortName: "aviators",
+        colorCode: "#004A7F", // Dark blue
+      });
+      
+      await db.insert(teams).values({
+        name: "The Producers",
+        shortName: "producers",
+        colorCode: "#800000", // Maroon
+      });
+    }
+    
+    // Ensure admin user exists
+    await this.ensureAdminUserExists();
+  }
+  
+  // Ensures an admin user exists in the system
+  async ensureAdminUserExists() {
+    const adminUsername = "superadmin";
+    const existingAdmin = await this.getUserByUsername(adminUsername);
+    
+    if (!existingAdmin) {
+      // Create a new admin user
+      await this.createUser({
+        username: adminUsername,
+        passcode: "$2b$10$LLNIo.a42c8YTxffFVi0wezkcKquF.JPizZQ9XnZ.JMYgg4PH/XOy", // "1111" hashed
+        isAdmin: true,
+        needsPasswordChange: true
+      });
+      console.log("Created new admin user");
+    }
   }
 
   // Helper method for holes
