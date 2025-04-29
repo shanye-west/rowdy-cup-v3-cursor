@@ -347,13 +347,13 @@ export class DBStorage implements IStorage {
   private async resetSequence(tableName: string) {
     // Get the max ID from the table
     const result = await db.execute(
-      sql`SELECT COALESCE(MAX(id), 0) + 1 AS max_id FROM ${sql.identifier(tableName)}`
+      `SELECT COALESCE(MAX(id), 0) + 1 AS max_id FROM "${tableName}"`
     );
     const maxId = result.rows[0].max_id;
     
     // Reset the sequence to the next available ID
     await db.execute(
-      sql`ALTER SEQUENCE ${sql.identifier(tableName + '_id_seq')} RESTART WITH ${sql.raw(maxId.toString())}`
+      `ALTER SEQUENCE "${tableName}_id_seq" RESTART WITH ${maxId}`
     );
   }
 
@@ -702,6 +702,10 @@ export class DBStorage implements IStorage {
           pendingAviatorScore += 1;
         } else if (match.leadingTeam === "producers") {
           pendingProducerScore += 1;
+        } else {
+          // In progress but currently tied
+          pendingAviatorScore += 0.5;
+          pendingProducerScore += 0.5;
         }
       }
     }
