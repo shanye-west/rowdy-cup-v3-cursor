@@ -289,6 +289,78 @@ export class DBStorage implements IStorage {
       .returning();
     return row;
   }
+  
+  async deleteRound(id: number) {
+    // Start transaction for deletion operations
+    await db.transaction(async (tx) => {
+      // Get all matches in this round
+      const roundMatches = await tx
+        .select()
+        .from(matches)
+        .where(eq(matches.roundId, id));
+      
+      // For each match, delete scores and participants
+      for (const match of roundMatches) {
+        // Delete scores first
+        await tx
+          .delete(scores)
+          .where(eq(scores.matchId, match.id));
+        
+        // Delete match participants
+        await tx
+          .delete(match_players)
+          .where(eq(match_players.matchId, match.id));
+      }
+      
+      // Delete all matches in the round
+      await tx
+        .delete(matches)
+        .where(eq(matches.roundId, id));
+      
+      // Finally delete the round itself
+      await tx
+        .delete(rounds)
+        .where(eq(rounds.id, id));
+    });
+    
+    // Reset sequences
+    await this.resetSequence('matches');
+    await this.resetSequence('scores');
+    await this.resetSequence('match_players');
+    await this.resetSequence('rounds');
+  }
+  
+  async deleteAllRounds() {
+    // Start transaction for deletion operations
+    await db.transaction(async (tx) => {
+      // Delete all scores first (foreign key constraint)
+      await tx.delete(scores);
+      
+      // Delete all match participants
+      await tx.delete(match_players);
+      
+      // Delete all matches
+      await tx.delete(matches);
+      
+      // Delete all rounds
+      await tx.delete(rounds);
+    });
+    
+    // Reset sequences
+    await this.resetSequence('matches');
+    await this.resetSequence('scores');
+    await this.resetSequence('match_players');
+    await this.resetSequence('rounds');
+    
+    // Update tournament scores to zero
+    const tournament = await this.getTournament();
+    if (tournament) {
+      await this.updateTournament(tournament.id, {
+        aviatorScore: 0,
+        producerScore: 0
+      });
+    }
+  }
 
   // Matches
   async getMatches() {

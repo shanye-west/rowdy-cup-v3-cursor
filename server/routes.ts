@@ -881,46 +881,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete all rounds
   app.delete("/api/admin/rounds/all", isAdmin, async (req, res) => {
     try {
-      // In a real database implementation, this would use a transaction
-      // Delete all scores first (cascade delete)
-      const scores = await storage.getScores();
-      for (const score of scores) {
-        await storage.updateScore(score.id, {
-          matchId: score.matchId,
-          aviatorScore: null,
-          producerScore: null,
-          winningTeam: null,
-        });
-      }
-
-      // Delete all matches (cascade delete)
-      const matches = await storage.getMatches();
-      for (const match of matches) {
-        await storage.updateMatch(match.id, {
-          status: "deleted",
-          currentHole: 1,
-          leadingTeam: null,
-          leadAmount: 0,
-          result: null,
-        });
-      }
-
-      // Delete all rounds
-      const rounds = await storage.getRounds();
-      for (const round of rounds) {
-        await storage.updateRound(round.id, {
-          isComplete: false,
-          status: "deleted",
-        });
-      }
-
-      // Recalculate tournament scores
-      const tournamentScores = await storage.calculateTournamentScores();
-      const tournament = await storage.getTournament();
-      if (tournament) {
-        await storage.updateTournament(tournament.id, tournamentScores);
-      }
-
+      // Use new deleteAllRounds method that properly removes rounds from the database
+      await storage.deleteAllRounds();
+      
       broadcast("data-reset", { type: "rounds-deleted" });
       res.status(200).json({ message: "All rounds have been deleted" });
     } catch (error) {
