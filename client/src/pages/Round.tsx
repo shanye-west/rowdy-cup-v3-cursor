@@ -45,8 +45,8 @@ const Round = ({ id }: RoundProps) => {
   const [isCreateMatchDialogOpen, setIsCreateMatchDialogOpen] = useState(false);
   const [matchFormData, setMatchFormData] = useState({
     name: "",
-    aviatorPlayers: "",
-    producerPlayers: "",
+    aviatorPlayers: [] as number[], // Array for multiple players
+    producerPlayers: [] as number[], // Array for multiple players
   });
   
   // Fetch players for match creation
@@ -114,8 +114,8 @@ const Round = ({ id }: RoundProps) => {
   const resetMatchForm = () => {
     setMatchFormData({
       name: "",
-      aviatorPlayers: "",
-      producerPlayers: "",
+      aviatorPlayers: [],
+      producerPlayers: [],
     });
   };
 

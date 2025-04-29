@@ -326,7 +326,7 @@ export class DBStorage implements IStorage {
     // Reset sequences
     await this.resetSequence('matches');
     await this.resetSequence('scores');
-    await this.resetSequence('match_players');
+    await this.resetSequence('match_participants');
     await this.resetSequence('rounds');
   }
   
@@ -349,7 +349,7 @@ export class DBStorage implements IStorage {
     // Reset sequences
     await this.resetSequence('matches');
     await this.resetSequence('scores');
-    await this.resetSequence('match_players');
+    await this.resetSequence('match_participants');
     await this.resetSequence('rounds');
     
     // Update tournament scores to zero
