@@ -664,7 +664,7 @@ const EnhancedMatchScorecard = ({
                       return (
                         <td key={hole.number} className="py-2 px-2 text-center">
                           <input
-                            type="number"
+                            type="tel"
                             inputMode="numeric"
                             pattern="[0-9]*"
                             className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
@@ -703,7 +703,7 @@ const EnhancedMatchScorecard = ({
                       return (
                         <td key={hole.number} className="py-2 px-2 text-center">
                           <input
-                            type="number"
+                            type="tel"
                             inputMode="numeric"
                             pattern="[0-9]*"
                             className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
@@ -749,7 +749,10 @@ const EnhancedMatchScorecard = ({
               {/* Front Nine Aviator Scores */}
               {frontNine.map((hole) => (
                 <td key={hole.number} className="py-2 px-2 text-center">
-                  <select
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
                       ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
                     value={getScoreInputValue(hole.number, "aviator")}
@@ -760,15 +763,10 @@ const EnhancedMatchScorecard = ({
                         e.target.value,
                       )
                     }
+                    min="1"
+                    max="12"
                     disabled={isHoleGreyedOut(hole.number)}
-                  >
-                    <option value="">-</option>
-                    {[...Array(12)].map((_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {i + 1}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </td>
               ))}
               <td className="py-2 px-2 text-center font-semibold bg-gray-100 text-aviator">
@@ -780,7 +778,10 @@ const EnhancedMatchScorecard = ({
               {/* Back Nine Aviator Scores */}
               {backNine.map((hole) => (
                 <td key={hole.number} className="py-2 px-2 text-center">
-                  <select
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
                       ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
                     value={getScoreInputValue(hole.number, "aviator")}
@@ -791,15 +792,10 @@ const EnhancedMatchScorecard = ({
                         e.target.value,
                       )
                     }
+                    min="1"
+                    max="12"
                     disabled={isHoleGreyedOut(hole.number)}
-                  >
-                    <option value="">-</option>
-                    {[...Array(12)].map((_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {i + 1}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </td>
               ))}
               <td className="py-2 px-2 text-center font-semibold bg-gray-100 text-aviator">
@@ -855,7 +851,10 @@ const EnhancedMatchScorecard = ({
               {/* Front Nine Producer Scores */}
               {frontNine.map((hole) => (
                 <td key={hole.number} className="py-2 px-2 text-center">
-                  <select
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
                       ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
                     value={getScoreInputValue(hole.number, "producer")}
@@ -866,15 +865,10 @@ const EnhancedMatchScorecard = ({
                         e.target.value,
                       )
                     }
+                    min="1"
+                    max="12"
                     disabled={isHoleGreyedOut(hole.number)}
-                  >
-                    <option value="">-</option>
-                    {[...Array(12)].map((_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {i + 1}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </td>
               ))}
               <td className="py-2 px-2 text-center font-semibold bg-gray-100 text-producer">
@@ -886,7 +880,10 @@ const EnhancedMatchScorecard = ({
               {/* Back Nine Producer Scores */}
               {backNine.map((hole) => (
                 <td key={hole.number} className="py-2 px-2 text-center">
-                  <select
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
                       ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
                     value={getScoreInputValue(hole.number, "producer")}
@@ -897,15 +894,10 @@ const EnhancedMatchScorecard = ({
                         e.target.value,
                       )
                     }
+                    min="1"
+                    max="12"
                     disabled={isHoleGreyedOut(hole.number)}
-                  >
-                    <option value="">-</option>
-                    {[...Array(12)].map((_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {i + 1}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </td>
               ))}
               <td className="py-2 px-2 text-center font-semibold bg-gray-100 text-producer">
@@ -940,7 +932,7 @@ const EnhancedMatchScorecard = ({
                       return (
                         <td key={hole.number} className="py-2 px-2 text-center">
                           <input
-                            type="number"
+                            type="tel"
                             inputMode="numeric"
                             pattern="[0-9]*"
                             className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
@@ -979,7 +971,7 @@ const EnhancedMatchScorecard = ({
                       return (
                         <td key={hole.number} className="py-2 px-2 text-center">
                           <input
-                            type="number"
+                            type="tel"
                             inputMode="numeric"
                             pattern="[0-9]*"
                             className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
