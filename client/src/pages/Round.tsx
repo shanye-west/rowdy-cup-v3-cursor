@@ -252,6 +252,28 @@ const Round = ({ id }: RoundProps) => {
 
   const isLoading = isRoundLoading || isMatchesLoading;
 
+const renderMatchStatus = (match: any) => {
+  if (match.status === "completed") {
+    return (
+      <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+        Completed
+      </span>
+    );
+  } else if (match.status === "in_progress") {
+    return (
+      <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
+        In Progress
+      </span>
+    );
+  } else {
+    return (
+      <span className="inline-block px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">
+        Upcoming
+      </span>
+    );
+  }
+};
+
   return (
     <div className="container mx-auto px-4 py-6">
       {isLoading ? (
