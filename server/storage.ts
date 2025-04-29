@@ -62,11 +62,15 @@ export interface IStorage {
   calculateRoundScores(roundId: number): Promise<{
     aviatorScore: number;
     producerScore: number;
+    pendingAviatorScore: number;
+    pendingProducerScore: number;
   }>;
 
   calculateTournamentScores(): Promise<{
     aviatorScore: number;
     producerScore: number;
+    pendingAviatorScore: number;
+    pendingProducerScore: number;
   }>;
 
   calculatePlayerStats(
@@ -131,7 +135,7 @@ export class DBStorage implements IStorage {
       // Format username as firstnamelastname (all lowercase, no spaces)
       const name = data.name || '';
       const username = name.toLowerCase().replace(/\s+/g, '');
-      
+
       // First create a user for this player
       const [user] = await tx.insert(users).values({
         username: username, // Username as firstnamelastname
@@ -139,21 +143,21 @@ export class DBStorage implements IStorage {
         isAdmin: false,
         needsPasswordChange: true, // Require password change on first login
       }).returning();
-      
+
       // Then create the player with reference to the user
       const [player] = await tx.insert(players).values({
         ...data,
         userId: user.id // Link player to user
       }).returning();
-      
+
       // Update the user with the player reference to create bi-directional link
       await tx.update(users)
         .set({ playerId: player.id })
         .where(eq(users.id, user.id));
-      
+
       return { ...player, user };
     });
-    
+
     return result;
   }
 
@@ -163,7 +167,7 @@ export class DBStorage implements IStorage {
       .set(data)
       .where(eq(players.id, id))
       .returning();
-    
+
     // If player name has changed, update the associated user's name too
     if (data.name && updatedPlayer.userId) {
       const username = data.name.toLowerCase().replace(/\s+/g, '');
@@ -172,39 +176,39 @@ export class DBStorage implements IStorage {
         .set({ username: username })
         .where(eq(users.id, updatedPlayer.userId));
     }
-    
+
     return updatedPlayer;
   }
-  
+
   async deletePlayer(id: number) {
     // Find player to get userId
     const [player] = await db
       .select()
       .from(players)
       .where(eq(players.id, id));
-      
+
     if (player && player.userId) {
       // Delete associated match participants first
       await db
         .delete(match_players)
         .where(eq(match_players.playerId, id));
-      
+
       // Then delete the player
       await db
         .delete(players)
         .where(eq(players.id, id));
-        
+
       // Finally delete the user
       await db
         .delete(users)
         .where(eq(users.id, player.userId));
-      
+
       return true;
     }
-    
+
     return false;
   }
-  
+
   async deleteAllPlayers() {
     try {
       // Start a transaction for deletion operations
@@ -214,13 +218,13 @@ export class DBStorage implements IStorage {
           id: players.id,
           userId: players.userId
         }).from(players);
-        
+
         // Delete all match participants first (foreign key constraint)
         await tx.delete(match_players);
-        
+
         // Then delete all players
         await tx.delete(players);
-        
+
         // Finally delete all associated users
         for (const player of allPlayers) {
           if (player.userId) {
@@ -228,7 +232,7 @@ export class DBStorage implements IStorage {
           }
         }
       });
-      
+
       return true;
     } catch (error) {
       console.error("Error deleting all players:", error);
@@ -601,13 +605,13 @@ export class DBStorage implements IStorage {
     for (const match of matchesByRound) {
       if (match.status === "completed") {
         if (match.leadingTeam === "aviators") {
-          aviatorScore += 1;
+          aviatorScore += 100;
         } else if (match.leadingTeam === "producers") {
-          producerScore += 1;
+          producerScore += 100;
         } else {
           // Tied match
-          aviatorScore += 0.5;
-          producerScore += 0.5;
+          aviatorScore += 50;
+          producerScore += 50;
         }
       } else if (match.status === "in_progress") {
         if (match.leadingTeam === "aviators") {
