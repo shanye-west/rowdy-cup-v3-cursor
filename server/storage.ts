@@ -203,6 +203,10 @@ export class DBStorage implements IStorage {
         .delete(users)
         .where(eq(users.id, player.userId));
 
+      // Reset sequences
+      await this.resetSequence('players');
+      await this.resetSequence('users');
+
       return true;
     }
 
@@ -340,6 +344,19 @@ export class DBStorage implements IStorage {
     return row;
   }
 
+  private async resetSequence(tableName: string) {
+    // Get the max ID from the table
+    const result = await db.execute(
+      sql`SELECT COALESCE(MAX(id), 0) + 1 AS max_id FROM ${sql.identifier(tableName)}`
+    );
+    const maxId = result.rows[0].max_id;
+    
+    // Reset the sequence to the next available ID
+    await db.execute(
+      sql`ALTER SEQUENCE ${sql.identifier(tableName + '_id_seq')} RESTART WITH ${sql.raw(maxId.toString())}`
+    );
+  }
+
   async deleteMatch(id: number) {
     // Delete related scores first
     await db.delete(scores).where(eq(scores.matchId, id));
@@ -347,6 +364,8 @@ export class DBStorage implements IStorage {
     await db.delete(match_players).where(eq(match_players.matchId, id));
     // Delete the match itself
     await db.delete(matches).where(eq(matches.id, id));
+    // Reset sequence
+    await this.resetSequence('matches');
   }
 
   // Match Players
