@@ -24,6 +24,7 @@ export interface IStorage {
   getPlayer(id: number): Promise<any | undefined>;
   createPlayer(data: any): Promise<any>;
   updatePlayer(id: number, data: Partial<any>): Promise<any | undefined>;
+  deletePlayer(id: number): Promise<boolean>;
 
   getTeams(): Promise<any[]>;
   getTeam(id: number): Promise<any | undefined>;
@@ -107,17 +108,77 @@ export class DBStorage implements IStorage {
   }
 
   async createPlayer(data: any) {
-    const [row] = await db.insert(players).values(data).returning();
-    return row;
+    // Start a transaction to ensure both player and user are created together
+    const result = await db.transaction(async (tx) => {
+      // First create a user for this player
+      const [user] = await tx.insert(users).values({
+        username: `player_${Date.now()}`, // Generate unique username based on timestamp
+        passcode: Math.random().toString(36).slice(-8), // Generate random password
+        isAdmin: false,
+      }).returning();
+      
+      // Then create the player with reference to the user
+      const [player] = await tx.insert(players).values({
+        ...data,
+        userId: user.id // Link player to user
+      }).returning();
+      
+      // Update the user with the player reference to create bi-directional link
+      await tx.update(users)
+        .set({ playerId: player.id })
+        .where(eq(users.id, user.id));
+      
+      return { ...player, user };
+    });
+    
+    return result;
   }
 
   async updatePlayer(id: number, data: Partial<any>) {
-    const [row] = await db
+    const [updatedPlayer] = await db
       .update(players)
       .set(data)
       .where(eq(players.id, id))
       .returning();
-    return row;
+    
+    // If player name has changed, update the associated user's name too
+    if (data.name && updatedPlayer.userId) {
+      await db
+        .update(users)
+        .set({ username: `${data.name.replace(/\s+/g, '_').toLowerCase()}_${updatedPlayer.id}` })
+        .where(eq(users.id, updatedPlayer.userId));
+    }
+    
+    return updatedPlayer;
+  }
+  
+  async deletePlayer(id: number) {
+    // Find player to get userId
+    const [player] = await db
+      .select()
+      .from(players)
+      .where(eq(players.id, id));
+      
+    if (player && player.userId) {
+      // Delete associated match participants first
+      await db
+        .delete(match_players)
+        .where(eq(match_players.playerId, id));
+      
+      // Then delete the player
+      await db
+        .delete(players)
+        .where(eq(players.id, id));
+        
+      // Finally delete the user
+      await db
+        .delete(users)
+        .where(eq(users.id, player.userId));
+      
+      return true;
+    }
+    
+    return false;
   }
 
   // Teams
@@ -228,13 +289,13 @@ export class DBStorage implements IStorage {
   async getMatchParticipants(matchId: number) {
     return db
       .select({
-        matchId: match_players.match_id,
-        playerId: match_players.player_id,
+        matchId: match_players.matchId,
+        playerId: match_players.playerId,
         team: match_players.team,
         result: match_players.result,
       })
       .from(match_players)
-      .where(eq(match_players.match_id, matchId));
+      .where(eq(match_players.matchId, matchId));
   }
 
   async createMatchParticipant(data: any) {
@@ -250,17 +311,17 @@ export class DBStorage implements IStorage {
     // Query to get match participants with player details
     const matchParticipants = await db
       .select({
-        match_id: match_players.match_id,
-        player_id: match_players.player_id,
+        matchId: match_players.matchId,
+        playerId: match_players.playerId,
         team: match_players.team,
       })
       .from(match_players)
-      .where(eq(match_players.match_id, id));
+      .where(eq(match_players.matchId, id));
 
     // Get full player details
     const detailedPlayers = await Promise.all(
       matchParticipants.map(async (mp) => {
-        const player = await this.getPlayer(mp.player_id);
+        const player = await this.getPlayer(mp.playerId);
         return {
           ...mp,
           playerName: player?.name || 'Unknown',

@@ -62,6 +62,7 @@ export const players = pgTable("players", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   teamId: integer("team_id").notNull(),
+  userId: integer("user_id"), // Reference to user in the users table
   wins: integer("wins").default(0),
   losses: integer("losses").default(0),
   ties: integer("ties").default(0),
