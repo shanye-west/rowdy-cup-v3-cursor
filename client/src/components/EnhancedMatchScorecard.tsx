@@ -182,7 +182,9 @@ const EnhancedMatchScorecard = ({
 
   // Get a score for a specific hole number
   const getScore = (holeNumber: number): Score | undefined => {
-    return scores.find((s) => s.holeNumber === holeNumber);
+    // Sort scores by ID to get the latest score for a hole
+    const sortedScores = [...scores].sort((a, b) => b.id - a.id);
+    return sortedScores.find((s) => s.holeNumber === holeNumber);
   };
 
   // Determine the last completed hole based on scores
