@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import MatchHeader from "@/components/MatchHeader";
 import EnhancedMatchScorecard from "@/components/EnhancedMatchScorecard";
@@ -75,6 +76,7 @@ interface ScoreData {
 const Match = ({ id }: MatchProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isAdminMode, setIsAdminMode] = useState(false);
@@ -439,9 +441,9 @@ const Match = ({ id }: MatchProps) => {
 
   const handleBackToAdminMatches = () => {
     if (match && match.roundId) {
-      window.location.href = `/admin/rounds/${match.roundId}/matches`;
+      window.location.href = `/rounds/${match.roundId}`;
     } else {
-      window.location.href = "/admin";
+      window.location.href = "/";
     }
   };
 
@@ -465,7 +467,7 @@ const Match = ({ id }: MatchProps) => {
                 className="flex items-center text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
                 onClick={handleBackToAdminMatches}
               >
-                <ChevronLeft className="h-4 w-4 mr-1" /> Back to Admin Matches
+                <ChevronLeft className="h-4 w-4 mr-1" /> Back to Round
               </button>
 
               <div className="flex items-center space-x-2">

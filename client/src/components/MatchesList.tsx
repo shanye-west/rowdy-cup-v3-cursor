@@ -77,7 +77,7 @@ const MatchesList = ({ matches }: MatchesListProps) => {
   
   const handleEditClick = (e: React.MouseEvent, matchId: number) => {
     e.stopPropagation();
-    navigate(`/admin/matches/${matchId}/edit`);
+    navigate(`/matches/${matchId}?admin=true`);
   };
   
   const handleDeleteClick = (e: React.MouseEvent, matchId: number) => {
