@@ -534,8 +534,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Holes API
   app.get("/api/holes", async (req, res) => {
-    const holes = await storage.getHoles();
-    res.json(holes);
+    const courseId = req.query.courseId
+      ? parseInt(req.query.courseId as string)
+      : undefined;
+    
+    if (courseId) {
+      // Filter holes by courseId if provided
+      const holes = await storage.getHolesByCourse(courseId);
+      res.json(holes);
+    } else {
+      // Return all holes if no courseId filter
+      const holes = await storage.getHoles();
+      res.json(holes);
+    }
   });
 
   // Teams API
