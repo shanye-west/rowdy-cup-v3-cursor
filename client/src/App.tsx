@@ -9,7 +9,8 @@ import Round from "@/pages/Round";
 import Match from "@/pages/Match";
 import Teams from "@/pages/Teams";
 import AuthPage from "@/pages/AuthPage";
-// Admin pages removed as they're being integrated into regular pages
+import AdminPage from "@/pages/AdminPage";
+import AdminPlayersPage from "@/pages/AdminPlayersPage";
 import LoginPage from "@/pages/Login";
 import SetPinPage from "@/pages/SetPin";
 import TestCourses from "@/pages/TestCourses";
@@ -146,7 +147,8 @@ function Router() {
       <Route path="/set-pin" component={SetPinPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/test-courses" component={TestCourses} />
-      {/* Admin routes removed - functionality moved into regular pages */}
+      <ProtectedRoute path="/admin" component={AdminPage} adminOnly={true} />
+      <ProtectedRoute path="/admin/players" component={AdminPlayersPage} adminOnly={true} />
       <Route component={NotFound} />
     </Switch>
   );
