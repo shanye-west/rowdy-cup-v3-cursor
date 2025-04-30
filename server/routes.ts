@@ -134,6 +134,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize the data
   await storage.initializeData();
 
+  // Course API
+  app.get("/api/courses", async (req, res) => {
+    try {
+      const courses = await storage.getCourses();
+      res.json(courses);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+      res.status(500).json({ message: "Failed to fetch courses" });
+    }
+  });
+
   // Broadcasting function for real-time updates
   const broadcast = (type: string, data: any) => {
     wss.clients.forEach((client) => {

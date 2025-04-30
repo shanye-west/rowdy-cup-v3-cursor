@@ -280,7 +280,8 @@ function RoundsTab() {
   const [roundFormData, setRoundFormData] = useState({
     name: "",
     matchType: "Singles Match",
-    courseName: "",
+    courseId: 0,
+    courseName: "", // keeping for backward compatibility
     date: new Date().toISOString().split('T')[0],
     startTime: "08:00",
     isComplete: false
@@ -289,6 +290,11 @@ function RoundsTab() {
   const { data: rounds, isLoading } = useQuery<Round[]>({
     queryKey: ['/api/rounds'],
     queryFn: getQueryFn({ on401: "throw" }),
+  });
+  
+  const { data: courses, isLoading: isLoadingCourses } = useQuery<any[]>({
+    queryKey: ['/api/courses'],
+    queryFn: getQueryFn(),
   });
 
   const addRoundMutation = useMutation({
@@ -378,6 +384,7 @@ function RoundsTab() {
     setRoundFormData({
       name: round.name,
       matchType: round.matchType,
+      courseId: round.courseId || 1,
       courseName: round.courseName,
       date: round.date,
       startTime: round.startTime,
@@ -387,9 +394,13 @@ function RoundsTab() {
   };
 
   const resetRoundForm = () => {
+    // Default to the first course if courses are loaded
+    const defaultCourseId = courses && courses.length > 0 ? courses[0].id : 1;
+    
     setRoundFormData({
       name: "",
       matchType: "Singles Match",
+      courseId: defaultCourseId,
       courseName: "",
       date: new Date().toISOString().split('T')[0],
       startTime: "08:00",
