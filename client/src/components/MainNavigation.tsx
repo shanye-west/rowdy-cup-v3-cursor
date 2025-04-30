@@ -42,7 +42,7 @@ const MainNavigation = ({ isOpen, onNavigate }: MainNavigationProps) => {
           <li>
             <button 
               className="block w-full text-left py-2 hover:bg-gray-100 px-3 rounded"
-              onClick={() => onNavigate('/teams')}
+              onClick={() => onNavigate(isAdmin ? '/admin/players' : '/teams')}
             >
               Team Rosters
             </button>
