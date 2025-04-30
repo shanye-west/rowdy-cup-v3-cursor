@@ -287,14 +287,36 @@ function RoundsTab() {
     isComplete: false
   });
   
+  // Define Round interface with courseId
+  interface Round {
+    id: number;
+    name: string;
+    matchType: string;
+    courseId?: number;
+    courseName: string;
+    date: string;
+    startTime: string;
+    aviatorScore?: number;
+    producerScore?: number;
+    isComplete?: boolean;
+  }
+  
   const { data: rounds, isLoading } = useQuery<Round[]>({
     queryKey: ['/api/rounds'],
     queryFn: getQueryFn({ on401: "throw" }),
   });
   
-  const { data: courses, isLoading: isLoadingCourses } = useQuery<any[]>({
+  // Define Course type interface
+  interface Course {
+    id: number;
+    name: string;
+    location: string;
+    description: string;
+  }
+  
+  const { data: courses = [], isLoading: isLoadingCourses } = useQuery<Course[]>({
     queryKey: ['/api/courses'],
-    queryFn: getQueryFn(),
+    queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
   const addRoundMutation = useMutation({
@@ -396,12 +418,13 @@ function RoundsTab() {
   const resetRoundForm = () => {
     // Default to the first course if courses are loaded
     const defaultCourseId = courses && courses.length > 0 ? courses[0].id : 1;
+    const defaultCourseName = courses && courses.length > 0 ? courses[0].name : "";
     
     setRoundFormData({
       name: "",
       matchType: "Singles Match",
       courseId: defaultCourseId,
-      courseName: "",
+      courseName: defaultCourseName,
       date: new Date().toISOString().split('T')[0],
       startTime: "08:00",
       isComplete: false
@@ -489,16 +512,36 @@ function RoundsTab() {
         
         <div>
           <label className="block text-sm font-medium mb-1">
-            Course Name
+            Course
           </label>
-          <input
-            type="text"
-            name="courseName"
-            value={roundFormData.courseName}
-            onChange={handleRoundInputChange}
+          <select
+            name="courseId"
+            value={roundFormData.courseId}
+            onChange={(e) => {
+              // Update both courseId and courseName
+              const courseId = parseInt(e.target.value);
+              const selectedCourse = courses.find(course => course.id === courseId);
+              setRoundFormData({
+                ...roundFormData,
+                courseId: courseId,
+                courseName: selectedCourse ? selectedCourse.name : ""
+              });
+            }}
             className="w-full px-3 py-2 border rounded-md"
             required
-          />
+          >
+            {isLoadingCourses ? (
+              <option value="">Loading courses...</option>
+            ) : courses.length > 0 ? (
+              courses.map(course => (
+                <option key={course.id} value={course.id}>
+                  {course.name} ({course.location})
+                </option>
+              ))
+            ) : (
+              <option value="">No courses available</option>
+            )}
+          </select>
         </div>
         
         <div className="grid grid-cols-2 gap-4">
