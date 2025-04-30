@@ -7,6 +7,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Loader2, Settings, UserPlus, Calendar, Users, Trophy, Trash } from "lucide-react";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 
 // Define types for our data
 type Tournament = {
@@ -815,6 +816,7 @@ function RoundsTab() {
 // Players Management Tab
 function PlayersTab() {
   const { toast } = useToast();
+  const [_, navigate] = useLocation();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
@@ -1108,7 +1110,10 @@ function PlayersTab() {
           <p className="text-sm mb-3">
             A new dedicated player management page is now available with improved functionality for adding and deleting players.
           </p>
-          <Button onClick={() => window.location.href = '/admin/players'} variant="outline">
+          <Button 
+            onClick={() => navigate('/admin/players')} 
+            variant="outline"
+          >
             <Users className="mr-2 h-4 w-4" />
             Go to Player Management
           </Button>

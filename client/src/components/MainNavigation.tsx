@@ -42,13 +42,37 @@ const MainNavigation = ({ isOpen, onNavigate }: MainNavigationProps) => {
           <li>
             <button 
               className="block w-full text-left py-2 hover:bg-gray-100 px-3 rounded"
-              onClick={() => onNavigate(isAdmin ? '/admin/players' : '/teams')}
+              onClick={() => onNavigate('/teams')}
             >
               Team Rosters
             </button>
           </li>
           
-          {/* Admin Dashboard removed as requested */}
+          {isAdmin && (
+            <>
+              <li>
+                <button 
+                  className="block w-full text-left py-2 hover:bg-gray-100 px-3 rounded"
+                  onClick={() => onNavigate('/admin')}
+                >
+                  <div className="flex items-center">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Admin Dashboard
+                  </div>
+                </button>
+              </li>
+              <li>
+                <button 
+                  className="block w-full text-left py-2 hover:bg-gray-100 px-3 rounded"
+                  onClick={() => onNavigate('/admin/players')}
+                >
+                  <div className="flex items-center ml-5">
+                    Player Management
+                  </div>
+                </button>
+              </li>
+            </>
+          )}
           
           {!isAuthenticated && (
             <li>
