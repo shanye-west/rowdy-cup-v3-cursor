@@ -77,16 +77,6 @@ const Teams = () => {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <button 
-        className="mb-4 flex items-center font-semibold text-blue-600"
-        onClick={handleBackClick}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to Tournament
-      </button>
-
       <h1 className="font-heading text-2xl font-bold mb-6">Team Rosters</h1>
 
       {isLoading ? (
