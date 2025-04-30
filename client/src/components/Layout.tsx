@@ -48,14 +48,22 @@ const Layout = ({ children }: LayoutProps) => {
           </a>
           
           {/* Static Navigation Buttons */}
-          <div className="flex items-center space-x-3">
-            {/* Home Button */}
-            <button 
-              className="px-3 py-1 rounded-md hover:bg-gray-100 font-medium text-gray-800"
-              onClick={() => handleNavigation('/')}
-            >
-              Home
-            </button>
+            <div className="flex items-center space-x-3">
+              {/* Home Button */}
+              <button 
+                className="px-3 py-1 rounded-md hover:bg-gray-100 font-medium text-gray-800"
+                onClick={() => handleNavigation('/')}
+              >
+                Home
+              </button>
+
+              {/* Teams Button */}
+              <button 
+                className="px-3 py-1 rounded-md hover:bg-gray-100 font-medium text-gray-800"
+                onClick={() => handleNavigation(isAdmin ? '/admin/players' : '/teams')}
+              >
+                Teams
+              </button>
             
             {/* Login/Logout Button */}
             {isAuthenticated ? (
