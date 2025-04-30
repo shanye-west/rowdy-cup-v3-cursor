@@ -6,6 +6,9 @@ import { useState } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+// Add these imports
+import aviatorsLogo from "../assets/aviators-text.svg";
+import producersLogo from "../assets/producers-text.svg";
 
 interface Match {
   id: number;
@@ -29,7 +32,7 @@ const MatchesList = ({ matches }: MatchesListProps) => {
   const { isAdmin } = useAuth();
   const { toast } = useToast();
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
-  
+
   // Delete match mutation
   const deleteMatchMutation = useMutation({
     mutationFn: async (matchId: number) => {
@@ -45,7 +48,7 @@ const MatchesList = ({ matches }: MatchesListProps) => {
       // Get the round ID before the match is removed from the matches array
       const match = matches.find(m => m.id === matchId);
       const roundId = match?.roundId;
-      
+
       // Force refetch all relevant data to ensure UI is completely in sync
       queryClient.invalidateQueries({ queryKey: [`/api/matches`] });
       if (roundId) {
@@ -54,7 +57,7 @@ const MatchesList = ({ matches }: MatchesListProps) => {
         queryClient.invalidateQueries({ queryKey: [`/api/rounds`] });
       }
       queryClient.invalidateQueries({ queryKey: [`/api/tournament`] });
-      
+
       toast({
         title: "Match deleted",
         description: "Match and all associated scores have been deleted successfully",
@@ -71,25 +74,23 @@ const MatchesList = ({ matches }: MatchesListProps) => {
       });
     },
   });
-  
+
   const handleMatchClick = (matchId: number) => {
     navigate(`/matches/${matchId}`);
   };
-  
 
-  
   const handleDeleteClick = (e: React.MouseEvent, matchId: number) => {
     e.stopPropagation();
     setConfirmDeleteId(matchId);
   };
-  
+
   const confirmDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirmDeleteId !== null) {
       deleteMatchMutation.mutate(confirmDeleteId);
     }
   };
-  
+
   const cancelDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     setConfirmDeleteId(null);
@@ -120,9 +121,9 @@ const MatchesList = ({ matches }: MatchesListProps) => {
   const renderMatchResult = (match: Match) => {
     if (match.status === "completed" && match.result) {
       const winningTeam = match.leadingTeam === "aviators" 
-        ? <span className="text-aviator">AVIATORS</span> 
-        : <span className="text-producer">PRODUCERS</span>;
-        
+        ? <img src={aviatorsLogo} alt="Aviators" className="h-5 inline-block" /> 
+        : <img src={producersLogo} alt="Producers" className="h-5 inline-block" />;
+
       return (
         <div className="text-center bg-gray-100 py-2 rounded-lg font-heading font-bold">
           {winningTeam} win {match.result}
@@ -130,9 +131,9 @@ const MatchesList = ({ matches }: MatchesListProps) => {
       );
     } else if (match.status === "in_progress" && match.leadingTeam) {
       const leadingTeam = match.leadingTeam === "aviators" 
-        ? <span className="text-aviator">AVIATORS</span> 
-        : <span className="text-producer">PRODUCERS</span>;
-        
+        ? <img src={aviatorsLogo} alt="Aviators" className="h-5 inline-block" /> 
+        : <img src={producersLogo} alt="Producers" className="h-5 inline-block" />;
+
       return (
         <div className="flex justify-center items-center">
           <div className="text-center py-1 px-3 rounded-lg font-heading font-bold bg-gray-100">
@@ -153,10 +154,10 @@ const MatchesList = ({ matches }: MatchesListProps) => {
         </div>
       );
     }
-    
+
     return null;
   };
-  
+
   const renderMatchStatusDisplay = (match: Match) => {
     if (match.status === "completed" && match.result) {
       return null; // Result is already displayed
@@ -232,29 +233,29 @@ const MatchesList = ({ matches }: MatchesListProps) => {
               {renderMatchStatus(match)}
             </div>
           </div>
-          
+
           <div className="p-4">
             <div className="flex mb-2">
               <div className="w-1/2 border-r border-gray-200 pr-3">
                 <div className="flex items-center mb-1">
                   <div className="w-3 h-3 rounded-full bg-aviator mr-2"></div>
-                  <span className="font-semibold text-sm">AVIATORS</span>
+                  <img src={aviatorsLogo} alt="Aviators" className="h-5" />
                 </div>
                 <div className="text-sm text-gray-600">{match.aviatorPlayers}</div>
               </div>
-              
+
               <div className="w-1/2 pl-3">
-                <div className="flex items-center mb-1">
+                <div className="flex items-center justify-end mb-1">
                   <div className="w-3 h-3 rounded-full bg-producer mr-2"></div>
-                  <span className="font-semibold text-sm">PRODUCERS</span>
+                  <img src={producersLogo} alt="Producers" className="h-5" />
                 </div>
-                <div className="text-sm text-gray-600">{match.producerPlayers}</div>
+                <div className="text-sm text-gray-600 text-right">{match.producerPlayers}</div>
               </div>
             </div>
-            
+
             {/* Display match status */}
             {renderMatchStatusDisplay(match)}
-            
+
             {renderMatchResult(match)}
           </div>
         </div>
