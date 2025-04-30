@@ -13,7 +13,7 @@ const Layout = ({ children }: LayoutProps) => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [_, navigate] = useLocation();
-  const { user, isAuthenticated, logoutMutation } = useAuth();
+  const { user, isAuthenticated, isAdmin, logoutMutation } = useAuth();
   
   // Show password change dialog if user is authenticated and needs password change
   useEffect(() => {
@@ -64,6 +64,24 @@ const Layout = ({ children }: LayoutProps) => {
             >
               Roster
             </button>
+            
+            {/* Admin Buttons - Only for admins */}
+            {isAdmin && (
+              <>
+                <button 
+                  className="px-3 py-1 rounded-md hover:bg-gray-100 font-medium text-gray-800"
+                  onClick={() => handleNavigation('/admin')}
+                >
+                  Admin
+                </button>
+                <button 
+                  className="px-3 py-1 rounded-md hover:bg-gray-100 font-medium text-gray-800"
+                  onClick={() => handleNavigation('/admin/players')}
+                >
+                  Players
+                </button>
+              </>
+            )}
             
             {/* Login/Logout Button */}
             {isAuthenticated ? (
