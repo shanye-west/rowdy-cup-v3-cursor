@@ -505,6 +505,13 @@ function RoundsTab() {
   const roundFormJSX = (
     <form onSubmit={handleRoundFormSubmit}>
       <div className="space-y-4">
+        {/* Debug info for courses */}
+        <div className="text-xs bg-gray-100 p-2 rounded">
+          <p>Courses loading: {isLoadingCourses ? 'Yes' : 'No'}</p>
+          <p>Courses count: {courses?.length || 0}</p>
+          <p>Courses data: {JSON.stringify(courses)}</p>
+        </div>
+      
         <div>
           <label className="block text-sm font-medium mb-1">
             Round Name
@@ -543,29 +550,38 @@ function RoundsTab() {
           <label className="block text-sm font-medium mb-1">
             Course
           </label>
-          <select
-            name="courseId"
-            value={roundFormData.courseId || ""}
-            onChange={(e) => {
-              // Update both courseId and courseName
-              const courseId = parseInt(e.target.value);
-              const selectedCourse = courses.find(course => course.id === courseId);
-              setRoundFormData({
-                ...roundFormData,
-                courseId: courseId,
-                courseName: selectedCourse ? selectedCourse.name : ""
-              });
-            }}
-            className="w-full px-3 py-2 border rounded-md"
-            required
-          >
-            <option value="">Select a course</option>
-            {courses.map(course => (
-              <option key={course.id} value={course.id}>
-                {course.name} ({course.location})
-              </option>
-            ))}
-          </select>
+          
+          {isLoadingCourses ? (
+            <div className="p-2 border rounded">Loading courses...</div>
+          ) : courses && courses.length > 0 ? (
+            <select
+              name="courseId"
+              value={roundFormData.courseId || ""}
+              onChange={(e) => {
+                // Update both courseId and courseName
+                const courseId = parseInt(e.target.value);
+                const selectedCourse = courses.find(course => course.id === courseId);
+                setRoundFormData({
+                  ...roundFormData,
+                  courseId: courseId,
+                  courseName: selectedCourse ? selectedCourse.name : ""
+                });
+              }}
+              className="w-full px-3 py-2 border rounded-md"
+              required
+            >
+              <option value="">Select a course</option>
+              {courses.map(course => (
+                <option key={course.id} value={course.id}>
+                  {course.name} ({course.location})
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div className="p-2 border rounded text-red-500">
+              No courses available. Please add courses first.
+            </div>
+          )}
         </div>
         
         <div className="grid grid-cols-2 gap-4">

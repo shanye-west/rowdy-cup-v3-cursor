@@ -137,11 +137,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Course API
   app.get("/api/courses", async (req, res) => {
     try {
+      console.log("API: Fetching courses");
       const courses = await storage.getCourses();
+      console.log("API: Courses fetched:", courses);
       res.json(courses);
     } catch (error) {
       console.error("Error fetching courses:", error);
       res.status(500).json({ message: "Failed to fetch courses" });
+    }
+  });
+  
+  // API to add course (for testing)
+  app.post("/api/courses", async (req, res) => {
+    try {
+      console.log("API: Adding new course:", req.body);
+      const course = await storage.createCourse(req.body);
+      console.log("API: Course added:", course);
+      res.status(201).json(course);
+    } catch (error) {
+      console.error("Error creating course:", error);
+      res.status(500).json({ message: "Failed to create course" });
     }
   });
 

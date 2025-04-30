@@ -12,6 +12,7 @@ import AuthPage from "@/pages/AuthPage";
 // Admin pages removed as they're being integrated into regular pages
 import LoginPage from "@/pages/Login";
 import SetPinPage from "@/pages/SetPin";
+import TestCourses from "@/pages/TestCourses";
 import Layout from "@/components/Layout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -144,6 +145,7 @@ function Router() {
       <Route path="/login" component={LoginPage} />
       <Route path="/set-pin" component={SetPinPage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/test-courses" component={TestCourses} />
       {/* Admin routes removed - functionality moved into regular pages */}
       <Route component={NotFound} />
     </Switch>
