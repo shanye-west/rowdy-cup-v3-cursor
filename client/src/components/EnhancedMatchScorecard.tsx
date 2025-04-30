@@ -112,8 +112,8 @@ const EnhancedMatchScorecard = ({
   >(new Map());
 
   const allHoles = [...holes].sort((a, b) => a.number - b.number);
-  const frontNine = holes.filter((h) => h.number <= 9);
-  const backNine = holes.filter((h) => h.number > 9);
+  const frontNine = [...holes].filter((h) => h.number <= 9).sort((a, b) => a.number - b.number);
+  const backNine = [...holes].filter((h) => h.number > 9).sort((a, b) => a.number - b.number);
 
   // Compute player score totals
   const playerTotals = useMemo(() => {

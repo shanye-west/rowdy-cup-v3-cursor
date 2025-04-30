@@ -109,6 +109,12 @@ const Match = ({ id }: MatchProps) => {
     queryKey: [`/api/scores?matchId=${id}`],
   });
 
+  // Fetch round data
+  const { data: round, isLoading: isRoundLoading } = useQuery<RoundData>({
+    queryKey: [`/api/rounds/${match?.roundId}`],
+    enabled: !!match?.roundId,
+  });
+  
   // Fetch holes data for the specific course of this round
   const { data: holes, isLoading: isHolesLoading } = useQuery<HoleData[]>({
     queryKey: [`/api/holes`, round?.courseId],
@@ -119,12 +125,6 @@ const Match = ({ id }: MatchProps) => {
       return response.json();
     },
     enabled: !!round?.courseId,
-  });
-
-  // Fetch round data
-  const { data: round, isLoading: isRoundLoading } = useQuery<RoundData>({
-    queryKey: [`/api/rounds/${match?.roundId}`],
-    enabled: !!match?.roundId,
   });
 
   // Fetch players data for match editing
