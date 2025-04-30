@@ -12,16 +12,28 @@ import {
   rounds,
   tournament,
   holes,
+  courses,
 } from "@shared/schema";
 
 export interface IStorage {
+  // Course methods
+  getCourses(): Promise<any[]>;
+  getCourse(id: number): Promise<any | undefined>;
+  createCourse(data: any): Promise<any>;
+  
+  // Hole methods
   getHoles(): Promise<any[]>;
+  getHolesByCourse(courseId: number): Promise<any[]>;
+  createHole(data: any): Promise<any>;
+  
+  // User methods
   getUsers(): Promise<any[]>;
   getUser(id: number): Promise<any | undefined>;
   getUserByUsername(username: string): Promise<any | undefined>;
   createUser(data: any): Promise<any>;
   updateUser(id: number, data: Partial<any>): Promise<any | undefined>;
 
+  // Player methods
   getPlayers(): Promise<any[]>;
   getPlayer(id: number): Promise<any | undefined>;
   createPlayer(data: any): Promise<any>;
@@ -29,9 +41,11 @@ export interface IStorage {
   deletePlayer(id: number): Promise<boolean>;
   deleteAllPlayers(): Promise<boolean>;
 
+  // Team methods
   getTeams(): Promise<any[]>;
   getTeam(id: number): Promise<any | undefined>;
 
+  // Round methods
   getRounds(): Promise<any[]>;
   getRound(id: number): Promise<any | undefined>;
   createRound(data: any): Promise<any>;
@@ -39,6 +53,7 @@ export interface IStorage {
   deleteRound(id: number): Promise<void>;
   deleteAllRounds(): Promise<void>;
 
+  // Match methods
   getMatches(): Promise<any[]>;
   getMatch(id: number): Promise<any | undefined>;
   getMatchWithParticipants(id: number): Promise<any | undefined>;
@@ -47,9 +62,11 @@ export interface IStorage {
   updateMatch(id: number, data: Partial<any>): Promise<any | undefined>;
   deleteMatch(id: number): Promise<void>;
 
+  // Match participant methods
   getMatchParticipants(matchId: number): Promise<any[]>;
   createMatchParticipant(data: any): Promise<any>;
 
+  // Score methods
   getScores(): Promise<any[]>;
   getScore(matchId: number, holeNumber: number): Promise<any | undefined>;
   getScoresByMatch(matchId: number): Promise<any[]>;
@@ -58,10 +75,12 @@ export interface IStorage {
   updateScoreAndMatch(id: number, data: Partial<any>): Promise<any>;
   createScoreAndMatch(data: any): Promise<any>;
 
+  // Tournament methods
   getTournament(): Promise<any | undefined>;
   createTournament(data: any): Promise<any>;
   updateTournament(id: number, data: Partial<any>): Promise<any | undefined>;
 
+  // Calculation methods
   calculateRoundScores(roundId: number): Promise<{
     aviatorScore: number;
     producerScore: number;
@@ -82,13 +101,31 @@ export interface IStorage {
   ): Promise<{ wins: number; losses: number; draws: number }>;
 
   initializeData(): Promise<void>;
-  createHole(data: any): Promise<any>;
 }
 
 export class DBStorage implements IStorage {
-  // Holes
+  // Course methods
+  async getCourses() {
+    return db.select().from(courses);
+  }
+
+  async getCourse(id: number) {
+    const [row] = await db.select().from(courses).where(eq(courses.id, id));
+    return row;
+  }
+
+  async createCourse(data: any) {
+    const [row] = await db.insert(courses).values(data).returning();
+    return row;
+  }
+
+  // Hole methods
   async getHoles() {
     return db.select().from(holes);
+  }
+  
+  async getHolesByCourse(courseId: number) {
+    return db.select().from(holes).where(eq(holes.courseId, courseId));
   }
 
   // Users
@@ -947,12 +984,38 @@ export class DBStorage implements IStorage {
   }
 
   async initializeData() {
+    // Create default course if it doesn't exist
+    const existingCourses = await this.getCourses();
+    let defaultCourseId = 1;
+    
+    if (existingCourses.length === 0) {
+      const newCourse = await this.createCourse({
+        name: "TPC Sawgrass",
+        location: "Ponte Vedra Beach, FL",
+        description: "Home of THE PLAYERS Championship"
+      });
+      defaultCourseId = newCourse.id;
+      
+      // Add a second course
+      await this.createCourse({
+        name: "Pebble Beach Golf Links",
+        location: "Pebble Beach, CA",
+        description: "Iconic coastal course"
+      });
+    } else {
+      defaultCourseId = existingCourses[0].id;
+    }
+
     // Create default holes if they don't exist
     const existingHoles = await this.getHoles();
     if (existingHoles.length === 0) {
       const pars = [4, 5, 3, 4, 4, 5, 4, 3, 4, 4, 4, 3, 5, 4, 4, 5, 3, 4];
       for (let i = 0; i < pars.length; i++) {
-        await this.createHole({ number: i + 1, par: pars[i] });
+        await this.createHole({ 
+          number: i + 1, 
+          par: pars[i],
+          courseId: defaultCourseId
+        });
       }
     }
 
@@ -963,6 +1026,8 @@ export class DBStorage implements IStorage {
         name: "Rowdy Cup 2025",
         aviatorScore: 0,
         producerScore: 0,
+        pendingAviatorScore: 0,
+        pendingProducerScore: 0,
         year: new Date().getFullYear(),
       });
     }

@@ -134,8 +134,7 @@ export const matches = pgTable("matches", {
     roundIdFk: foreignKey({
       columns: [table.roundId],
       foreignColumns: [rounds.id],
-      name: "matches_round_id_fk",
-      onDelete: "cascade" // If round is deleted, cascade to matches
+      name: "matches_round_id_fk"
     })
   };
 });
@@ -155,8 +154,7 @@ export const match_players = pgTable("match_participants", {
     matchIdFk: foreignKey({
       columns: [table.matchId],
       foreignColumns: [matches.id],
-      name: "match_participants_match_id_fk",
-      onDelete: "cascade" // If match is deleted, cascade to participants
+      name: "match_participants_match_id_fk"
     }),
     playerIdFk: foreignKey({
       columns: [table.playerId],
@@ -183,8 +181,7 @@ export const scores = pgTable("scores", {
     matchIdFk: foreignKey({
       columns: [table.matchId],
       foreignColumns: [matches.id],
-      name: "scores_match_id_fk",
-      onDelete: "cascade" // If match is deleted, cascade to scores
+      name: "scores_match_id_fk"
     })
   };
 });
