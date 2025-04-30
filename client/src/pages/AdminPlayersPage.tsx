@@ -286,7 +286,7 @@ const AdminPlayersPage = () => {
                     </div>
                   </div>
                 ))}
-                {(!playersByTeam[team.id] || playersByTeam[team.id].length === 0) && (
+                {(!playersByTeam?.[team.id] || playersByTeam?.[team.id]?.length === 0) && (
                   <div className="py-4 text-center text-muted-foreground">
                     No players in this team
                   </div>

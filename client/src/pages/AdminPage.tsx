@@ -1096,12 +1096,23 @@ function PlayersTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Team Players</h2>
-        <Button onClick={handleOpenAddDialog}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add Player
-        </Button>
+      <div className="flex flex-col space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Team Players</h2>
+          <Button onClick={handleOpenAddDialog}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add Player
+          </Button>
+        </div>
+        <div className="bg-muted/50 p-4 rounded-lg border border-border">
+          <p className="text-sm mb-3">
+            A new dedicated player management page is now available with improved functionality for adding and deleting players.
+          </p>
+          <Button onClick={() => window.location.href = '/admin/players'} variant="outline">
+            <Users className="mr-2 h-4 w-4" />
+            Go to Player Management
+          </Button>
+        </div>
       </div>
 
       {teams?.map((team: Team) => (
