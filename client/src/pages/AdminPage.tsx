@@ -314,25 +314,31 @@ function RoundsTab() {
     description: string;
   }
   
-  // Debug log before query
-  console.log("About to fetch courses");
+  // Using a simplified fetch for courses to ensure it works
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [isLoadingCourses, setIsLoadingCourses] = useState(true);
   
-  const { data: courses = [], isLoading: isLoadingCourses } = useQuery<Course[]>({
-    queryKey: ['/api/courses'],
-    queryFn: async () => {
-      console.log("Inside courses fetch function");
-      const response = await fetch('/api/courses');
-      console.log("Courses API response status:", response.status);
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Error fetching courses: ${response.status}`, errorText);
-        return [];
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        console.log("Fetching courses directly...");
+        const response = await fetch('/api/courses');
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Got courses data:", data);
+          setCourses(data);
+        } else {
+          console.error("Error fetching courses:", response.status);
+        }
+      } catch (error) {
+        console.error("Failed to fetch courses:", error);
+      } finally {
+        setIsLoadingCourses(false);
       }
-      const data = await response.json();
-      console.log("Courses data received:", data);
-      return data;
-    },
-  });
+    };
+
+    fetchCourses();
+  }, []);
 
   const addRoundMutation = useMutation({
     mutationFn: async (roundData: any) => {
@@ -463,16 +469,27 @@ function RoundsTab() {
   const handleRoundFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Ensure courseId is a number before submitting
+    // More robust validation and casting to ensure courseId is a number
+    if (!roundFormData.courseId || isNaN(Number(roundFormData.courseId))) {
+      toast({
+        title: "Error",
+        description: "Please select a valid course",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Ensure courseId is properly cast to a number
     const formData = {
       ...roundFormData,
       courseId: Number(roundFormData.courseId)
     };
     
+    console.log('Submitting round with data:', formData);
+    
     if (isEditDialogOpen && currentRound) {
       updateRoundMutation.mutate({ id: currentRound.id, data: formData });
     } else {
-      console.log('Submitting round with data:', formData);
       addRoundMutation.mutate(formData);
     }
   };
