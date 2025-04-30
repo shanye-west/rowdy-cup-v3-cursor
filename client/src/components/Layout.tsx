@@ -57,32 +57,6 @@ const Layout = ({ children }: LayoutProps) => {
               Home
             </button>
             
-            {/* Roster Button */}
-            <button 
-              className="px-3 py-1 rounded-md hover:bg-gray-100 font-medium text-gray-800"
-              onClick={() => handleNavigation('/teams')}
-            >
-              Roster
-            </button>
-            
-            {/* Admin Buttons - Only for admins */}
-            {isAdmin && (
-              <>
-                <button 
-                  className="px-3 py-1 rounded-md hover:bg-gray-100 font-medium text-gray-800"
-                  onClick={() => handleNavigation('/admin')}
-                >
-                  Admin
-                </button>
-                <button 
-                  className="px-3 py-1 rounded-md hover:bg-gray-100 font-medium text-gray-800"
-                  onClick={() => handleNavigation('/admin/players')}
-                >
-                  Players
-                </button>
-              </>
-            )}
-            
             {/* Login/Logout Button */}
             {isAuthenticated ? (
               <button 
