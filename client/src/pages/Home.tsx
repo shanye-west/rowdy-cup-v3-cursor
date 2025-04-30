@@ -8,7 +8,7 @@ import rowdyCupLogo from "../assets/rowdy-cup-logo.svg";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, Settings, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 
 const Home = () => {
@@ -21,14 +21,52 @@ const Home = () => {
     name: "",
     year: new Date().getFullYear()
   });
+  
+  // State for courses
+  const [courses, setCourses] = useState<any[]>([]);
+  const [isLoadingCourses, setIsLoadingCourses] = useState(true);
+  
   const [roundFormData, setRoundFormData] = useState({
     name: "",
     matchType: "Singles Match",
+    courseId: 1, // Default value that will be updated when courses are loaded
     courseName: "",
     date: new Date().toISOString().split('T')[0],
     startTime: "08:00",
     isComplete: false
   });
+  
+  // Fetch courses on component mount
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        console.log("Fetching courses for Home page");
+        const response = await fetch('/api/courses');
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Home page got courses:", data);
+          setCourses(data);
+          
+          // If we have courses, set the default courseId and courseName
+          if (data.length > 0) {
+            setRoundFormData(prev => ({
+              ...prev,
+              courseId: data[0].id,
+              courseName: data[0].name
+            }));
+          }
+        } else {
+          console.error("Error fetching courses:", response.status);
+        }
+      } catch (error) {
+        console.error("Failed to fetch courses:", error);
+      } finally {
+        setIsLoadingCourses(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   // Define types
   interface Tournament {
@@ -143,15 +181,38 @@ const Home = () => {
 
   const handleRoundFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    addRoundMutation.mutate(roundFormData);
+    
+    // Validation for course selection
+    if (!roundFormData.courseId || isNaN(Number(roundFormData.courseId))) {
+      toast({
+        title: "Error",
+        description: "Please select a valid course",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Ensure courseId is properly cast to a number
+    const formData = {
+      ...roundFormData,
+      courseId: Number(roundFormData.courseId)
+    };
+    
+    console.log('Submitting round with data:', formData);
+    addRoundMutation.mutate(formData);
   };
 
   // Reset form
   const resetRoundForm = () => {
+    // Default to the first course if courses are loaded
+    const defaultCourseId = courses && courses.length > 0 ? courses[0].id : 1;
+    const defaultCourseName = courses && courses.length > 0 ? courses[0].name : "";
+    
     setRoundFormData({
       name: "",
       matchType: "Singles Match",
-      courseName: "",
+      courseId: defaultCourseId,
+      courseName: defaultCourseName,
       date: new Date().toISOString().split('T')[0],
       startTime: "08:00",
       isComplete: false
@@ -354,16 +415,48 @@ const Home = () => {
                     
                     <div>
                       <label className="block text-sm font-medium mb-1">
-                        Course Name
+                        Course
                       </label>
-                      <input
-                        type="text"
-                        name="courseName"
-                        value={roundFormData.courseName}
-                        onChange={handleRoundInputChange}
-                        className="w-full px-3 py-2 border rounded-md"
-                        required
-                      />
+                      
+                      {isLoadingCourses ? (
+                        <div className="p-2 border rounded">Loading courses...</div>
+                      ) : courses && courses.length > 0 ? (
+                        <select
+                          name="courseId"
+                          value={roundFormData.courseId || ""}
+                          onChange={(e) => {
+                            // Update both courseId and courseName
+                            const courseId = parseInt(e.target.value);
+                            const selectedCourse = courses.find(course => course.id === courseId);
+                            setRoundFormData({
+                              ...roundFormData,
+                              courseId: courseId,
+                              courseName: selectedCourse ? selectedCourse.name : ""
+                            });
+                          }}
+                          className="w-full px-3 py-2 border rounded-md"
+                          required
+                        >
+                          <option value="">Select a course</option>
+                          {courses.map(course => (
+                            <option key={course.id} value={course.id}>
+                              {course.name} ({course.location})
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className="p-2 border rounded text-red-500">
+                          No courses available. Please add courses first.
+                        </div>
+                      )}
+                      
+                      {/* Debug information */}
+                      {isAdmin && (
+                        <div className="text-xs mt-1 bg-gray-100 p-2 rounded">
+                          <p>Selected course ID: {roundFormData.courseId}</p>
+                          <p>Selected course name: {roundFormData.courseName}</p>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
