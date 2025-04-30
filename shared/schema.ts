@@ -99,12 +99,13 @@ export const rounds = pgTable("rounds", {
   name: text("name").notNull(),
   matchType: text("match_type").notNull(),
   date: text("date").notNull(),
-  courseId: integer("course_id").notNull(),
+  courseName: text("course_name").notNull(),
   startTime: text("start_time").notNull(),
   isComplete: boolean("is_complete").default(false),
   status: text("status"),
   aviatorScore: numeric("aviator_score"),
   producerScore: numeric("producer_score"),
+  courseId: integer("course_id"),
 }, (table) => {
   return {
     courseIdFk: foreignKey({
