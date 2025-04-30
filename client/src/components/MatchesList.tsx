@@ -183,7 +183,9 @@ const MatchesList = ({ matches }: MatchesListProps) => {
 
   return (
     <div className="space-y-4">
-      {matches.map((match) => (
+      {matches
+        .sort((a, b) => a.name.localeCompare(b.name)) // Sort matches by name
+        .map((match) => (
         <div 
           key={match.id}
           className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer relative"

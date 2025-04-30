@@ -84,7 +84,7 @@ const RoundsList = ({ rounds }: RoundsListProps) => {
 
   return (
     <div className="space-y-4">
-      {rounds.map((round) => (
+      {rounds.sort((a, b) => a.id - b.id).map((round) => (
         <div 
           key={round.id}
           className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer relative"
