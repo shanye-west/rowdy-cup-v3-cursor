@@ -441,10 +441,18 @@ function RoundsTab() {
 
   const handleRoundFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Ensure courseId is a number before submitting
+    const formData = {
+      ...roundFormData,
+      courseId: Number(roundFormData.courseId)
+    };
+    
     if (isEditDialogOpen && currentRound) {
-      updateRoundMutation.mutate({ id: currentRound.id, data: roundFormData });
+      updateRoundMutation.mutate({ id: currentRound.id, data: formData });
     } else {
-      addRoundMutation.mutate(roundFormData);
+      console.log('Submitting round with data:', formData);
+      addRoundMutation.mutate(formData);
     }
   };
 
@@ -516,7 +524,7 @@ function RoundsTab() {
           </label>
           <select
             name="courseId"
-            value={roundFormData.courseId}
+            value={roundFormData.courseId || ""}
             onChange={(e) => {
               // Update both courseId and courseName
               const courseId = parseInt(e.target.value);
@@ -530,17 +538,12 @@ function RoundsTab() {
             className="w-full px-3 py-2 border rounded-md"
             required
           >
-            {isLoadingCourses ? (
-              <option value="">Loading courses...</option>
-            ) : courses.length > 0 ? (
-              courses.map(course => (
-                <option key={course.id} value={course.id}>
-                  {course.name} ({course.location})
-                </option>
-              ))
-            ) : (
-              <option value="">No courses available</option>
-            )}
+            <option value="">Select a course</option>
+            {courses.map(course => (
+              <option key={course.id} value={course.id}>
+                {course.name} ({course.location})
+              </option>
+            ))}
           </select>
         </div>
         
