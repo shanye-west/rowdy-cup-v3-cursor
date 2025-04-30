@@ -314,9 +314,24 @@ function RoundsTab() {
     description: string;
   }
   
+  // Debug log before query
+  console.log("About to fetch courses");
+  
   const { data: courses = [], isLoading: isLoadingCourses } = useQuery<Course[]>({
     queryKey: ['/api/courses'],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: async () => {
+      console.log("Inside courses fetch function");
+      const response = await fetch('/api/courses');
+      console.log("Courses API response status:", response.status);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error fetching courses: ${response.status}`, errorText);
+        return [];
+      }
+      const data = await response.json();
+      console.log("Courses data received:", data);
+      return data;
+    },
   });
 
   const addRoundMutation = useMutation({
@@ -417,6 +432,7 @@ function RoundsTab() {
 
   const resetRoundForm = () => {
     // Default to the first course if courses are loaded
+    console.log("Available courses:", courses);
     const defaultCourseId = courses && courses.length > 0 ? courses[0].id : 1;
     const defaultCourseName = courses && courses.length > 0 ? courses[0].name : "";
     
@@ -428,6 +444,11 @@ function RoundsTab() {
       date: new Date().toISOString().split('T')[0],
       startTime: "08:00",
       isComplete: false
+    });
+
+    console.log("Round form data after reset:", {
+      courseId: defaultCourseId,
+      courseName: defaultCourseName
     });
   };
 
