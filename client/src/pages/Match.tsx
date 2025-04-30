@@ -109,9 +109,16 @@ const Match = ({ id }: MatchProps) => {
     queryKey: [`/api/scores?matchId=${id}`],
   });
 
-  // Fetch holes data
+  // Fetch holes data for the specific course of this round
   const { data: holes, isLoading: isHolesLoading } = useQuery<HoleData[]>({
-    queryKey: ["/api/holes"],
+    queryKey: [`/api/holes`, round?.courseId],
+    queryFn: async () => {
+      if (!round?.courseId) return [];
+      const response = await fetch(`/api/holes?courseId=${round.courseId}`);
+      if (!response.ok) throw new Error('Failed to fetch holes');
+      return response.json();
+    },
+    enabled: !!round?.courseId,
   });
 
   // Fetch round data
