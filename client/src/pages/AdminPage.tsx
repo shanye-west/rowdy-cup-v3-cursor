@@ -885,6 +885,29 @@ function PlayersTab() {
       });
     },
   });
+  
+  const deletePlayerMutation = useMutation({
+    mutationFn: async (playerId: number) => {
+      const res = await apiRequest("DELETE", `/api/players/${playerId}`, {});
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      toast({
+        title: "Player deleted",
+        description: "Player has been removed successfully",
+        duration: 1000,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete player",
+        description: error.message,
+        variant: "destructive",
+        duration: 1000,
+      });
+    },
+  });
 
   const handleOpenAddDialog = () => {
     resetPlayerForm();
@@ -904,6 +927,18 @@ function PlayersTab() {
       ties: player.ties || 0
     });
     setIsEditDialogOpen(true);
+  };
+  
+  const handleDeletePlayer = (playerId: number) => {
+    if (window.confirm("Are you sure you want to delete this player? This action cannot be undone.")) {
+      deletePlayerMutation.mutate(playerId);
+    }
+  };
+  
+  const handleAddPlayerForTeam = (teamId: number) => {
+    resetPlayerForm();
+    setPlayerFormData(prev => ({ ...prev, teamId }));
+    setIsAddDialogOpen(true);
   };
 
   const resetPlayerForm = () => {
@@ -1072,12 +1107,23 @@ function PlayersTab() {
       {teams?.map((team: Team) => (
         <Card key={team.id}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center">
-              <div 
-                className="w-4 h-4 mr-2 rounded-full" 
-                style={{ backgroundColor: team.colorCode }}
-              />
-              {team.name}
+            <CardTitle className="text-lg flex items-center justify-between">
+              <div className="flex items-center">
+                <div 
+                  className="w-4 h-4 mr-2 rounded-full" 
+                  style={{ backgroundColor: team.colorCode }}
+                />
+                {team.name}
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => handleAddPlayerForTeam(team.id)}
+                className="ml-2"
+              >
+                <UserPlus className="h-4 w-4 mr-1" />
+                Add Player
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -1093,13 +1139,23 @@ function PlayersTab() {
                       {player.wins || 0}W - {player.losses || 0}L - {player.ties || 0}T
                     </div>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => handleOpenEditDialog(player)}
-                  >
-                    Edit
-                  </Button>
+                  <div className="flex space-x-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleOpenEditDialog(player)}
+                    >
+                      Edit
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleDeletePlayer(player.id)}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-100"
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
