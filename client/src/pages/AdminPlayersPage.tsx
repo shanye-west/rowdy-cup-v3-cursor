@@ -176,22 +176,25 @@ const AdminPlayersPage = () => {
   // Sort players by win percentage, then by wins
   if (playersByTeam) {
     Object.keys(playersByTeam).forEach(teamId => {
-      playersByTeam[Number(teamId)].sort((a, b) => {
-        const aPercentage = calculateWinPercentage(a);
-        const bPercentage = calculateWinPercentage(b);
-        
-        if (bPercentage !== aPercentage) {
-          return bPercentage - aPercentage;
-        }
-        
-        // If percentages are equal, sort by number of wins
-        if (b.wins !== a.wins) {
-          return b.wins - a.wins;
-        }
-        
-        // If wins are equal, sort alphabetically
-        return a.name.localeCompare(b.name);
-      });
+      const numTeamId = Number(teamId);
+      if (playersByTeam[numTeamId] && Array.isArray(playersByTeam[numTeamId])) {
+        playersByTeam[numTeamId].sort((a, b) => {
+          const aPercentage = calculateWinPercentage(a);
+          const bPercentage = calculateWinPercentage(b);
+          
+          if (bPercentage !== aPercentage) {
+            return bPercentage - aPercentage;
+          }
+          
+          // If percentages are equal, sort by number of wins
+          if (b.wins !== a.wins) {
+            return b.wins - a.wins;
+          }
+          
+          // If wins are equal, sort alphabetically
+          return a.name.localeCompare(b.name);
+        });
+      }
     });
   }
 
