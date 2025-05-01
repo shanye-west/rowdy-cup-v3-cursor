@@ -76,7 +76,10 @@ interface ScoreData {
   matchStatus: string | null;
 }
 
-const Match = ({ id }: MatchProps) => {
+import { Lock, Unlock } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+
+const Match = ({ id }: { id: number }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -142,7 +145,6 @@ const Match = ({ id }: MatchProps) => {
     enabled: !!id,
   });
 
-  // Check user's admin status
   const { isAdmin } = useAuth();
 
   // Update lock status when match data changes
