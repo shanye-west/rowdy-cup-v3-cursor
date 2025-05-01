@@ -524,13 +524,7 @@ const Match = ({ id }: { id: number }) => {
       ) : (
         <>
           {/* Updated header section - now visible for all users, but with admin features conditional */}
-          <div className="mb-4 flex items-center justify-between">
-            <button
-              className="flex items-center text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
-              onClick={handleBackToAdminMatches}
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" /> Back to Round
-            </button>
+            <div className="mb-4 flex items-center justify-end">
 
             <div className="flex items-center space-x-2">
               {isAdminMode && (
