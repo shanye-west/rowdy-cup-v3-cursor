@@ -81,12 +81,12 @@ const EnhancedMatchScorecard = ({
   // Split participants into teams
   const aviatorPlayersList = useMemo(() => {
     if (!Array.isArray(participants)) return [];
-    
+
     return participants
       .filter((p: any) => p.team === "aviators")
       .map((p: any) => {
         if (!Array.isArray(allPlayers)) return { id: p.playerId, name: `Player ${p.playerId}`, teamId: 1 };
-        
+
         // Find the player details from allPlayers
         const playerDetails = allPlayers.find((player: any) => player.id === p.playerId);
         return playerDetails || { id: p.playerId, name: `Player ${p.playerId}`, teamId: 1 };
@@ -95,12 +95,12 @@ const EnhancedMatchScorecard = ({
 
   const producerPlayersList = useMemo(() => {
     if (!Array.isArray(participants)) return [];
-    
+
     return participants
       .filter((p: any) => p.team === "producers")
       .map((p: any) => {
         if (!Array.isArray(allPlayers)) return { id: p.playerId, name: `Player ${p.playerId}`, teamId: 2 };
-        
+
         // Find the player details from allPlayers
         const playerDetails = allPlayers.find((player: any) => player.id === p.playerId);
         return playerDetails || { id: p.playerId, name: `Player ${p.playerId}`, teamId: 2 };
@@ -223,7 +223,7 @@ const EnhancedMatchScorecard = ({
   // Check if a hole is or should be greyed out (e.g., match is over)
   const isHoleGreyedOut = (holeNumber: number): boolean => {
     if (locked) return true;
-    
+
     if (matchStatus !== "completed") return false;
 
     // Find the match-deciding hole
@@ -801,8 +801,9 @@ const EnhancedMatchScorecard = ({
                       type="tel"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded bg-white text-black
-                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
+                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
+                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed text-black" : 
+                          getScoreInputValue(hole.number, "aviator") ? "bg-aviator text-white" : "bg-white text-black"}`}
                       value={getScoreInputValue(hole.number, "aviator")}
                       onChange={(e) =>
                         handleScoreChange(
@@ -837,8 +838,9 @@ const EnhancedMatchScorecard = ({
                       type="tel"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded bg-white text-black
-                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
+                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
+                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed text-black" : 
+                          getScoreInputValue(hole.number, "aviator") ? "bg-aviator text-white" : "bg-white text-black"}`}
                       value={getScoreInputValue(hole.number, "aviator")}
                       onChange={(e) =>
                         handleScoreChange(
@@ -909,7 +911,7 @@ const EnhancedMatchScorecard = ({
               {frontNine.map((hole) => (
                 <td key={hole.number} className="py-2 px-2 text-center bg-producer text-white">
                   {isBestBall ? (
-                    <div className="score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded bg-white text-black">
+                    <div className="score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded bgwhite text-black">
                       {getScoreInputValue(hole.number, "producer") || "-"}
                     </div>
                   ) : (
@@ -917,8 +919,9 @@ const EnhancedMatchScorecard = ({
                       type="tel"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded bg-white text-black
-                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
+                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
+                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed text-black" : 
+                          getScoreInputValue(hole.number, "producer") ? "bg-producer text-white" : "bg-white text-black"}`}
                       value={getScoreInputValue(hole.number, "producer")}
                       onChange={(e) =>
                         handleScoreChange(
@@ -953,8 +956,9 @@ const EnhancedMatchScorecard = ({
                       type="tel"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded bg-white text-black
-                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""}`}
+                      className={`score-input w-16 h-8 text-center border border-gray-300 rounded 
+                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed text-black" : 
+                          getScoreInputValue(hole.number, "producer") ? "bg-producer text-white" : "bg-white text-black"}`}
                       value={getScoreInputValue(hole.number, "producer")}
                       onChange={(e) =>
                         handleScoreChange(
