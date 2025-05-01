@@ -533,12 +533,20 @@ const Match = ({ id }: { id: number }) => {
                 </div>
               )}
 
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBackToAdminMatches}
+                className="mr-2"
+              >
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                Back to Round
+              </Button>
               {isAdmin && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleToggleLock}
-                  className="ml-2"
                 >
                   {isLocked ? (
                     <>
