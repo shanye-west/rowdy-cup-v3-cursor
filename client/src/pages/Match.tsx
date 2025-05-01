@@ -6,7 +6,7 @@ import MatchHeader from "@/components/MatchHeader";
 import EnhancedMatchScorecard from "@/components/EnhancedMatchScorecard";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ChevronLeft, Edit, Save, Lock, Unlock } from "lucide-react"; // Add Unlock import
+import { ChevronLeft, Edit, Save, Lock, Unlock } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/hooks/use-auth";
 
 interface MatchProps {
   id: number;
@@ -43,7 +44,7 @@ interface MatchData {
   leadingTeam: string | null;
   leadAmount: number;
   result: string | null;
-  locked: boolean; // Changed from optional to required
+  locked?: boolean;
 }
 
 interface RoundData {
@@ -141,10 +142,12 @@ const Match = ({ id }: MatchProps) => {
     enabled: !!id,
   });
 
+  // Check user's admin status
+  const { isAdmin } = useAuth();
+
   // Update lock status when match data changes
   useEffect(() => {
     if (match) {
-      console.log("Match data loaded, lock status:", match.locked);
       setIsLocked(!!match.locked);
     }
   }, [match]);
@@ -201,20 +204,13 @@ const Match = ({ id }: MatchProps) => {
   const toggleLockMutation = useMutation({
     mutationFn: async (locked: boolean) => {
       if (!match) return;
-      console.log("Toggling lock to:", locked); // Add logging
       return apiRequest("PUT", `/api/matches/${match.id}`, {
         locked: locked,
       });
     },
     onSuccess: () => {
-      // Toggle the local state
-      const newLockState = !isLocked;
-      console.log("Lock mutation successful, changing state to:", newLockState);
-      setIsLocked(newLockState);
-
-      // Refresh the match data from server
+      setIsLocked(!isLocked);
       queryClient.invalidateQueries({ queryKey: [`/api/matches/${id}`] });
-
       toast({
         title: isLocked ? "Match unlocked" : "Match locked",
         description: isLocked 
@@ -223,7 +219,6 @@ const Match = ({ id }: MatchProps) => {
       });
     },
     onError: (error) => {
-      console.error("Lock toggle error:", error); // Add error logging
       toast({
         title: "Error updating match lock status",
         description: error.message,
@@ -407,7 +402,6 @@ const Match = ({ id }: MatchProps) => {
 
   // Handle lock toggle
   const handleToggleLock = () => {
-    console.log("Toggle lock button clicked, current lock state:", isLocked);
     toggleLockMutation.mutate(!isLocked);
   };
 
@@ -530,21 +524,23 @@ const Match = ({ id }: MatchProps) => {
         </>
       ) : (
         <>
-          {/* Admin Header if in Admin mode */}
-          {isAdminMode && (
-            <div className="mb-4 flex items-center justify-between">
-              <button
-                className="flex items-center text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
-                onClick={handleBackToAdminMatches}
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" /> Back to Round
-              </button>
+          {/* Updated header section - now visible for all users, but with admin features conditional */}
+          <div className="mb-4 flex items-center justify-between">
+            <button
+              className="flex items-center text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
+              onClick={handleBackToAdminMatches}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" /> Back to Round
+            </button>
 
-              <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
+              {isAdminMode && (
                 <div className="bg-amber-100 text-amber-800 px-3 py-1 rounded text-xs font-medium">
                   Admin View
                 </div>
+              )}
 
+              {isAdmin && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -563,9 +559,9 @@ const Match = ({ id }: MatchProps) => {
                     </>
                   )}
                 </Button>
-              </div>
+              )}
             </div>
-          )}
+          </div>
 
           {/* Match Header */}
           <MatchHeader

@@ -9,7 +9,6 @@ import Round from "@/pages/Round";
 import Match from "@/pages/Match";
 import Teams from "@/pages/Teams";
 import AuthPage from "@/pages/AuthPage";
-import AdminPage from "@/pages/AdminPage";
 import AdminPlayersPage from "@/pages/AdminPlayersPage";
 import LoginPage from "@/pages/Login";
 import SetPinPage from "@/pages/SetPin";
@@ -147,7 +146,6 @@ function Router() {
       <Route path="/set-pin" component={SetPinPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/test-courses" component={TestCourses} />
-      <ProtectedRoute path="/admin" component={AdminPage} adminOnly={true} />
       <ProtectedRoute path="/admin/players" component={AdminPlayersPage} adminOnly={true} />
       <Route component={NotFound} />
     </Switch>
