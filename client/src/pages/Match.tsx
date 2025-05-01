@@ -76,9 +76,6 @@ interface ScoreData {
   matchStatus: string | null;
 }
 
-import { Lock, Unlock } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-
 const Match = ({ id }: { id: number }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
