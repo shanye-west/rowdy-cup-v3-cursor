@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2, ChevronLeft, Plus, PenSquare } from "lucide-react";
+import { Loader2, ChevronLeft, Plus, PenSquare, Lock, Unlock } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import {
@@ -35,6 +35,7 @@ type Match = {
   leadingTeam: string | null;
   leadAmount: number;
   result: string | null;
+  locked: boolean;
 };
 
 type Player = {
@@ -92,12 +93,12 @@ export default function AdminMatchesPage() {
     queryFn: getQueryFn({ on401: "throw" }),
     enabled: !!roundId,
   });
-  
+
   const { data: players, isLoading: isPlayersLoading } = useQuery<Player[]>({
     queryKey: ['/api/players'],
     queryFn: getQueryFn({ on401: "throw" }),
   });
-  
+
   const { data: teams, isLoading: isTeamsLoading } = useQuery<Team[]>({
     queryKey: ['/api/teams'],
     queryFn: getQueryFn({ on401: "throw" }),
@@ -130,6 +131,33 @@ export default function AdminMatchesPage() {
     },
   });
 
+  // Add toggle lock mutation
+  const toggleLockMutation = useMutation({
+    mutationFn: async ({ matchId, locked }: { matchId: number, locked: boolean }) => {
+      return apiRequest("PUT", `/api/matches/${matchId}`, {
+        locked
+      });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/matches?roundId=${roundId}`] });
+      toast({
+        title: variables.locked ? "Match locked" : "Match unlocked",
+        description: variables.locked 
+          ? "The match has been locked to prevent further edits." 
+          : "The match has been unlocked for editing.",
+        duration: 3000,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update match lock status",
+        description: error.message,
+        variant: "destructive",
+        duration: 3000,
+      });
+    },
+  });
+
   const resetMatchForm = () => {
     setMatchFormData({
       name: "",
@@ -147,19 +175,19 @@ export default function AdminMatchesPage() {
       [name]: value,
     });
   };
-  
+
   // Check if a player is already participating in a match in this round
   const isPlayerInAnyMatch = (playerId: number): boolean => {
     if (!matches || !players) return false;
-    
+
     const player = players.find(p => p.id === playerId);
     if (!player) return false;
-    
+
     // Check each active match
     return matches.some(match => {
       // Skip deleted matches
       if (match.status === 'deleted') return false;
-      
+
       // Check both teams for the player
       return (
         (match.aviatorPlayers && match.aviatorPlayers.includes(player.name)) ||
@@ -167,17 +195,17 @@ export default function AdminMatchesPage() {
       );
     });
   };
-  
+
   // Handle selecting an Aviator player
   const handleAddAviatorPlayer = (playerId: number) => {
     if (players && roundId) {
       const player = players.find(p => p.id === Number(playerId));
-      
+
       if (player) {
         // Add player to selected list if not already there
         if (!selectedAviatorPlayers.some(p => p.id === player.id)) {
           setSelectedAviatorPlayers([...selectedAviatorPlayers, player]);
-          
+
           // Update form data
           const playerNames = [...selectedAviatorPlayers, player].map(p => p.name).join(", ");
           setMatchFormData({
@@ -188,17 +216,17 @@ export default function AdminMatchesPage() {
       }
     }
   };
-  
+
   // Handle selecting a Producer player
   const handleAddProducerPlayer = (playerId: number) => {
     if (players && roundId) {
       const player = players.find(p => p.id === Number(playerId));
-      
+
       if (player) {
         // Add player to selected list if not already there
         if (!selectedProducerPlayers.some(p => p.id === player.id)) {
           setSelectedProducerPlayers([...selectedProducerPlayers, player]);
-          
+
           // Update form data
           const playerNames = [...selectedProducerPlayers, player].map(p => p.name).join(", ");
           setMatchFormData({
@@ -209,12 +237,12 @@ export default function AdminMatchesPage() {
       }
     }
   };
-  
+
   // Handle removing selected players
   const removeAviatorPlayer = (playerId: number) => {
     const updatedPlayers = selectedAviatorPlayers.filter(p => p.id !== playerId);
     setSelectedAviatorPlayers(updatedPlayers);
-    
+
     // Update form data
     const playerNames = updatedPlayers.map(p => p.name).join(", ");
     setMatchFormData({
@@ -222,11 +250,11 @@ export default function AdminMatchesPage() {
       aviatorPlayers: playerNames,
     });
   };
-  
+
   const removeProducerPlayer = (playerId: number) => {
     const updatedPlayers = selectedProducerPlayers.filter(p => p.id !== playerId);
     setSelectedProducerPlayers(updatedPlayers);
-    
+
     // Update form data
     const playerNames = updatedPlayers.map(p => p.name).join(", ");
     setMatchFormData({
@@ -237,7 +265,7 @@ export default function AdminMatchesPage() {
 
   const handleAddMatch = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate that we have selected players
     if (!matchFormData.aviatorPlayers || !matchFormData.producerPlayers) {
       toast({
@@ -247,16 +275,25 @@ export default function AdminMatchesPage() {
       });
       return;
     }
-    
+
     addMatchMutation.mutate(matchFormData);
   };
 
   const handleEditMatch = (matchId: number) => {
     window.location.href = `/admin/matches/${matchId}/edit`;
   };
-  
+
   const handleViewScorecard = (matchId: number) => {
     window.location.href = `/matches/${matchId}?admin=true`;
+  };
+
+  // Handle lock toggle
+  const handleToggleLock = (e: React.MouseEvent, matchId: number, currentLockState: boolean) => {
+    e.stopPropagation();
+    toggleLockMutation.mutate({ 
+      matchId, 
+      locked: !currentLockState 
+    });
   };
 
   if (!isAdmin) {
@@ -293,7 +330,7 @@ export default function AdminMatchesPage() {
             <Plus className="h-4 w-4 mr-1" /> Add Match
           </Button>
         </div>
-        
+
         <Card className="bg-muted/20">
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row justify-between">
@@ -311,9 +348,9 @@ export default function AdminMatchesPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <h2 className="text-xl font-semibold mt-4">Match List</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {matches && matches.filter(m => m.status !== 'deleted').length > 0 ? (
             matches
@@ -329,6 +366,11 @@ export default function AdminMatchesPage() {
                         <span className="text-amber-600">In Progress</span> : 
                         <span className="text-blue-600">Upcoming</span>
                       }
+                      {match.locked && (
+                        <span className="ml-2 text-gray-500 inline-flex items-center">
+                          <Lock className="h-3 w-3 mr-1" /> Locked
+                        </span>
+                      )}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pb-2">
@@ -372,7 +414,7 @@ export default function AdminMatchesPage() {
                       <PenSquare className="h-4 w-4 mr-2" />
                       Edit Match
                     </Button>
-                    
+
                     <Button 
                       variant="default" 
                       className="w-full flex items-center"
@@ -380,6 +422,25 @@ export default function AdminMatchesPage() {
                     >
                       <PenSquare className="h-4 w-4 mr-2" />
                       View Scorecard
+                    </Button>
+
+                    {/* Add Lock/Unlock Button */}
+                    <Button 
+                      variant="outline" 
+                      className="w-full flex items-center"
+                      onClick={(e) => handleToggleLock(e, match.id, !!match.locked)}
+                    >
+                      {match.locked ? (
+                        <>
+                          <Unlock className="h-4 w-4 mr-2" />
+                          Unlock Match
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="h-4 w-4 mr-2" />
+                          Lock Match
+                        </>
+                      )}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -396,7 +457,7 @@ export default function AdminMatchesPage() {
           )}
         </div>
       </div>
-      
+
       {/* Add Match Dialog */}
       {isAddDialogOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -418,7 +479,7 @@ export default function AdminMatchesPage() {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     Aviator Players
@@ -444,7 +505,7 @@ export default function AdminMatchesPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    
+
                     {/* Selected Aviator Players */}
                     {selectedAviatorPlayers.length > 0 && (
                       <div className="mt-2">
@@ -465,7 +526,7 @@ export default function AdminMatchesPage() {
                         </div>
                       </div>
                     )}
-                    
+
                     <input
                       type="hidden"
                       name="aviatorPlayers"
@@ -474,7 +535,7 @@ export default function AdminMatchesPage() {
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     Producer Players
@@ -500,7 +561,7 @@ export default function AdminMatchesPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    
+
                     {/* Selected Producer Players */}
                     {selectedProducerPlayers.length > 0 && (
                       <div className="mt-2">
@@ -521,7 +582,7 @@ export default function AdminMatchesPage() {
                         </div>
                       </div>
                     )}
-                    
+
                     <input
                       type="hidden"
                       name="producerPlayers"
@@ -531,7 +592,7 @@ export default function AdminMatchesPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex justify-end mt-6 space-x-2">
                 <Button
                   type="button"

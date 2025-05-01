@@ -61,7 +61,7 @@ const RoundHeader = ({
               <div className="relative">
                 <span className="font-heading font-bold text-3xl">{aviatorScore}</span>
                 {pendingAviatorScore > 0 && (
-                  <span className="absolute text-gray-400 text-lg font-normal bottom-0 -right-5" title="Pending points">
+                  <span className="absolute text-gray-400 text-sm font-normal bottom-0 -right-15.5" style={{ marginRight: '10px' }} title="Pending points">
                     +{pendingAviatorScore}
                   </span>
                 )}
@@ -72,7 +72,7 @@ const RoundHeader = ({
               <div className="relative">
                 <span className="font-heading font-bold text-3xl">{producerScore}</span>
                 {pendingProducerScore > 0 && (
-                  <span className="absolute text-gray-400 text-lg font-normal bottom-0 -left-5" title="Pending points">
+                  <span className="absolute text-gray-400 text-sm font-normal bottom-0 -left-11" style={{ marginLeft: '10px' }} title="Pending points">
                     +{pendingProducerScore}
                   </span>
                 )}

@@ -21,7 +21,7 @@ interface Match {
   result: string | null;
   currentHole?: number;
   roundId: number;
-  locked?: boolean;
+  locked: boolean;
 }
 
 interface MatchesListProps {
@@ -100,41 +100,41 @@ const MatchesList = ({ matches }: MatchesListProps) => {
   };
 
   const renderMatchStatus = (match: Match) => {
-      if (match.status === "completed") {
-        return (
-          <div className="flex items-center space-x-1">
-            <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
-              Completed
-            </span>
-            {match.locked && (
-              <Lock className="h-3 w-3 text-gray-500" title="Match locked" />
-            )}
-          </div>
-        );
-      } else if (match.status === "in_progress") {
-        return (
-          <div className="flex items-center space-x-1">
-            <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
-              In Progress
-            </span>
-            {match.locked && (
-              <Lock className="h-3 w-3 text-gray-500" title="Match locked" />
-            )}
-          </div>
-        );
-      } else {
-        return (
-          <div className="flex items-center space-x-1">
-            <span className="inline-block px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">
-              Upcoming
-            </span>
-            {match.locked && (
-              <Lock className="h-3 w-3 text-gray-500" title="Match locked" />
-            )}
-          </div>
-        );
-      }
-    };
+    if (match.status === "completed") {
+      return (
+        <div className="flex items-center space-x-1">
+          <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+            Completed
+          </span>
+          {match.locked && (
+            <Lock className="h-3 w-3 text-gray-500" title="Match locked" />
+          )}
+        </div>
+      );
+    } else if (match.status === "in_progress") {
+      return (
+        <div className="flex items-center space-x-1">
+          <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
+            In Progress
+          </span>
+          {match.locked && (
+            <Lock className="h-3 w-3 text-gray-500" title="Match locked" />
+          )}
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex items-center space-x-1">
+          <span className="inline-block px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">
+            Upcoming
+          </span>
+          {match.locked && (
+            <Lock className="h-3 w-3 text-gray-500" title="Match locked" />
+          )}
+        </div>
+      );
+    }
+  };
 
   const renderMatchResult = (match: Match) => {
     if (match.status === "completed" && match.result) {

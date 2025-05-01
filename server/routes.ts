@@ -372,22 +372,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const roundId = match.roundId; // Save roundId before deleting the match
-      
+
       // Delete the match
       await storage.deleteMatch(matchId);
-      
+
       // Update round scores
       const updatedRound = await storage.getRound(roundId);
       if (updatedRound) {
         broadcast("round-updated", updatedRound);
       }
-      
+
       // Update tournament scores
       const updatedTournament = await storage.getTournament();
       if (updatedTournament) {
         broadcast("tournament-updated", updatedTournament);
       }
-      
+
       // Add roundId to broadcast to help clients better handle the update
       broadcast("match-deleted", { id: matchId, roundId });
       return res.status(200).json({ message: "Match deleted successfully" });

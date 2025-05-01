@@ -6,7 +6,7 @@ import MatchHeader from "@/components/MatchHeader";
 import EnhancedMatchScorecard from "@/components/EnhancedMatchScorecard";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ChevronLeft, Edit, Save, Lock, Unlock } from "lucide-react";
+import { ChevronLeft, Edit, Save, Lock, Unlock } from "lucide-react"; // Add Unlock import
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,7 +43,7 @@ interface MatchData {
   leadingTeam: string | null;
   leadAmount: number;
   result: string | null;
-  locked?: boolean;
+  locked: boolean; // Changed from optional to required
 }
 
 interface RoundData {
@@ -144,6 +144,7 @@ const Match = ({ id }: MatchProps) => {
   // Update lock status when match data changes
   useEffect(() => {
     if (match) {
+      console.log("Match data loaded, lock status:", match.locked);
       setIsLocked(!!match.locked);
     }
   }, [match]);
@@ -200,13 +201,20 @@ const Match = ({ id }: MatchProps) => {
   const toggleLockMutation = useMutation({
     mutationFn: async (locked: boolean) => {
       if (!match) return;
+      console.log("Toggling lock to:", locked); // Add logging
       return apiRequest("PUT", `/api/matches/${match.id}`, {
         locked: locked,
       });
     },
     onSuccess: () => {
-      setIsLocked(!isLocked);
+      // Toggle the local state
+      const newLockState = !isLocked;
+      console.log("Lock mutation successful, changing state to:", newLockState);
+      setIsLocked(newLockState);
+
+      // Refresh the match data from server
       queryClient.invalidateQueries({ queryKey: [`/api/matches/${id}`] });
+
       toast({
         title: isLocked ? "Match unlocked" : "Match locked",
         description: isLocked 
@@ -215,6 +223,7 @@ const Match = ({ id }: MatchProps) => {
       });
     },
     onError: (error) => {
+      console.error("Lock toggle error:", error); // Add error logging
       toast({
         title: "Error updating match lock status",
         description: error.message,
@@ -398,6 +407,7 @@ const Match = ({ id }: MatchProps) => {
 
   // Handle lock toggle
   const handleToggleLock = () => {
+    console.log("Toggle lock button clicked, current lock state:", isLocked);
     toggleLockMutation.mutate(!isLocked);
   };
 

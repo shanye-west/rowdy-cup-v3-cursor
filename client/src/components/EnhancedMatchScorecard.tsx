@@ -44,7 +44,7 @@ interface MatchScorecardProps {
   scores: Score[];
   matchStatus?: string;
   matchType: string;
-  locked?: boolean;
+  locked: boolean;
   onScoreUpdate: (
     holeNumber: number,
     aviatorScore: number | null,

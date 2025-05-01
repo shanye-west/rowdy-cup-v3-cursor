@@ -548,21 +548,21 @@ export class DBStorage implements IStorage {
         // Delete all scores for this match
         await tx.delete(scores)
           .where(eq(scores.matchId, id));
-        
+
         // Delete all match participants
         await tx.delete(match_players)
           .where(eq(match_players.matchId, id));
-        
+
         // Delete the match itself
         await tx.delete(matches)
           .where(eq(matches.id, id));
       });
-      
+
       // Reset sequences
       await db.execute(`SELECT SETVAL('scores_id_seq', COALESCE((SELECT MAX(id) FROM scores), 0) + 1, false)`);
       await db.execute(`SELECT SETVAL('match_participants_id_seq', COALESCE((SELECT MAX(id) FROM match_participants), 0) + 1, false)`);
       await db.execute(`SELECT SETVAL('matches_id_seq', COALESCE((SELECT MAX(id) FROM matches), 0) + 1, false)`);
-      
+
       console.log(`Successfully deleted match ID: ${id} from database`);
     } catch (error) {
       console.error(`Error deleting match ID: ${id}:`, error);
