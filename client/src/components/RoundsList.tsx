@@ -132,10 +132,14 @@ const RoundsList = ({ rounds }: RoundsListProps) => {
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <div className="w-3 h-3 rounded-full bg-aviator mr-2"></div>
-                <span className="font-semibold">{round.aviatorScore}</span>
+                <div className="relative">
+                  <span className="font-semibold">{parseFloat(round.aviatorScore.toString())}</span>
+                </div>
               </div>
               <div className="flex items-center">
-                <span className="font-semibold">{round.producerScore}</span>
+                <div className="relative">
+                  <span className="font-semibold">{parseFloat(round.producerScore.toString())}</span>
+                </div>
                 <div className="w-3 h-3 rounded-full bg-producer ml-2"></div>
               </div>
             </div>
