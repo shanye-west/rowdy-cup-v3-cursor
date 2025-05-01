@@ -1,5 +1,7 @@
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { Lock, Unlock } from "lucide-react";
+import { Button } from "./ui/button";
 import aviatorsLogo from "../assets/aviators-logo.svg";
 import producersLogo from "../assets/producers-logo.svg";
 
@@ -14,6 +16,9 @@ interface MatchHeaderProps {
   currentHole: number;
   status?: string;
   result?: string | null;
+  isAdmin?: boolean;
+  isLocked?: boolean;
+  onToggleLock?: () => void;
 }
 
 interface Player {
@@ -39,6 +44,9 @@ const MatchHeader = ({
   currentHole,
   status = "in_progress",
   result = null,
+  isAdmin = false,
+  isLocked = false,
+  onToggleLock,
 }: MatchHeaderProps) => {
   const [_, navigate] = useLocation();
 
@@ -83,15 +91,36 @@ const MatchHeader = ({
 
   return (
     <div className="mb-6">
-      <button 
-        className="mb-2 flex items-center font-semibold text-blue-600"
-        onClick={handleBackClick}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to Round
-      </button>
+      <div className="mb-2 flex items-center justify-between">
+        <button 
+          className="flex items-center font-semibold text-blue-600"
+          onClick={handleBackClick}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Round
+        </button>
+        {isAdmin && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleToggleLock}
+          >
+            {isLocked ? (
+              <>
+                <Unlock className="mr-2 h-4 w-4" />
+                Unlock Match
+              </>
+            ) : (
+              <>
+                <Lock className="mr-2 h-4 w-4" />
+                Lock Match
+              </>
+            )}
+          </Button>
+        )}
+      </div>
       
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="bg-gray-800 text-white px-4 py-3">
