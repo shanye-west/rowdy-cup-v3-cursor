@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
@@ -21,6 +21,7 @@ interface Match {
   result: string | null;
   currentHole?: number;
   roundId: number;
+  locked?: boolean;
 }
 
 interface MatchesListProps {
@@ -116,6 +117,17 @@ const MatchesList = ({ matches }: MatchesListProps) => {
         </span>
       );
     }
+  };
+  
+  // Add lock indicator if match is locked
+    return (
+      <div className="flex items-center space-x-1">
+        {statusElement}
+        {match.locked && (
+          <Lock className="h-3 w-3 text-gray-500" title="Match locked" />
+        )}
+      </div>
+    );
   };
 
   const renderMatchResult = (match: Match) => {

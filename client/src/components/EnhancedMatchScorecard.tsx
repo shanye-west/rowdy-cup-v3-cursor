@@ -44,6 +44,7 @@ interface MatchScorecardProps {
   scores: Score[];
   matchStatus?: string;
   matchType: string;
+  locked?: boolean;
   onScoreUpdate: (
     holeNumber: number,
     aviatorScore: number | null,
@@ -61,6 +62,7 @@ const EnhancedMatchScorecard = ({
   scores,
   matchStatus = "in_progress",
   matchType,
+  locked = false,
   onScoreUpdate,
   onBestBallScoreUpdate,
 }: MatchScorecardProps) => {
@@ -220,6 +222,8 @@ const EnhancedMatchScorecard = ({
 
   // Check if a hole is or should be greyed out (e.g., match is over)
   const isHoleGreyedOut = (holeNumber: number): boolean => {
+    if (locked) return true;
+    
     if (matchStatus !== "completed") return false;
 
     // Find the match-deciding hole

@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Lock, Unlock } from "lucide-react";
 
 interface MatchProps {
   id: number;
@@ -80,6 +81,7 @@ const Match = ({ id }: MatchProps) => {
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isAdminMode, setIsAdminMode] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
   const [matchSummary, setMatchSummary] = useState({
     aviatorTotal: 0,
     producerTotal: 0,
@@ -99,6 +101,13 @@ const Match = ({ id }: MatchProps) => {
     setIsAdminMode(urlParams.get("admin") === "true");
   }, []);
 
+  // Update lock status when match data changes
+  useEffect(() => {
+    if (match) {
+      setIsLocked(!!match.locked);
+    }
+  }, [match]);
+  
   // Fetch match data
   const { data: match, isLoading: isMatchLoading } = useQuery<MatchData>({
     queryKey: [`/api/matches/${id}`],
@@ -306,6 +315,11 @@ const Match = ({ id }: MatchProps) => {
     updateScoreMutation.mutate(scoreData);
   };
 
+  // Handle lock toggle
+  const handleToggleLock = () => {
+    toggleLockMutation.mutate(!isLocked);
+  };
+  
   // Update match status from "upcoming" to "in_progress" when first score is entered
   useEffect(() => {
     if (!match || !scores || match.status !== "upcoming") return;
@@ -374,6 +388,33 @@ const Match = ({ id }: MatchProps) => {
       await updateMatchMutation.mutateAsync({
         id: match.id,
         name: editMatchData.name,
+      });
+
+      // Add a mutation for toggling lock status
+      const toggleLockMutation = useMutation({
+        mutationFn: async (locked: boolean) => {
+          if (!match) return;
+          return apiRequest("PUT", `/api/matches/${match.id}`, {
+            locked: locked,
+          });
+        },
+        onSuccess: () => {
+          setIsLocked(!isLocked);
+          queryClient.invalidateQueries({ queryKey: [`/api/matches/${id}`] });
+          toast({
+            title: isLocked ? "Match unlocked" : "Match locked",
+            description: isLocked 
+              ? "The match has been unlocked for editing." 
+              : "The match has been locked to prevent further edits.",
+          });
+        },
+        onError: (error) => {
+          toast({
+            title: "Error updating match lock status",
+            description: error.message,
+            variant: "destructive",
+          });
+        },
       });
 
       // Find which players are new vs. existing
@@ -478,7 +519,30 @@ const Match = ({ id }: MatchProps) => {
               </button>
 
               <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2">
+                  <div className="bg-amber-100 text-amber-800 px-3 py-1 rounded text-xs font-medium">
+                    Admin View
+                  </div>
 
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleToggleLock}
+                    className="ml-2"
+                  >
+                    {isLocked ? (
+                      <>
+                        <Unlock className="mr-2 h-4 w-4" />
+                        Unlock Match
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="mr-2 h-4 w-4" />
+                        Lock Match
+                      </>
+                    )}
+                  </Button>
+                </div>
                 <div className="bg-amber-100 text-amber-800 px-3 py-1 rounded text-xs font-medium">
                   Admin View
                 </div>
@@ -508,6 +572,7 @@ const Match = ({ id }: MatchProps) => {
             onScoreUpdate={handleScoreUpdate}
             matchStatus={match.status}
             matchType={round?.matchType || ""}
+            locked={isLocked}
           />
         </>
       )}
