@@ -304,6 +304,9 @@ const Match = ({ id }: { id: number }) => {
     aviatorScore: number | null,
     producerScore: number | null,
   ) => {
+
+    if (isLocked)
+      
     // Allow updates even if one of the scores is null
     const scoreData = {
       matchId: id,

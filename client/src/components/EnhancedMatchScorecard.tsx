@@ -727,7 +727,7 @@ const EnhancedMatchScorecard = ({
                             }
                             min="1"
                             max="12"
-                            disabled={isHoleGreyedOut(hole.number)}
+                            disabled={isHoleGreyedOut(hole.number) || locked}
                           />
                         </td>
                       );
@@ -767,7 +767,7 @@ const EnhancedMatchScorecard = ({
                             }
                             min="1"
                             max="12"
-                            disabled={isHoleGreyedOut(hole.number)}
+                            disabled={isHoleGreyedOut(hole.number) || locked}
                           />
                         </td>
                       );
@@ -814,7 +814,7 @@ const EnhancedMatchScorecard = ({
                       }
                       min="1"
                       max="12"
-                      disabled={isHoleGreyedOut(hole.number)}
+                      disabled={isHoleGreyedOut(hole.number) || locked}
                     />
                   )}
                 </td>
@@ -850,7 +850,7 @@ const EnhancedMatchScorecard = ({
                       }
                       min="1"
                       max="12"
-                      disabled={isHoleGreyedOut(hole.number)}
+                      disabled={isHoleGreyedOut(hole.number) || locked}
                     />
                   )}
                 </td>
@@ -930,7 +930,7 @@ const EnhancedMatchScorecard = ({
                       }
                       min="1"
                       max="12"
-                      disabled={isHoleGreyedOut(hole.number)}
+                      disabled={isHoleGreyedOut(hole.number) || locked}
                     />
                   )}
                 </td>
@@ -966,7 +966,7 @@ const EnhancedMatchScorecard = ({
                       }
                       min="1"
                       max="12"
-                      disabled={isHoleGreyedOut(hole.number)}
+                      disabled={isHoleGreyedOut(hole.number) || locked}
                     />
                   )}
                 </td>
@@ -1025,7 +1025,7 @@ const EnhancedMatchScorecard = ({
                             }
                             min="1"
                             max="12"
-                            disabled={isHoleGreyedOut(hole.number)}
+                            disabled={isHoleGreyedOut(hole.number) || locked}
                           />
                         </td>
                       );
@@ -1065,7 +1065,7 @@ const EnhancedMatchScorecard = ({
                             }
                             min="1"
                             max="12"
-                            disabled={isHoleGreyedOut(hole.number)}
+                            disabled={isHoleGreyedOut(hole.number) || locked}
                           />
                         </td>
                       );
