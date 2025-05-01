@@ -6,7 +6,7 @@ import MatchHeader from "@/components/MatchHeader";
 import EnhancedMatchScorecard from "@/components/EnhancedMatchScorecard";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ChevronLeft, Edit, Save, Settings } from "lucide-react";
+import { ChevronLeft, Edit, Save, Lock, Unlock } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,7 +29,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Lock, Unlock } from "lucide-react";
 
 interface MatchProps {
   id: number;
@@ -44,6 +43,7 @@ interface MatchData {
   leadingTeam: string | null;
   leadAmount: number;
   result: string | null;
+  locked?: boolean;
 }
 
 interface RoundData {
@@ -56,6 +56,7 @@ interface RoundData {
   producerScore: number;
   date: string;
   isComplete: boolean;
+  courseId?: number;
 }
 
 interface HoleData {
@@ -74,7 +75,7 @@ interface ScoreData {
   matchStatus: string | null;
 }
 
-const Match = ({ id }: { id: number }) => {
+const Match = ({ id }: MatchProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -101,13 +102,6 @@ const Match = ({ id }: { id: number }) => {
     setIsAdminMode(urlParams.get("admin") === "true");
   }, []);
 
-  // Update lock status when match data changes
-  useEffect(() => {
-    if (match) {
-      setIsLocked(!!match.locked);
-    }
-  }, [match]);
-  
   // Fetch match data
   const { data: match, isLoading: isMatchLoading } = useQuery<MatchData>({
     queryKey: [`/api/matches/${id}`],
@@ -123,7 +117,7 @@ const Match = ({ id }: { id: number }) => {
     queryKey: [`/api/rounds/${match?.roundId}`],
     enabled: !!match?.roundId,
   });
-  
+
   // Fetch holes data for the specific course of this round
   const { data: holes, isLoading: isHolesLoading } = useQuery<HoleData[]>({
     queryKey: [`/api/holes`, round?.courseId],
@@ -147,8 +141,12 @@ const Match = ({ id }: { id: number }) => {
     enabled: !!id,
   });
 
-  const isLoading =
-    isMatchLoading || isScoresLoading || isHolesLoading || isRoundLoading || isPlayersLoading || isParticipantsLoading;
+  // Update lock status when match data changes
+  useEffect(() => {
+    if (match) {
+      setIsLocked(!!match.locked);
+    }
+  }, [match]);
 
   // Function to update score
   const updateScoreMutation = useMutation({
@@ -197,6 +195,36 @@ const Match = ({ id }: { id: number }) => {
       });
     },
   });
+
+  // Toggle lock mutation
+  const toggleLockMutation = useMutation({
+    mutationFn: async (locked: boolean) => {
+      if (!match) return;
+      return apiRequest("PUT", `/api/matches/${match.id}`, {
+        locked: locked,
+      });
+    },
+    onSuccess: () => {
+      setIsLocked(!isLocked);
+      queryClient.invalidateQueries({ queryKey: [`/api/matches/${id}`] });
+      toast({
+        title: isLocked ? "Match unlocked" : "Match locked",
+        description: isLocked 
+          ? "The match has been unlocked for editing." 
+          : "The match has been locked to prevent further edits.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating match lock status",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const isLoading =
+    isMatchLoading || isScoresLoading || isHolesLoading || isRoundLoading || isPlayersLoading || isParticipantsLoading;
 
   // Calculate proper match play result (e.g., "3&2", "4&3", "1 UP")
   const calculateMatchPlayResult = (completedScores: ScoreData[]): string => {
@@ -299,14 +327,22 @@ const Match = ({ id }: { id: number }) => {
     }
   }, [scores, match]);
 
+  // Handle score update
   const handleScoreUpdate = (
     holeNumber: number,
     aviatorScore: number | null,
     producerScore: number | null,
   ) => {
+    // Check if the match is locked
+    if (isLocked) {
+      toast({
+        title: "Match locked",
+        description: "Cannot update scores for a locked match",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    if (isLocked)
-      
     // Allow updates even if one of the scores is null
     const scoreData = {
       matchId: id,
@@ -318,11 +354,6 @@ const Match = ({ id }: { id: number }) => {
     updateScoreMutation.mutate(scoreData);
   };
 
-  // Handle lock toggle
-  const handleToggleLock = () => {
-    toggleLockMutation.mutate(!isLocked);
-  };
-  
   // Update match status from "upcoming" to "in_progress" when first score is entered
   useEffect(() => {
     if (!match || !scores || match.status !== "upcoming") return;
@@ -348,22 +379,27 @@ const Match = ({ id }: { id: number }) => {
         name: match.name,
       });
     }
-    
+
     if (participants && participants.length > 0 && players && players.length > 0) {
       const aviators = participants
         .filter((p: any) => p.team === "aviators")
         .map((p: any) => players.find((player: any) => player.id === p.playerId))
         .filter(Boolean);
-      
+
       const producers = participants
         .filter((p: any) => p.team === "producers")
         .map((p: any) => players.find((player: any) => player.id === p.playerId))
         .filter(Boolean);
-      
+
       setSelectedAviatorPlayers(aviators);
       setSelectedProducerPlayers(producers);
     }
   }, [match, participants, players]);
+
+  // Handle lock toggle
+  const handleToggleLock = () => {
+    toggleLockMutation.mutate(!isLocked);
+  };
 
   const handleOpenEditDialog = () => {
     setShowEditDialog(true);
@@ -393,38 +429,11 @@ const Match = ({ id }: { id: number }) => {
         name: editMatchData.name,
       });
 
-      // Add a mutation for toggling lock status
-      const toggleLockMutation = useMutation({
-        mutationFn: async (locked: boolean) => {
-          if (!match) return;
-          return apiRequest("PUT", `/api/matches/${match.id}`, {
-            locked: locked,
-          });
-        },
-        onSuccess: () => {
-          setIsLocked(!isLocked);
-          queryClient.invalidateQueries({ queryKey: [`/api/matches/${id}`] });
-          toast({
-            title: isLocked ? "Match unlocked" : "Match locked",
-            description: isLocked 
-              ? "The match has been unlocked for editing." 
-              : "The match has been locked to prevent further edits.",
-          });
-        },
-        onError: (error) => {
-          toast({
-            title: "Error updating match lock status",
-            description: error.message,
-            variant: "destructive",
-          });
-        },
-      });
-
       // Find which players are new vs. existing
       const existingAviatorPlayerIds = participants
         .filter((p: any) => p.team === "aviators")
         .map((p: any) => p.playerId);
-      
+
       const existingProducerPlayerIds = participants
         .filter((p: any) => p.team === "producers")
         .map((p: any) => p.playerId);
@@ -432,7 +441,7 @@ const Match = ({ id }: { id: number }) => {
       // Players to add
       const newAviatorPlayers = selectedAviatorPlayers
         .filter((p: any) => !existingAviatorPlayerIds.includes(p.id));
-      
+
       const newProducerPlayers = selectedProducerPlayers
         .filter((p: any) => !existingProducerPlayerIds.includes(p.id));
 
@@ -442,7 +451,7 @@ const Match = ({ id }: { id: number }) => {
           p.team === "aviators" && 
           !selectedAviatorPlayers.some((s: any) => s.id === p.playerId)
         );
-      
+
       const producerPlayersToRemove = participants
         .filter((p: any) => 
           p.team === "producers" && 
@@ -475,7 +484,7 @@ const Match = ({ id }: { id: number }) => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: [`/api/matches/${match.id}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/match-players?matchId=${match.id}`] });
-      
+
       setShowEditDialog(false);
       toast({
         title: "Match updated",
@@ -522,33 +531,28 @@ const Match = ({ id }: { id: number }) => {
               </button>
 
               <div className="flex items-center space-x-2">
-                <div className="flex items-center space-x-2">
-                  <div className="bg-amber-100 text-amber-800 px-3 py-1 rounded text-xs font-medium">
-                    Admin View
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleToggleLock}
-                    className="ml-2"
-                  >
-                    {isLocked ? (
-                      <>
-                        <Unlock className="mr-2 h-4 w-4" />
-                        Unlock Match
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="mr-2 h-4 w-4" />
-                        Lock Match
-                      </>
-                    )}
-                  </Button>
-                </div>
                 <div className="bg-amber-100 text-amber-800 px-3 py-1 rounded text-xs font-medium">
                   Admin View
                 </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleToggleLock}
+                  className="ml-2"
+                >
+                  {isLocked ? (
+                    <>
+                      <Unlock className="mr-2 h-4 w-4" />
+                      Unlock Match
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="mr-2 h-4 w-4" />
+                      Lock Match
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           )}
