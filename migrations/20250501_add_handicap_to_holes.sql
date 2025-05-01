@@ -1,0 +1,2 @@
+ALTER TABLE holes
+ADD COLUMN handicap_index INTEGER NOT NULL DEFAULT 0;
