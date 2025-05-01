@@ -30,7 +30,7 @@ const RoundsList = ({ rounds }: RoundsListProps) => {
   const { isAdmin } = useAuth();
   const { toast } = useToast();
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
-  
+
   const deleteRoundMutation = useMutation({
     mutationFn: async (roundId: number) => {
       const res = await apiRequest("DELETE", `/api/rounds/${roundId}`);
@@ -64,19 +64,19 @@ const RoundsList = ({ rounds }: RoundsListProps) => {
   const handleRoundClick = (roundId: number) => {
     navigate(`/rounds/${roundId}`);
   };
-  
+
   const handleDeleteClick = (e: React.MouseEvent, roundId: number) => {
     e.stopPropagation();
     setConfirmDeleteId(roundId);
   };
-  
+
   const confirmDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirmDeleteId !== null) {
       deleteRoundMutation.mutate(confirmDeleteId);
     }
   };
-  
+
   const cancelDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     setConfirmDeleteId(null);
@@ -132,24 +132,10 @@ const RoundsList = ({ rounds }: RoundsListProps) => {
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <div className="w-3 h-3 rounded-full bg-aviator mr-2"></div>
-                <div className="relative">
-                  <span className="font-semibold">{round.aviatorScore}</span>
-                  {round.pendingAviatorScore && round.pendingAviatorScore > 0 && (
-                    <span className="absolute text-gray-400 text-xs font-normal bottom-0 -right-4" title="Pending points">
-                      +{round.pendingAviatorScore}
-                    </span>
-                  )}
-                </div>
+                <span className="font-semibold">{round.aviatorScore}</span>
               </div>
               <div className="flex items-center">
-                <div className="relative">
-                  <span className="font-semibold">{round.producerScore}</span>
-                  {round.pendingProducerScore && round.pendingProducerScore > 0 && (
-                    <span className="absolute text-gray-400 text-xs font-normal bottom-0 -left-4" title="Pending points">
-                      +{round.pendingProducerScore}
-                    </span>
-                  )}
-                </div>
+                <span className="font-semibold">{round.producerScore}</span>
                 <div className="w-3 h-3 rounded-full bg-producer ml-2"></div>
               </div>
             </div>
