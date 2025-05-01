@@ -74,7 +74,7 @@ interface ScoreData {
   matchStatus: string | null;
 }
 
-const Match = ({ id }: MatchProps) => {
+const Match = ({ id }: { id: number }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
