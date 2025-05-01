@@ -791,9 +791,11 @@ const EnhancedMatchScorecard = ({
 
               {/* Front Nine Aviator Scores */}
               {frontNine.map((hole) => (
-                <td key={hole.number} className="py-2 px-2 text-center bg-aviator text-white">
+                <td key={hole.number} className="py-2 px-2 text-center">
                   {isBestBall ? (
-                    <div className="score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded bg-white text-black">
+                    <div className={`score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded ${
+                      getScoreInputValue(hole.number, "aviator") ? "bg-aviator text-white" : "bg-white text-black"
+                    }`}>
                       {getScoreInputValue(hole.number, "aviator") || "-"}
                     </div>
                   ) : (
@@ -828,9 +830,11 @@ const EnhancedMatchScorecard = ({
 
               {/* Back Nine Aviator Scores */}
               {backNine.map((hole) => (
-                <td key={hole.number} className="py-2 px-2 text-center bg-aviator text-white">
+                <td key={hole.number} className="py-2 px-2 text-center">
                   {isBestBall ? (
-                    <div className="score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded bg-white text-black">
+                    <div className={`score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded ${
+                      getScoreInputValue(hole.number, "aviator") ? "bg-aviator text-white" : "bg-white text-black"
+                    }`}>
                       {getScoreInputValue(hole.number, "aviator") || "-"}
                     </div>
                   ) : (
@@ -909,9 +913,11 @@ const EnhancedMatchScorecard = ({
 
               {/* Front Nine Producer Scores */}
               {frontNine.map((hole) => (
-                <td key={hole.number} className="py-2 px-2 text-center bg-producer text-white">
+                <td key={hole.number} className="py-2 px-2 text-center">
                   {isBestBall ? (
-                    <div className="score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded bgwhite text-black">
+                    <div className={`score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded ${
+                      getScoreInputValue(hole.number, "producer") ? "bg-producer text-white" : "bg-white text-black"
+                    }`}>
                       {getScoreInputValue(hole.number, "producer") || "-"}
                     </div>
                   ) : (
@@ -946,9 +952,11 @@ const EnhancedMatchScorecard = ({
 
               {/* Back Nine Producer Scores */}
               {backNine.map((hole) => (
-                <td key={hole.number} className="py-2 px-2 text-center bg-producer text-white">
+                <td key={hole.number} className="py-2 px-2 text-center">
                   {isBestBall ? (
-                    <div className="score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded bg-white text-black">
+                    <div className={`score-display w-16 h-8 inline-flex items-center justify-center border border-gray-300 rounded ${
+                      getScoreInputValue(hole.number, "producer") ? "bg-producer text-white" : "bg-white text-black"
+                    }`}>
                       {getScoreInputValue(hole.number, "producer") || "-"}
                     </div>
                   ) : (
