@@ -559,7 +559,7 @@ function RoundsTab() {
             <option value="2-man Team Scramble">2-man Team Scramble</option>
             <option value="4-man Team Scramble">4-man Team Scramble</option>
             <option value="2-man Team Shamble">2-man Team Shamble</option>
-            <option value="2-man Best Ball">2-man Best Ball</option>
+            <option value="2-man Team Best Ball">2-man Team Best Ball</option>
             <option value="Alternate Shot">Alternate Shot</option>
           </select>
         </div>

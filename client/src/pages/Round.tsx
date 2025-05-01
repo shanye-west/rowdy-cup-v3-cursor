@@ -155,7 +155,7 @@ const Round = ({ id }: RoundProps) => {
       } else if (
         round.matchType === "2-man Team Scramble" || 
         round.matchType === "2-man Team Shamble" || 
-        round.matchType === "2-man Best Ball" ||
+        round.matchType === "2-man Team Best Ball" ||
         round.matchType === "Alternate Shot"
       ) {
         setPlayersPerTeam(2);

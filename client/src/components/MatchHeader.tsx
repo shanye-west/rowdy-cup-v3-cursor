@@ -1,7 +1,5 @@
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Lock, Unlock } from "lucide-react";
-import { Button } from "./ui/button";
 import aviatorsLogo from "../assets/aviators-logo.svg";
 import producersLogo from "../assets/producers-logo.svg";
 
@@ -16,9 +14,6 @@ interface MatchHeaderProps {
   currentHole: number;
   status?: string;
   result?: string | null;
-  isAdmin?: boolean;
-  isLocked?: boolean;
-  onToggleLock?: () => void;
 }
 
 interface Player {
@@ -100,35 +95,8 @@ const MatchHeader = ({
       
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="bg-gray-800 text-white px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="font-heading font-bold text-xl">{name}</h2>
-              <p className="text-sm text-gray-300">{matchType} • {roundName}</p>
-            </div>
-            {isAdmin && onToggleLock && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleLock();
-                }}
-                className="text-white hover:text-white hover:bg-gray-700"
-              >
-                {isLocked ? (
-                  <>
-                    <Unlock className="mr-2 h-4 w-4" />
-                    Unlock Match
-                  </>
-                ) : (
-                  <>
-                    <Lock className="mr-2 h-4 w-4" />
-                    Lock Match
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
+          <h2 className="font-heading font-bold text-xl">{name}</h2>
+          <p className="text-sm text-gray-300">{matchType} • {roundName}</p>
         </div>
         
         <div className="p-4">
