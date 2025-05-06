@@ -27,28 +27,32 @@ export async function hashPassword(password: string) {
 
 // Password comparison function
 async function comparePasswords(supplied: string, stored: string) {
-  // Check if we're dealing with a plain 4-digit PIN
-  if (stored === "1111" || (!stored.includes('.') && stored.length === 4)) {
-    // Direct comparison for 4-digit PIN
+  try {
+    // Simple case: direct comparison for admin or plain text passwords
+    if (stored === "1111" || (!stored.includes('.') && stored.length <= 4)) {
+      return supplied === stored;
+    }
+    
+    // Check if stored password has the expected format (hash.salt)
+    if (!stored || !stored.includes('.')) {
+      console.error('Invalid password format in database: missing salt separator');
+      return supplied === stored;
+    }
+    
+    const [hashed, salt] = stored.split(".");
+    if (!salt) {
+      console.error('Invalid password format in database: salt is missing');
+      return supplied === stored;
+    }
+    
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    console.error('Error comparing passwords:', error);
+    // Fallback to direct comparison if any error occurs
     return supplied === stored;
   }
-  
-  // Check if stored password has the expected format (hash.salt)
-  if (!stored || !stored.includes('.')) {
-    console.error('Invalid password format in database: missing salt separator');
-    // Fallback for direct comparison in case the password was stored incorrectly
-    return supplied === stored;
-  }
-  
-  const [hashed, salt] = stored.split(".");
-  if (!salt) {
-    console.error('Invalid password format in database: salt is missing');
-    return supplied === stored;
-  }
-  
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
