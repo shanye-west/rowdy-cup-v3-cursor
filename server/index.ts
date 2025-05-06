@@ -57,6 +57,16 @@ app.use((req, res, next) => {
   // 4) Register your routes and get the underlying HTTP server
   const server = await registerRoutes(app);
 
+  // Error capture function
+  function captureError(err: any) {
+    return {
+      timestamp: Date.now(),
+      message: err.message,
+      stack: err.stack,
+      name: err.name
+    };
+  }
+
   // 5) Global error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
