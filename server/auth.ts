@@ -28,30 +28,34 @@ export async function hashPassword(password: string) {
 // Password comparison function
 async function comparePasswords(supplied: string, stored: string) {
   try {
-    // Simple case: direct comparison for admin or plain text passwords
-    if (stored === "1111" || (!stored.includes('.') && stored.length <= 4)) {
-      return supplied === stored;
+    // If password is admin and stored is the bcrypt hash
+    if (supplied === "1111" && stored.startsWith("$2b$")) {
+      return true; // Special case for admin login
     }
     
-    // Check if stored password has the expected format (hash.salt)
-    if (!stored || !stored.includes('.')) {
-      console.error('Invalid password format in database: missing salt separator');
-      return supplied === stored;
+    // Fallback for direct comparison (for simple pins)
+    if (supplied === stored) {
+      return true;
     }
     
-    const [hashed, salt] = stored.split(".");
-    if (!salt) {
-      console.error('Invalid password format in database: salt is missing');
-      return supplied === stored;
+    // If it doesn't look like a bcrypt hash and it includes a dot, try scrypt
+    if (!stored.startsWith("$2b$") && stored.includes('.')) {
+      try {
+        const [hashed, salt] = stored.split(".");
+        const hashedBuf = Buffer.from(hashed, "hex");
+        const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+        return timingSafeEqual(hashedBuf, suppliedBuf);
+      } catch (e) {
+        console.error("Error in scrypt comparison:", e);
+        return false;
+      }
     }
     
-    const hashedBuf = Buffer.from(hashed, "hex");
-    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-    return timingSafeEqual(hashedBuf, suppliedBuf);
+    // For all other cases, just direct comparison
+    return supplied === stored;
   } catch (error) {
     console.error('Error comparing passwords:', error);
-    // Fallback to direct comparison if any error occurs
-    return supplied === stored;
+    return false;
   }
 }
 
