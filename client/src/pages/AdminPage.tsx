@@ -61,7 +61,7 @@ function TournamentTab() {
   const [formData, setFormData] = useState({
     name: "",
     year: new Date().getFullYear(),
-    type: "rowdy",
+    type: "rowdy-cup",
     aviatorScore: 0,
     producerScore: 0
   });
@@ -77,7 +77,7 @@ function TournamentTab() {
       setFormData({
         name: tournament.name,
         year: tournament.year,
-        type: tournament.type || "rowdy",
+        type: tournament.type || "rowdy-cup",
         aviatorScore: tournament.aviatorScore || 0,
         producerScore: tournament.producerScore || 0
       });
@@ -155,7 +155,7 @@ function TournamentTab() {
               Current Tournament: <span className="font-medium">{tournament?.name}</span>
             </p>
             <p className="text-sm text-muted-foreground">
-              Type: <span className="font-medium">{tournament?.type === 'sw' ? 'SW Monthly Golf' : 'Rowdy Cup'}</span>
+              Type: <span className="font-medium">{tournament?.type === 'sw-monthly' ? 'SW Monthly Golf' : 'Rowdy Cup'}</span>
             </p>
           </div>
           <div className="flex space-x-4">
@@ -232,8 +232,8 @@ function TournamentTab() {
                     className="w-full px-3 py-2 border rounded-md"
                     required
                   >
-                    <option value="rowdy">Rowdy Cup</option>
-                    <option value="sw">SW Monthly Golf</option>
+                    <option value="rowdy-cup">Rowdy Cup</option>
+                    <option value="sw-monthly">SW Monthly Golf</option>
                   </select>
                   <p className="text-xs text-muted-foreground mt-1">Determines which database will be used for this tournament</p>
                 </div>

@@ -113,14 +113,16 @@ export function setupAuth(app: Express) {
   app.post("/api/login", (req, res, next) => {
     passport.authenticate("local", (err: Error | null, user: Express.User | false, info: any) => {
       if (err) {
-        return next(err);
+        console.error("Login error:", err);
+        return res.status(500).json({ error: err.message || "Internal server error" });
       }
       if (!user) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
       req.login(user, (err) => {
         if (err) {
-          return next(err);
+          console.error("Session error:", err);
+          return res.status(500).json({ error: err.message || "Session error" });
         }
         return res.json({
           id: user.id,
