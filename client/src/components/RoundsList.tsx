@@ -7,13 +7,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
-// Define which round types to hide
-const HIDDEN_ROUND_TYPES = [
-  "Singles Match",
-  "Alternate Shot"
-  // Add any other round types you want to hide
-];
-
 interface Round {
   id: number;
   name: string;
@@ -30,24 +23,15 @@ interface Round {
 
 interface RoundsListProps {
   rounds: Round[];
-  showHiddenRounds?: boolean; // New prop to control visibility
 }
+
+const ROUNDS_TO_HIDE = ["Singles Match", "Alternate Shot"];
 
 const RoundsList = ({ rounds }: RoundsListProps) => {
   const [_, navigate] = useLocation();
   const { isAdmin } = useAuth();
   const { toast } = useToast();
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
-  const [filteredRounds, setFilteredRounds] = useState<Round[]>([])
-
-  // Apply filtering logic
-  useEffect(() => {
-    if (showHiddenRounds) {
-      setFilteredRounds(rounds);
-    } else {
-      setFilteredRounds(rounds.filter(round => !HIDDEN_ROUND_TYPES.includes(round.matchType)));
-    }
-  }
 
   const deleteRoundMutation = useMutation({
     mutationFn: async (roundId: number) => {
