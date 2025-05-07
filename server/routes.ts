@@ -1,4 +1,4 @@
-import { Express, Router } from "express";
+import { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer } from "ws";
 import { storage } from "./storage";
@@ -12,7 +12,6 @@ import {
   User,
 } from "@shared/schema";
 import { setupAuth, isAuthenticated, isAdmin, hashPassword } from "./auth";
-import { registerSWRoutes } from "./routes/sw";
 
 /**
  * Debug helper to log and validate player IDs
@@ -134,11 +133,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Initialize the data
   await storage.initializeData();
-  
-  // Register SW routes
-  const mainRouter = Router();
-  registerSWRoutes(mainRouter, wss);
-  app.use(mainRouter);
 
   // Course API
   app.get("/api/courses", async (req, res) => {

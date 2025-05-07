@@ -139,21 +139,6 @@ export class DBStorage implements IStorage {
   }
 
   async getUserByUsername(username: string) {
-    // Special case for admin username to support multiple variants
-    const isAdminLogin = ['admin', 'superadmin'].includes(username.toLowerCase());
-    
-    if (isAdminLogin) {
-      // Try to find any admin user (fallback logic)
-      const adminUsers = await db.select()
-        .from(users)
-        .where(eq(users.isAdmin, true));
-      
-      if (adminUsers.length > 0) {
-        return adminUsers[0]; // Return the first admin user found
-      }
-    }
-    
-    // Regular lookup by exact username
     const [row] = await db.select().from(users).where(eq(users.username, username));
     return row;
   }
@@ -1069,16 +1054,14 @@ export class DBStorage implements IStorage {
   
   // Ensures an admin user exists in the system
   async ensureAdminUserExists() {
-    // Check if any admin user exists
-    const admins = await db.select()
-      .from(users)
-      .where(eq(users.isAdmin, true));
+    const adminUsername = "superadmin";
+    const existingAdmin = await this.getUserByUsername(adminUsername);
     
-    if (admins.length === 0) {
+    if (!existingAdmin) {
       // Create a new admin user
       await this.createUser({
-        username: "admin",
-        passcode: "1111", // Store as plain text for now, will be hashed when changed by user
+        username: adminUsername,
+        passcode: "$2b$10$LLNIo.a42c8YTxffFVi0wezkcKquF.JPizZQ9XnZ.JMYgg4PH/XOy", // "1111" hashed
         isAdmin: true,
         needsPasswordChange: true
       });

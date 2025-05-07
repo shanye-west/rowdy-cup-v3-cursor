@@ -199,7 +199,6 @@ export const tournament = pgTable("tournament", {
   pendingAviatorScore: numeric("pending_aviator_score"),
   pendingProducerScore: numeric("pending_producer_score"),
   year: integer("year").notNull(),
-  type: text("type").default("rowdy-cup").notNull(), // "rowdy-cup" or "sw-monthly"
 });
 export const insertTournamentSchema = createInsertSchema(tournament);
 export type InsertTournament = z.infer<typeof insertTournamentSchema>;

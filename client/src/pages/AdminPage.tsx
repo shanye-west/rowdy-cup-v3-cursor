@@ -14,11 +14,8 @@ type Tournament = {
   id: number;
   name: string;
   year: number;
-  type: string;
   aviatorScore: number | null;
   producerScore: number | null;
-  pendingAviatorScore?: number | null;
-  pendingProducerScore?: number | null;
 };
 
 type Round = {
@@ -61,7 +58,6 @@ function TournamentTab() {
   const [formData, setFormData] = useState({
     name: "",
     year: new Date().getFullYear(),
-    type: "rowdy-cup",
     aviatorScore: 0,
     producerScore: 0
   });
@@ -77,7 +73,6 @@ function TournamentTab() {
       setFormData({
         name: tournament.name,
         year: tournament.year,
-        type: tournament.type || "rowdy-cup",
         aviatorScore: tournament.aviatorScore || 0,
         producerScore: tournament.producerScore || 0
       });
@@ -150,14 +145,9 @@ function TournamentTab() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col space-y-2 mb-4">
-            <p className="text-sm text-muted-foreground">
-              Current Tournament: <span className="font-medium">{tournament?.name}</span>
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Type: <span className="font-medium">{tournament?.type === 'sw-monthly' ? 'SW Monthly Golf' : 'Rowdy Cup'}</span>
-            </p>
-          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Current Tournament: <span className="font-medium">{tournament?.name}</span>
+          </p>
           <div className="flex space-x-4">
             <div className="bg-primary/10 rounded-lg p-4 flex-1">
               <h3 className="font-semibold">The Aviators</h3>
@@ -219,23 +209,6 @@ function TournamentTab() {
                     max="2099"
                     required
                   />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Tournament Type
-                  </label>
-                  <select
-                    name="type"
-                    value={formData.type}
-                    onChange={(e) => setFormData({...formData, type: e.target.value})}
-                    className="w-full px-3 py-2 border rounded-md"
-                    required
-                  >
-                    <option value="rowdy-cup">Rowdy Cup</option>
-                    <option value="sw-monthly">SW Monthly Golf</option>
-                  </select>
-                  <p className="text-xs text-muted-foreground mt-1">Determines which database will be used for this tournament</p>
                 </div>
                 
                 <div>

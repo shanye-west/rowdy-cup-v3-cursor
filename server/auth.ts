@@ -27,36 +27,28 @@ export async function hashPassword(password: string) {
 
 // Password comparison function
 async function comparePasswords(supplied: string, stored: string) {
-  try {
-    // If password is admin and stored is the bcrypt hash
-    if (supplied === "1111" && stored.startsWith("$2b$")) {
-      return true; // Special case for admin login
-    }
-    
-    // Fallback for direct comparison (for simple pins)
-    if (supplied === stored) {
-      return true;
-    }
-    
-    // If it doesn't look like a bcrypt hash and it includes a dot, try scrypt
-    if (!stored.startsWith("$2b$") && stored.includes('.')) {
-      try {
-        const [hashed, salt] = stored.split(".");
-        const hashedBuf = Buffer.from(hashed, "hex");
-        const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-        return timingSafeEqual(hashedBuf, suppliedBuf);
-      } catch (e) {
-        console.error("Error in scrypt comparison:", e);
-        return false;
-      }
-    }
-    
-    // For all other cases, just direct comparison
+  // Check if we're dealing with a plain 4-digit PIN
+  if (stored === "1111" || (!stored.includes('.') && stored.length === 4)) {
+    // Direct comparison for 4-digit PIN
     return supplied === stored;
-  } catch (error) {
-    console.error('Error comparing passwords:', error);
-    return false;
   }
+  
+  // Check if stored password has the expected format (hash.salt)
+  if (!stored || !stored.includes('.')) {
+    console.error('Invalid password format in database: missing salt separator');
+    // Fallback for direct comparison in case the password was stored incorrectly
+    return supplied === stored;
+  }
+  
+  const [hashed, salt] = stored.split(".");
+  if (!salt) {
+    console.error('Invalid password format in database: salt is missing');
+    return supplied === stored;
+  }
+  
+  const hashedBuf = Buffer.from(hashed, "hex");
+  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+  return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
@@ -121,16 +113,14 @@ export function setupAuth(app: Express) {
   app.post("/api/login", (req, res, next) => {
     passport.authenticate("local", (err: Error | null, user: Express.User | false, info: any) => {
       if (err) {
-        console.error("Login error:", err);
-        return res.status(500).json({ error: err.message || "Internal server error" });
+        return next(err);
       }
       if (!user) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
       req.login(user, (err) => {
         if (err) {
-          console.error("Session error:", err);
-          return res.status(500).json({ error: err.message || "Session error" });
+          return next(err);
         }
         return res.json({
           id: user.id,
