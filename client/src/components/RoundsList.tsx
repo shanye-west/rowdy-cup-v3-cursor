@@ -25,6 +25,8 @@ interface RoundsListProps {
   rounds: Round[];
 }
 
+const ROUNDS_TO_HIDE = ["Singles Match", "Alternate Shot"];
+
 const RoundsList = ({ rounds }: RoundsListProps) => {
   const [_, navigate] = useLocation();
   const { isAdmin } = useAuth();
@@ -84,7 +86,9 @@ const RoundsList = ({ rounds }: RoundsListProps) => {
 
   return (
     <div className="space-y-4">
-      {rounds.sort((a, b) => a.id - b.id).map((round) => (
+      {rounds
+        .filter((round) => !ROUNDS_TO_HIDE.includes(round.matchType)) // Filter out specific round types
+        .sort((a, b) => a.id - b.id).map((round) => (
         <div 
           key={round.id}
           className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer relative"
