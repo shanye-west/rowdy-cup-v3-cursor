@@ -7,13 +7,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
-// Define which round types to hide
-const HIDDEN_ROUND_TYPES = [
-  "Singles Match",
-  "Alternate Shot"
-  // Add any other round types you want to hide
-];
-
 interface Round {
   id: number;
   name: string;
@@ -30,7 +23,6 @@ interface Round {
 
 interface RoundsListProps {
   rounds: Round[];
-  showHiddenRounds?: boolean; // New prop to control visibility
 }
 
 const RoundsList = ({ rounds }: RoundsListProps) => {
@@ -38,16 +30,6 @@ const RoundsList = ({ rounds }: RoundsListProps) => {
   const { isAdmin } = useAuth();
   const { toast } = useToast();
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
-  const [filteredRounds, setFilteredRounds] = useState<Round[]>([])
-
-  // Apply filtering logic
-  useEffect(() => {
-    if (showHiddenRounds) {
-      setFilteredRounds(rounds);
-    } else {
-      setFilteredRounds(rounds.filter(round => !HIDDEN_ROUND_TYPES.includes(round.matchType)));
-    }
-  }
 
   const deleteRoundMutation = useMutation({
     mutationFn: async (roundId: number) => {
@@ -102,9 +84,7 @@ const RoundsList = ({ rounds }: RoundsListProps) => {
 
   return (
     <div className="space-y-4">
-      {rounds
-        .filter((round) => !ROUNDS_TO_HIDE.includes(round.matchType)) // Filter out specific round types
-        .sort((a, b) => a.id - b.id).map((round) => (
+      {rounds.sort((a, b) => a.id - b.id).map((round) => (
         <div 
           key={round.id}
           className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer relative"

@@ -315,11 +315,7 @@
                     <div className="w-3 h-3 rounded-full bg-aviator mr-2"></div>
                     <img src={aviatorsLogo} alt="Aviators" className="h-5" />
                   </div>
-                  <div className="text-sm text-gray-600">
-                    {match.aviatorPlayers.split(', ').map((player, index) => (
-                      <div key={index}>{player}</div>
-                    ))}
-                  </div>
+                  <div className="text-sm text-gray-600">{match.aviatorPlayers}</div>
                 </div>
 
                 <div className="w-1/2 pl-3">
@@ -327,12 +323,9 @@
                     <div className="w-3 h-3 rounded-full bg-producer mr-2"></div>
                     <img src={producersLogo} alt="Producers" className="h-5" />
                   </div>
-                  <div className="text-sm text-gray-600 text-right">{match.producerPlayers.split(', ').map((player, index) => (
-                    <div key={index}>{player}</div>    
-                  ))}
+                  <div className="text-sm text-gray-600 text-right">{match.producerPlayers}</div>
                 </div>
               </div>
-            </div>
 
               {/* Display match status */}
               {renderMatchStatusDisplay(match)}
