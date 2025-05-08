@@ -13,6 +13,7 @@ import {
   tournament,
   holes,
   courses,
+  player_course_handicaps,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -100,6 +101,15 @@ export interface IStorage {
     playerId: number,
   ): Promise<{ wins: number; losses: number; draws: number }>;
 
+  // Handicap system methods
+  updatePlayerHandicapIndex(playerId: number, handicapIndex: number): Promise<any>;
+  updateCourseRatings(courseId: number, data: { courseRating: number, slopeRating: number, par: number }): Promise<any>;
+  updateHoleHandicapRank(holeId: number, handicapRank: number): Promise<any>;
+  calculateCourseHandicap(playerId: number, roundId: number): Promise<number>;
+  getPlayerCourseHandicap(playerId: number, roundId: number): Promise<any>;
+  getHoleHandicapStrokes(playerId: number, roundId: number, holeNumber: number): Promise<number>;
+  storePlayerCourseHandicap(playerId: number, roundId: number, courseHandicap: number): Promise<any>;
+  
   initializeData(): Promise<void>;
 }
 

@@ -8,6 +8,9 @@ export const courses = pgTable("courses", {
   name: text("name").notNull().unique(),
   location: text("location"),
   description: text("description"),
+  courseRating: numeric("course_rating"), // Course rating (e.g., 72.4)
+  slopeRating: integer("slope_rating"), // Slope rating (e.g., 135)
+  par: integer("par"), // Par for the course (typically 72)
 });
 export const insertCourseSchema = createInsertSchema(courses);
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
@@ -81,6 +84,7 @@ export const holes = pgTable("holes", {
   courseId: integer("course_id").notNull(),
   number: integer("number").notNull(),
   par: integer("par").notNull(),
+  handicapRank: integer("handicap_rank"), // Handicap ranking (1-18), 1 is hardest hole
 }, (table) => {
   return {
     courseIdFk: foreignKey({
@@ -204,3 +208,27 @@ export const tournament = pgTable("tournament", {
 export const insertTournamentSchema = createInsertSchema(tournament);
 export type InsertTournament = z.infer<typeof insertTournamentSchema>;
 export type Tournament = typeof tournament.$inferSelect;
+
+// Player Course Handicaps table - stores calculated course handicaps for players in specific rounds
+export const player_course_handicaps = pgTable("player_course_handicaps", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull(),
+  roundId: integer("round_id").notNull(), 
+  courseHandicap: integer("course_handicap").notNull(), // Calculated course handicap (rounded)
+}, (table) => {
+  return {
+    playerIdFk: foreignKey({
+      columns: [table.playerId],
+      foreignColumns: [players.id],
+      name: "player_course_handicaps_player_id_fk"
+    }),
+    roundIdFk: foreignKey({
+      columns: [table.roundId],
+      foreignColumns: [rounds.id],
+      name: "player_course_handicaps_round_id_fk"
+    })
+  };
+});
+export const insertPlayerCourseHandicapSchema = createInsertSchema(player_course_handicaps);
+export type InsertPlayerCourseHandicap = z.infer<typeof insertPlayerCourseHandicapSchema>;
+export type PlayerCourseHandicap = typeof player_course_handicaps.$inferSelect;
