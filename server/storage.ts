@@ -1084,7 +1084,157 @@ export class DBStorage implements IStorage {
     const [row] = await db.insert(holes).values(data).returning();
     return row;
   }
+
+  // Handicap system methods
+  async updatePlayerHandicapIndex(playerId: number, handicapIndex: number) {
+    const [row] = await db
+      .update(players)
+      .set({ handicapIndex })
+      .where(eq(players.id, playerId))
+      .returning();
+    return row;
+  }
+
+  async updateCourseRatings(courseId: number, data: { courseRating: number, slopeRating: number, par: number }) {
+    const [row] = await db
+      .update(courses)
+      .set(data)
+      .where(eq(courses.id, courseId))
+      .returning();
+    return row;
+  }
+
+  async updateHoleHandicapRank(holeId: number, handicapRank: number) {
+    const [row] = await db
+      .update(holes)
+      .set({ handicapRank })
+      .where(eq(holes.id, holeId))
+      .returning();
+    return row;
+  }
+
+  async calculateCourseHandicap(playerId: number, roundId: number): Promise<number> {
+    // Get the player's handicap index
+    const player = await this.getPlayer(playerId);
+    if (!player || player.handicapIndex === null) {
+      return 0; // No handicap if player has no index
+    }
+
+    // Get the round to find the course
+    const round = await this.getRound(roundId);
+    if (!round || !round.courseId) {
+      return 0; // No handicap if no course is assigned to the round
+    }
+
+    // Get the course details
+    const course = await this.getCourse(round.courseId);
+    if (!course || !course.courseRating || !course.slopeRating || !course.par) {
+      return 0; // No handicap if course data is incomplete
+    }
+
+    // Apply the USGA formula:
+    // Course Handicap = (Handicap Index × Slope Rating / 113) + (Course Rating – Par)
+    const courseHandicap = Math.round(
+      (player.handicapIndex * course.slopeRating / 113) + (course.courseRating - course.par)
+    );
+    
+    // Store the calculated course handicap
+    await this.storePlayerCourseHandicap(playerId, roundId, courseHandicap);
+    
+    return courseHandicap;
+  }
+
+  async getPlayerCourseHandicap(playerId: number, roundId: number) {
+    // Check if we have a stored handicap
+    const [storedHandicap] = await db
+      .select()
+      .from(player_course_handicaps)
+      .where(
+        and(
+          eq(player_course_handicaps.playerId, playerId),
+          eq(player_course_handicaps.roundId, roundId)
+        )
+      );
+
+    if (storedHandicap) {
+      return storedHandicap;
+    }
+
+    // If no handicap is stored, calculate it
+    const calculatedHandicap = await this.calculateCourseHandicap(playerId, roundId);
+    return { 
+      playerId, 
+      roundId, 
+      courseHandicap: calculatedHandicap 
+    };
+  }
+
+  async getHoleHandicapStrokes(playerId: number, roundId: number, holeNumber: number): Promise<number> {
+    // Get the player's course handicap
+    const handicapData = await this.getPlayerCourseHandicap(playerId, roundId);
+    const courseHandicap = handicapData.courseHandicap || 0;
+    
+    if (courseHandicap <= 0) {
+      return 0; // No strokes given if handicap is 0 or negative
+    }
+    
+    // Get the round to find the course
+    const courseRound = await this.getRound(roundId);
+    if (!courseRound || !courseRound.courseId) {
+      return 0;
+    }
+    
+    // Get the hole details including its handicap rank
+    const courseHoles = await this.getHolesByCourse(courseRound.courseId);
+    const hole = courseHoles.find(h => h.number === holeNumber);
+    
+    if (!hole || hole.handicapRank === null) {
+      return 0; // No strokes if hole has no handicap ranking
+    }
+    
+    // Determine if player gets a stroke on this hole
+    // If course handicap is 9, player gets strokes on holes ranked 1-9
+    return hole.handicapRank <= courseHandicap ? 1 : 0;
+  }
+
+  async storePlayerCourseHandicap(playerId: number, roundId: number, courseHandicap: number) {
+    // Check if a record already exists
+    const [existingRecord] = await db
+      .select()
+      .from(player_course_handicaps)
+      .where(
+        and(
+          eq(player_course_handicaps.playerId, playerId),
+          eq(player_course_handicaps.roundId, roundId)
+        )
+      );
+    
+    if (existingRecord) {
+      // Update existing record
+      const [updated] = await db
+        .update(player_course_handicaps)
+        .set({ courseHandicap })
+        .where(
+          and(
+            eq(player_course_handicaps.playerId, playerId),
+            eq(player_course_handicaps.roundId, roundId)
+          )
+        )
+        .returning();
+      return updated;
+    } else {
+      // Insert new record
+      const [inserted] = await db
+        .insert(player_course_handicaps)
+        .values({
+          playerId,
+          roundId,
+          courseHandicap
+        })
+        .returning();
+      return inserted;
+    }
+  }
 }
 
-// Final export
 export const storage = new DBStorage();
