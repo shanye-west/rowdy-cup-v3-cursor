@@ -92,8 +92,16 @@ const EnhancedMatchScorecard = ({
     if (!matchData?.roundId || !isBestBall) return 0;
     
     try {
-      const response = await apiRequest<{strokes: number}>(`/api/rounds/${matchData.roundId}/players/${playerId}/holes/${holeNumber}/strokes`, 'GET');
-      return response?.strokes || 0;
+      // Make API request to fetch handicap strokes
+      const endpoint = `/api/rounds/${matchData.roundId}/players/${playerId}/holes/${holeNumber}/strokes`;
+      const response = await fetch(endpoint);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch handicap strokes: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return data?.strokes || 0;
     } catch (error) {
       console.error("Error fetching handicap strokes:", error);
       return 0;
@@ -1118,7 +1126,8 @@ const EnhancedMatchScorecard = ({
                                       className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
                                         ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""} 
                                         ${!isLowest ? "non-counting-score" : ""}
-                                        ${playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes ? "handicap-stroke" : ""}`}
+                                        ${playerScores.get(`${hole.number}-${player.name}`) && 
+                                          playerScores.get(`${hole.number}-${player.name}`)![0]?.handicapStrokes ? "handicap-stroke" : ""}`}
                                       value={getPlayerScoreValue(
                                         hole.number,
                                         player.name,
@@ -1137,13 +1146,15 @@ const EnhancedMatchScorecard = ({
                                       max="12"
                                       disabled={isHoleGreyedOut(hole.number) || locked}
                                     />
-                                    {playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 && (
+                                    {(playerScores.get(`${hole.number}-${player.name}`) &&
+                                      playerScores.get(`${hole.number}-${player.name}`)![0]?.handicapStrokes &&
+                                      playerScores.get(`${hole.number}-${player.name}`)![0]?.handicapStrokes > 0) ? (
                                       <div className="handicap-indicator">
-                                        {Array.from({ length: playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes || 0 }).map((_, i) => (
+                                        {Array.from({ length: playerScores.get(`${hole.number}-${player.name}`)![0]?.handicapStrokes || 0 }).map((_, i) => (
                                           <span key={i} className="handicap-dot"></span>
                                         ))}
                                       </div>
-                                    )}
+                                    ) : null}
                                     </div>
                                   </td>
                                 );
@@ -1187,13 +1198,15 @@ const EnhancedMatchScorecard = ({
                                         max="12"
                                         disabled={isHoleGreyedOut(hole.number) || locked}
                                       />
-                                      {playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 && (
+                                      {(playerScores.get(`${hole.number}-${player.name}`) &&
+                                        playerScores.get(`${hole.number}-${player.name}`)![0]?.handicapStrokes &&
+                                        playerScores.get(`${hole.number}-${player.name}`)![0]?.handicapStrokes > 0) ? (
                                         <div className="handicap-indicator">
-                                          {Array.from({ length: playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes || 0 }).map((_, i) => (
+                                          {Array.from({ length: playerScores.get(`${hole.number}-${player.name}`)![0]?.handicapStrokes || 0 }).map((_, i) => (
                                             <span key={i} className="handicap-dot"></span>
                                           ))}
                                         </div>
-                                      )}
+                                      ) : null}
                                     </div>
                                   </td>
                                 );
