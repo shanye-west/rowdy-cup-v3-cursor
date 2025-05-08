@@ -92,7 +92,7 @@ const EnhancedMatchScorecard = ({
     if (!matchData?.roundId || !isBestBall) return 0;
     
     try {
-      const response = await apiRequest(`/api/rounds/${matchData.roundId}/players/${playerId}/holes/${holeNumber}/strokes`);
+      const response = await apiRequest<{strokes: number}>(`/api/rounds/${matchData.roundId}/players/${playerId}/holes/${holeNumber}/strokes`, 'GET');
       return response?.strokes || 0;
     } catch (error) {
       console.error("Error fetching handicap strokes:", error);
@@ -1137,6 +1137,14 @@ const EnhancedMatchScorecard = ({
                                       max="12"
                                       disabled={isHoleGreyedOut(hole.number) || locked}
                                     />
+                                    {playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 && (
+                                      <div className="handicap-indicator">
+                                        {Array.from({ length: playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes || 0 }).map((_, i) => (
+                                          <span key={i} className="handicap-dot"></span>
+                                        ))}
+                                      </div>
+                                    )}
+                                    </div>
                                   </td>
                                 );
                               })}
@@ -1152,31 +1160,41 @@ const EnhancedMatchScorecard = ({
                                 );
                                 return (
                                   <td key={hole.number} className="py-2 px-2 text-center">
-                                    <input
-                                      type="tel"
-                                      inputMode="numeric"
-                                      pattern="[0-9]*"
-                                      className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
-                                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""} 
-                                        ${!isLowest ? "non-counting-score" : ""}`}
-                                      value={getPlayerScoreValue(
-                                        hole.number,
-                                        player.name,
-                                        "producer",
-                                      )}
-                                      onChange={(e) =>
-                                        handlePlayerScoreChange(
+                                    <div className="relative">
+                                      <input
+                                        type="tel"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
+                                          ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""} 
+                                          ${!isLowest ? "non-counting-score" : ""}
+                                          ${playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes ? "handicap-stroke" : ""}`}
+                                        value={getPlayerScoreValue(
                                           hole.number,
                                           player.name,
                                           "producer",
-                                          e.target.value,
-                                          e.target
-                                        )
-                                      }
-                                      min="1"
-                                      max="12"
-                                      disabled={isHoleGreyedOut(hole.number) || locked}
-                                    />
+                                        )}
+                                        onChange={(e) =>
+                                          handlePlayerScoreChange(
+                                            hole.number,
+                                            player.name,
+                                            "producer",
+                                            e.target.value,
+                                            e.target
+                                          )
+                                        }
+                                        min="1"
+                                        max="12"
+                                        disabled={isHoleGreyedOut(hole.number) || locked}
+                                      />
+                                      {playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 && (
+                                        <div className="handicap-indicator">
+                                          {Array.from({ length: playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes || 0 }).map((_, i) => (
+                                            <span key={i} className="handicap-dot"></span>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
                                   </td>
                                 );
                               })}
