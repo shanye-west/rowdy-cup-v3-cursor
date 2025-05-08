@@ -1154,28 +1154,65 @@ export class DBStorage implements IStorage {
   }
 
   async getPlayerCourseHandicap(playerId: number, roundId: number) {
-    // Check if we have a stored handicap
-    const [storedHandicap] = await db
-      .select()
-      .from(player_course_handicaps)
-      .where(
-        and(
-          eq(player_course_handicaps.playerId, playerId),
-          eq(player_course_handicaps.roundId, roundId)
-        )
-      );
-
-    if (storedHandicap) {
-      return storedHandicap;
+    try {
+      // Check if we have a stored handicap with the roundId
+      const [storedHandicap] = await db
+        .select()
+        .from(player_course_handicaps)
+        .where(
+          and(
+            eq(player_course_handicaps.playerId, playerId),
+            eq(player_course_handicaps.roundId, roundId)
+          )
+        );
+      
+      if (storedHandicap) {
+        return storedHandicap;
+      }
+      
+      // If not found with roundId, check if exists with courseId
+      // This is for backward compatibility during migration
+      const round = await this.getRound(roundId);
+      if (round && round.courseId) {
+        const [legacyHandicap] = await db
+          .select()
+          .from(player_course_handicaps)
+          .where(
+            and(
+              eq(player_course_handicaps.playerId, playerId),
+              eq(player_course_handicaps.courseId, round.courseId)
+            )
+          );
+          
+        if (legacyHandicap) {
+          // Update this record to include roundId
+          await db
+            .update(player_course_handicaps)
+            .set({ roundId: roundId })
+            .where(eq(player_course_handicaps.id, legacyHandicap.id));
+            
+          return {
+            ...legacyHandicap,
+            roundId: roundId
+          };
+        }
+      }
+  
+      // If no handicap is stored, calculate it
+      const calculatedHandicap = await this.calculateCourseHandicap(playerId, roundId);
+      return { 
+        playerId, 
+        roundId, 
+        courseHandicap: calculatedHandicap 
+      };
+    } catch (error) {
+      console.error("Error in getPlayerCourseHandicap:", error);
+      return { 
+        playerId, 
+        roundId, 
+        courseHandicap: 0 
+      };
     }
-
-    // If no handicap is stored, calculate it
-    const calculatedHandicap = await this.calculateCourseHandicap(playerId, roundId);
-    return { 
-      playerId, 
-      roundId, 
-      courseHandicap: calculatedHandicap 
-    };
   }
 
   async getHoleHandicapStrokes(playerId: number, roundId: number, holeNumber: number): Promise<number> {

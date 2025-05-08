@@ -213,7 +213,8 @@ export type Tournament = typeof tournament.$inferSelect;
 export const player_course_handicaps = pgTable("player_course_handicaps", {
   id: serial("id").primaryKey(),
   playerId: integer("player_id").notNull(),
-  roundId: integer("round_id").notNull(), 
+  roundId: integer("round_id"), // This is the new column we added
+  courseId: integer("course_id"), // This is a legacy column we might remove later
   courseHandicap: integer("course_handicap").notNull(), // Calculated course handicap (rounded)
 }, (table) => {
   return {
