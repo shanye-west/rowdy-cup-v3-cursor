@@ -92,8 +92,8 @@ const EnhancedMatchScorecard = ({
     if (!matchData?.roundId || !isBestBall) return 0;
     
     try {
-      const response = await apiRequest<{strokes: number}>(`/api/rounds/${matchData.roundId}/players/${playerId}/holes/${holeNumber}/strokes`);
-      return response.strokes;
+      const response = await apiRequest(`/api/rounds/${matchData.roundId}/players/${playerId}/holes/${holeNumber}/strokes`);
+      return response?.strokes || 0;
     } catch (error) {
       console.error("Error fetching handicap strokes:", error);
       return 0;
@@ -489,22 +489,45 @@ const EnhancedMatchScorecard = ({
     let aviatorScore = null;
     let producerScore = null;
 
-    // Find the lowest score for each team (ignoring null/undefined)
-    if (aviatorHoleScores.length > 0) {
-      const validScores = aviatorHoleScores.filter((s) => s.score !== null);
-      if (validScores.length > 0) {
-        aviatorScore = Math.min(...validScores.map((s) => s.score || Infinity));
-        if (aviatorScore === Infinity) aviatorScore = null;
+    // If the match is Best Ball and we have handicap strokes, use net scores
+    if (isBestBall) {
+      // Find the lowest net score for each team (ignoring null/undefined)
+      if (aviatorHoleScores.length > 0) {
+        const validNetScores = aviatorHoleScores.filter((s) => s.netScore !== null);
+        if (validNetScores.length > 0) {
+          aviatorScore = Math.min(...validNetScores.map((s) => s.netScore || Infinity));
+          if (aviatorScore === Infinity) aviatorScore = null;
+        }
       }
-    }
 
-    if (producerHoleScores.length > 0) {
-      const validScores = producerHoleScores.filter((s) => s.score !== null);
-      if (validScores.length > 0) {
-        producerScore = Math.min(
-          ...validScores.map((s) => s.score || Infinity),
-        );
-        if (producerScore === Infinity) producerScore = null;
+      if (producerHoleScores.length > 0) {
+        const validNetScores = producerHoleScores.filter((s) => s.netScore !== null);
+        if (validNetScores.length > 0) {
+          producerScore = Math.min(
+            ...validNetScores.map((s) => s.netScore || Infinity),
+          );
+          if (producerScore === Infinity) producerScore = null;
+        }
+      }
+    } else {
+      // For other match types, use gross scores
+      // Find the lowest score for each team (ignoring null/undefined)
+      if (aviatorHoleScores.length > 0) {
+        const validScores = aviatorHoleScores.filter((s) => s.score !== null);
+        if (validScores.length > 0) {
+          aviatorScore = Math.min(...validScores.map((s) => s.score || Infinity));
+          if (aviatorScore === Infinity) aviatorScore = null;
+        }
+      }
+
+      if (producerHoleScores.length > 0) {
+        const validScores = producerHoleScores.filter((s) => s.score !== null);
+        if (validScores.length > 0) {
+          producerScore = Math.min(
+            ...validScores.map((s) => s.score || Infinity),
+          );
+          if (producerScore === Infinity) producerScore = null;
+        }
       }
     }
 
@@ -538,22 +561,43 @@ const EnhancedMatchScorecard = ({
     const currentPlayerScoreObj = holeScores.find(
       (ps) => ps.player === playerName,
     );
-    const currentPlayerScore = currentPlayerScoreObj?.score;
-
-    if (currentPlayerScore === null || currentPlayerScore === undefined)
-      return false;
-
-    // Find the minimum score in this team for this hole (excluding nulls)
-    const validScores = holeScores
-      .filter((s) => s.score !== null && s.score !== undefined)
-      .map((s) => s.score || Infinity);
-
-    if (validScores.length === 0) return false;
-
-    const lowestScore = Math.min(...validScores);
-
-    // Check if this player has the lowest score
-    return currentPlayerScore === lowestScore;
+    
+    // For best ball with handicaps, use net scores
+    if (isBestBall && currentPlayerScoreObj?.netScore !== undefined) {
+      const currentPlayerNetScore = currentPlayerScoreObj.netScore;
+      
+      if (currentPlayerNetScore === null) return false;
+      
+      // Find the minimum net score in this team for this hole (excluding nulls)
+      const validNetScores = holeScores
+        .filter((s) => s.netScore !== null && s.netScore !== undefined)
+        .map((s) => s.netScore || Infinity);
+        
+      if (validNetScores.length === 0) return false;
+      
+      const lowestNetScore = Math.min(...validNetScores);
+      
+      // Check if this player has the lowest net score
+      return currentPlayerNetScore === lowestNetScore;
+    } else {
+      // Use gross scores if no handicap system or for other match types
+      const currentPlayerScore = currentPlayerScoreObj?.score;
+      
+      if (currentPlayerScore === null || currentPlayerScore === undefined)
+        return false;
+      
+      // Find the minimum score in this team for this hole (excluding nulls)
+      const validScores = holeScores
+        .filter((s) => s.score !== null && s.score !== undefined)
+        .map((s) => s.score || Infinity);
+        
+      if (validScores.length === 0) return false;
+      
+      const lowestScore = Math.min(...validScores);
+      
+      // Check if this player has the lowest score
+      return currentPlayerScore === lowestScore;
+    }
   };
 
   // Generate hole-by-hole match status (e.g., "1↑", "2↑", "AS") for the match status row
@@ -750,31 +794,34 @@ const EnhancedMatchScorecard = ({
                       );
                       return (
                         <td key={hole.number} className="py-2 px-2 text-center">
-                          <input
-                            type="tel"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
-                              ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""} 
-                              ${!isLowest ? "non-counting-score" : ""}`}
-                            value={getPlayerScoreValue(
-                              hole.number,
-                              player.name,
-                              "aviator",
-                            )}
-                            onChange={(e) =>
-                              handlePlayerScoreChange(
+                          <div className="relative">
+                            <input
+                              type="tel"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
+                                ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""} 
+                                ${!isLowest ? "non-counting-score" : ""}
+                                ${playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes ? "handicap-stroke" : ""}`}
+                              value={getPlayerScoreValue(
                                 hole.number,
                                 player.name,
                                 "aviator",
-                                e.target.value,
-                                e.target
-                              )
-                            }
-                            min="1"
-                            max="12"
-                            disabled={isHoleGreyedOut(hole.number) || locked}
-                          />
+                              )}
+                              onChange={(e) =>
+                                handlePlayerScoreChange(
+                                  hole.number,
+                                  player.name,
+                                  "aviator",
+                                  e.target.value,
+                                  e.target
+                                )
+                              }
+                              min="1"
+                              max="12"
+                              disabled={isHoleGreyedOut(hole.number) || locked}
+                            />
+                          </div>
                         </td>
                       );
                     })}
@@ -790,31 +837,34 @@ const EnhancedMatchScorecard = ({
                                 );
                                 return (
                                   <td key={hole.number} className="py-2 px-2 text-center">
-                                    <input
-                                      type="tel"
-                                      inputMode="numeric"
-                                      pattern="[0-9]*"
-                                      className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
-                                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""} 
-                                        ${!isLowest ? "non-counting-score" : ""}`}
-                                      value={getPlayerScoreValue(
-                                        hole.number,
-                                        player.name,
-                                        "aviator",
-                                      )}
-                                      onChange={(e) =>
-                                        handlePlayerScoreChange(
+                                    <div className="relative">
+                                      <input
+                                        type="tel"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
+                                          ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""} 
+                                          ${!isLowest ? "non-counting-score" : ""}
+                                          ${playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes ? "handicap-stroke" : ""}`}
+                                        value={getPlayerScoreValue(
                                           hole.number,
                                           player.name,
                                           "aviator",
-                                          e.target.value,
-                                          e.target
-                                        )
-                                      }
-                                      min="1"
-                                      max="12"
-                                      disabled={isHoleGreyedOut(hole.number) || locked}
-                                    />
+                                        )}
+                                        onChange={(e) =>
+                                          handlePlayerScoreChange(
+                                            hole.number,
+                                            player.name,
+                                            "aviator",
+                                            e.target.value,
+                                            e.target
+                                          )
+                                        }
+                                        min="1"
+                                        max="12"
+                                        disabled={isHoleGreyedOut(hole.number) || locked}
+                                      />
+                                    </div>
                                   </td>
                                 );
                               })}

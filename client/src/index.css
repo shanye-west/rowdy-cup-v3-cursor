@@ -196,3 +196,20 @@ tr:has(td.bg-producer) td:not(.bg-gray-100, .bg-gray-200) {
 html {
   scroll-behavior: smooth;
 }
+
+/* Handicap stroke indicator styles */
+.handicap-stroke {
+  position: relative;
+}
+
+.handicap-stroke::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 6px;
+  height: 6px;
+  background-color: #f97316; /* orange-500 */
+  border-radius: 50%;
+  z-index: 10;
+}
