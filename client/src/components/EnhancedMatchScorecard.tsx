@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -156,6 +156,62 @@ const EnhancedMatchScorecard = ({
   const allHoles = [...holes].sort((a, b) => a.number - b.number);
   const frontNine = [...holes].filter((h) => h.number <= 9).sort((a, b) => a.number - b.number);
   const backNine = [...holes].filter((h) => h.number > 9).sort((a, b) => a.number - b.number);
+  
+  // Load handicap strokes for all players on all holes
+  useEffect(() => {
+    if (!isBestBall || !matchData?.roundId) return;
+    
+    // Function to load handicap data for a player
+    const loadPlayerHandicapData = async (player: Player) => {
+      if (!player || !player.id) return;
+      
+      for (const hole of holes) {
+        try {
+          // Fetch handicap strokes for this player on this hole
+          const handicapStrokes = await getHandicapStrokes(player.id, hole.number);
+          
+          // Create the key for this player and hole
+          const key = `${hole.number}-${player.name}`;
+          
+          // Get existing scores or create new array
+          const existingScores = playerScores.get(key) || [];
+          
+          // If we already have scores, update with handicap info
+          if (existingScores.length > 0) {
+            existingScores[0] = {
+              ...existingScores[0],
+              handicapStrokes
+            };
+          } else {
+            // Otherwise create a new score object
+            existingScores.push({
+              player: player.name,
+              score: null,
+              teamId: player.teamId === 1 ? "aviator" : "producer",
+              playerId: player.id,
+              handicapStrokes
+            });
+          }
+          
+          // Update the Map with new data
+          setPlayerScores(prev => {
+            const newMap = new Map(prev);
+            newMap.set(key, existingScores);
+            return newMap;
+          });
+        } catch (error) {
+          console.error(`Error loading handicap for player ${player.name} on hole ${hole.number}:`, error);
+        }
+      }
+    };
+    
+    // Load for all players in the match
+    const allMatchPlayers = [...aviatorPlayersList, ...producerPlayersList];
+    allMatchPlayers.forEach(player => {
+      loadPlayerHandicapData(player);
+    });
+    
+  }, [matchData?.roundId, isBestBall, aviatorPlayersList, producerPlayersList, holes]);
 
   // Compute player score totals
   const playerTotals = useMemo(() => {
