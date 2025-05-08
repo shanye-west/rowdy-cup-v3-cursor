@@ -147,6 +147,31 @@ input[type="number"].score-input::-webkit-inner-spin-button {
   -moz-appearance: textfield;
 }
 
+/* Handicap dot indicator */
+.handicap-stroke {
+  position: relative;
+}
+
+.handicap-stroke::before {
+  content: "•";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  color: black;
+  font-weight: bold;
+}
+
+/* Multiple handicap strokes */
+.handicap-stroke[data-strokes="2"]::before {
+  content: "••";
+}
+
+.handicap-stroke[data-strokes="3"]::before {
+  content: "•••";
+}
+
 .tab-active {
   border-bottom: 3px solid #FFD700;
 }

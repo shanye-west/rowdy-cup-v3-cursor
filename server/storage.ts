@@ -1096,16 +1096,21 @@ export class DBStorage implements IStorage {
   }
 
   async updateCourseRatings(courseId: number, data: { courseRating: number, slopeRating: number, par: number }) {
-    const [row] = await db
-      .update(courses)
-      .set({
-        courseRating: data.courseRating.toString(),
-        slopeRating: data.slopeRating.toString(),
-        par: data.par
-      })
-      .where(eq(courses.id, courseId))
-      .returning();
-    return row;
+    try {
+      const [row] = await db
+        .update(courses)
+        .set({
+          courseRating: data.courseRating.toString(),
+          slopeRating: data.slopeRating,
+          par: data.par
+        })
+        .where(eq(courses.id, courseId))
+        .returning();
+      return row;
+    } catch (error) {
+      console.error("Error updating course ratings:", error);
+      throw error;
+    }
   }
 
   async updateHoleHandicapRank(holeId: number, handicapRank: number) {
