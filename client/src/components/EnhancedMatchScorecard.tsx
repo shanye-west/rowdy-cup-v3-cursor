@@ -1110,13 +1110,15 @@ const EnhancedMatchScorecard = ({
                                 );
                                 return (
                                   <td key={hole.number} className="py-2 px-2 text-center">
-                                    <input
+                                    <div className="relative">
+                                      <input
                                       type="tel"
                                       inputMode="numeric"
                                       pattern="[0-9]*"
                                       className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
                                         ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""} 
-                                        ${!isLowest ? "non-counting-score" : ""}`}
+                                        ${!isLowest ? "non-counting-score" : ""}
+                                        ${playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes ? "handicap-stroke" : ""}`}
                                       value={getPlayerScoreValue(
                                         hole.number,
                                         player.name,
