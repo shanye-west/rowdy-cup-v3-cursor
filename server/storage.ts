@@ -1089,7 +1089,7 @@ export class DBStorage implements IStorage {
   async updatePlayerHandicapIndex(playerId: number, handicapIndex: number) {
     const [row] = await db
       .update(players)
-      .set({ handicapIndex })
+      .set({ handicapIndex: handicapIndex.toString() })
       .where(eq(players.id, playerId))
       .returning();
     return row;
@@ -1098,7 +1098,11 @@ export class DBStorage implements IStorage {
   async updateCourseRatings(courseId: number, data: { courseRating: number, slopeRating: number, par: number }) {
     const [row] = await db
       .update(courses)
-      .set(data)
+      .set({
+        courseRating: data.courseRating.toString(),
+        slopeRating: data.slopeRating.toString(),
+        par: data.par
+      })
       .where(eq(courses.id, courseId))
       .returning();
     return row;
@@ -1134,8 +1138,13 @@ export class DBStorage implements IStorage {
 
     // Apply the USGA formula:
     // Course Handicap = (Handicap Index × Slope Rating / 113) + (Course Rating – Par)
+    const handicapIndex = parseFloat(player.handicapIndex.toString());
+    const slopeRating = parseFloat(course.slopeRating.toString());
+    const courseRating = parseFloat(course.courseRating.toString());
+    const par = parseInt(course.par.toString());
+    
     const courseHandicap = Math.round(
-      (player.handicapIndex * course.slopeRating / 113) + (course.courseRating - course.par)
+      (handicapIndex * slopeRating / 113) + (courseRating - par)
     );
     
     // Store the calculated course handicap

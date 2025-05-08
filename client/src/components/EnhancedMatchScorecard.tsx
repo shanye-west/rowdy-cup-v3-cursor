@@ -1179,7 +1179,7 @@ const EnhancedMatchScorecard = ({
                                         className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
                                           ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""} 
                                           ${!isLowest ? "non-counting-score" : ""}
-                                          ${playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes ? "handicap-stroke" : ""}`}
+                                          ${playerScores.get(`${hole.number}-${player.name}`) && playerScores.get(`${hole.number}-${player.name}`)![0]?.[0]?.handicapStrokes ? "handicap-stroke" : ""}`}
                                         value={getPlayerScoreValue(
                                           hole.number,
                                           player.name,
