@@ -1190,5 +1190,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Handicap System Routes
+
+  // Update player's handicap index
+  app.put("/api/players/:id/handicap", isAdmin, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const handicapIndex = parseFloat(req.body.handicapIndex);
+      
+      if (isNaN(playerId) || isNaN(handicapIndex)) {
+        return res.status(400).json({ error: "Invalid playerId or handicapIndex" });
+      }
+      
+      const updatedPlayer = await storage.updatePlayerHandicapIndex(playerId, handicapIndex);
+      res.json(updatedPlayer);
+    } catch (error) {
+      console.error("Error updating player handicap:", error);
+      res.status(500).json({ error: "Failed to update player handicap" });
+    }
+  });
+
+  // Update course ratings
+  app.put("/api/courses/:id/ratings", isAdmin, async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const { courseRating, slopeRating, par } = req.body;
+      
+      if (isNaN(courseId) || isNaN(courseRating) || isNaN(slopeRating) || isNaN(par)) {
+        return res.status(400).json({ error: "Invalid course ratings data" });
+      }
+      
+      const updatedCourse = await storage.updateCourseRatings(courseId, {
+        courseRating,
+        slopeRating,
+        par
+      });
+      res.json(updatedCourse);
+    } catch (error) {
+      console.error("Error updating course ratings:", error);
+      res.status(500).json({ error: "Failed to update course ratings" });
+    }
+  });
+
+  // Update hole handicap rank
+  app.put("/api/holes/:id/handicap-rank", isAdmin, async (req, res) => {
+    try {
+      const holeId = parseInt(req.params.id);
+      const handicapRank = parseInt(req.body.handicapRank);
+      
+      if (isNaN(holeId) || isNaN(handicapRank) || handicapRank < 1 || handicapRank > 18) {
+        return res.status(400).json({ error: "Invalid hole handicap rank data" });
+      }
+      
+      const updatedHole = await storage.updateHoleHandicapRank(holeId, handicapRank);
+      res.json(updatedHole);
+    } catch (error) {
+      console.error("Error updating hole handicap rank:", error);
+      res.status(500).json({ error: "Failed to update hole handicap rank" });
+    }
+  });
+
+  // Get player's course handicap for a specific round
+  app.get("/api/rounds/:roundId/players/:playerId/handicap", async (req, res) => {
+    try {
+      const roundId = parseInt(req.params.roundId);
+      const playerId = parseInt(req.params.playerId);
+      
+      if (isNaN(roundId) || isNaN(playerId)) {
+        return res.status(400).json({ error: "Invalid roundId or playerId" });
+      }
+      
+      const handicap = await storage.getPlayerCourseHandicap(playerId, roundId);
+      res.json(handicap);
+    } catch (error) {
+      console.error("Error getting player course handicap:", error);
+      res.status(500).json({ error: "Failed to get player course handicap" });
+    }
+  });
+
+  // Get player's handicap strokes for a specific hole in a round
+  app.get("/api/rounds/:roundId/players/:playerId/holes/:holeNumber/strokes", async (req, res) => {
+    try {
+      const roundId = parseInt(req.params.roundId);
+      const playerId = parseInt(req.params.playerId);
+      const holeNumber = parseInt(req.params.holeNumber);
+      
+      if (isNaN(roundId) || isNaN(playerId) || isNaN(holeNumber)) {
+        return res.status(400).json({ error: "Invalid parameters" });
+      }
+      
+      const strokes = await storage.getHoleHandicapStrokes(playerId, roundId, holeNumber);
+      res.json({ strokes });
+    } catch (error) {
+      console.error("Error getting hole handicap strokes:", error);
+      res.status(500).json({ error: "Failed to get hole handicap strokes" });
+    }
+  });
+
   return httpServer;
 }

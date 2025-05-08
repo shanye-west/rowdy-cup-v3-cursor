@@ -23,6 +23,7 @@ interface Player {
   id: number;
   name: string;
   teamId: number;
+  handicapIndex?: number | null;
 }
 
 interface MatchParticipant {
@@ -36,6 +37,8 @@ interface BestBallPlayerScore {
   score: number | null;
   teamId: string; // "aviator" or "producer"
   playerId: number;
+  handicapStrokes?: number;
+  netScore?: number | null;
 }
 
 interface MatchScorecardProps {
@@ -76,6 +79,35 @@ const EnhancedMatchScorecard = ({
   // Fetch all players for reference
   const { data: allPlayers = [] } = useQuery<any[]>({
     queryKey: ["/api/players"],
+  });
+  
+  // Fetch information about the match's round
+  const { data: matchData } = useQuery<any>({
+    queryKey: [`/api/matches/${matchId}`],
+    enabled: !!matchId && isBestBall,
+  });
+  
+  // Function to fetch handicap strokes for a player on a specific hole
+  const getHandicapStrokes = async (playerId: number, holeNumber: number) => {
+    if (!matchData?.roundId || !isBestBall) return 0;
+    
+    try {
+      const response = await apiRequest<{strokes: number}>(`/api/rounds/${matchData.roundId}/players/${playerId}/holes/${holeNumber}/strokes`);
+      return response.strokes;
+    } catch (error) {
+      console.error("Error fetching handicap strokes:", error);
+      return 0;
+    }
+  };
+  
+  // Fetch player handicaps for this round
+  const { data: playerHandicaps = [] } = useQuery<any[]>({
+    queryKey: [`/api/players`],
+    select: (data) => {
+      // Return only players with handicap information
+      return data.filter((player) => player.handicapIndex !== null);
+    },
+    enabled: !!matchData?.roundId && isBestBall,
   });
 
   // Split participants into teams
@@ -361,7 +393,7 @@ const EnhancedMatchScorecard = ({
   };
 
   // Handle individual player score changes for Best Ball
-  const handlePlayerScoreChange = (
+  const handlePlayerScoreChange = async (
     holeNumber: number,
     playerName: string,
     teamId: string,
@@ -389,21 +421,35 @@ const EnhancedMatchScorecard = ({
 
     // Find the player in the current hole scores
     const playerIndex = holeScores.findIndex((ps) => ps.player === playerName);
-
+    
+    const playerId = teamId === "aviator"
+      ? aviatorPlayersList.find((p: any) => p.name === playerName)?.id || 0
+      : producerPlayersList.find((p: any) => p.name === playerName)?.id || 0;
+    
+    // Get handicap strokes for this player on this hole (if Best Ball)
+    let handicapStrokes = 0;
+    if (isBestBall && matchData?.roundId && playerId) {
+      handicapStrokes = await getHandicapStrokes(playerId, holeNumber);
+    }
+    
+    // Calculate net score if applicable
+    let netScore = numValue !== null ? numValue - handicapStrokes : null;
+    
     // Create a player score object
-    const playerScoreObj = {
+    const playerScoreObj: BestBallPlayerScore = {
       player: playerName,
       score: numValue,
       teamId,
-      playerId:
-        teamId === "aviator"
-          ? aviatorPlayersList.find((p: any) => p.name === playerName)?.id || 0
-          : producerPlayersList.find((p: any) => p.name === playerName)?.id || 0,
+      playerId,
+      handicapStrokes,
+      netScore
     };
 
     if (playerIndex >= 0) {
       // Update existing player score
       holeScores[playerIndex].score = numValue;
+      holeScores[playerIndex].handicapStrokes = handicapStrokes;
+      holeScores[playerIndex].netScore = netScore;
     } else {
       // Add new player score
       holeScores.push(playerScoreObj);
