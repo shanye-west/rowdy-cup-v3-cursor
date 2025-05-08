@@ -213,3 +213,22 @@ html {
   border-radius: 50%;
   z-index: 10;
 }
+
+.handicap-indicator {
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  z-index: 10;
+}
+
+.handicap-dot {
+  width: 4px;
+  height: 4px;
+  background-color: #f97316; /* orange-500 */
+  border-radius: 50%;
+  display: inline-block;
+}
