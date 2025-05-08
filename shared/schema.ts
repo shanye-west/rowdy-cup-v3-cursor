@@ -34,6 +34,7 @@ export const players = pgTable("players", {
   losses: integer("losses").default(0),
   ties: integer("ties").default(0),
   status: text("status"),
+  handicapIndex: numeric("handicap_index"), // Player's handicap index (e.g., 8.4)
 }, (table) => {
   return {
     teamIdFk: foreignKey({
