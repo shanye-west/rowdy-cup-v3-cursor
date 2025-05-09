@@ -90,25 +90,34 @@ const EnhancedMatchScorecard = ({
     enabled: !!matchId && isBestBall,
   });
   
-  // Function to fetch handicap strokes for a player on a specific hole
+  // Function to calculate handicap strokes for a player on a specific hole
   const getHandicapStrokes = async (playerId: number, holeNumber: number) => {
     if (!matchData?.roundId || !isBestBall) return 0;
     
     try {
-      // Make API request to fetch handicap strokes
-      const response = await apiRequest(
-        "GET", 
-        `/api/players/${playerId}/rounds/${matchData.roundId}/holes/${holeNumber}/handicap-strokes`
-      );
+      // Get player's course handicap
+      const courseHandicap = getPlayerCourseHandicap(playerId);
       
-      if (!response.ok) {
-        throw new Error(`Failed to fetch handicap strokes: ${response.statusText}`);
+      // Find the hole with the matching number
+      const hole = holes.find(h => h.number === holeNumber);
+      const handicapRank = hole?.handicapRank || 0;
+      
+      // Calculate strokes based on hole handicap rank
+      // If player's handicap is higher than or equal to the hole's handicap rank, they get a stroke
+      // For example, if player has handicap 8 and hole rank is 5, they get a stroke
+      if (handicapRank > 0 && courseHandicap >= handicapRank) {
+        return 1;
       }
       
-      const data = await response.json();
-      return data?.handicapStrokes || 0;
+      // Calculate additional strokes for very high handicaps
+      // If player has handicap 19+ on hole rank 1, they get 2 strokes
+      if (handicapRank === 1 && courseHandicap >= 19) {
+        return 2;
+      }
+      
+      return 0;
     } catch (error) {
-      console.error("Error fetching handicap strokes:", error);
+      console.error("Error calculating handicap strokes:", error);
       return 0;
     }
   };
@@ -143,9 +152,62 @@ const EnhancedMatchScorecard = ({
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async (_, variables) => {
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: [`/api/round-handicaps/${matchData?.roundId}`] });
+      
+      // Find player
+      const player = [...aviatorPlayersList, ...producerPlayersList].find(p => p.id === variables.playerId);
+      if (!player) return;
+      
+      // Recalculate handicap strokes for this player on all holes
+      for (const hole of holes) {
+        // Calculate new handicap strokes
+        const newHandicapStrokes = await getHandicapStrokes(variables.playerId, hole.number);
+        
+        // Update player scores for this hole
+        const key = `${hole.number}-${player.name}`;
+        const existingScores = playerScores.get(key) || [];
+        
+        if (existingScores.length > 0) {
+          // Update existing score with new handicap strokes
+          const score = existingScores[0].score;
+          existingScores[0] = {
+            ...existingScores[0],
+            handicapStrokes: newHandicapStrokes,
+            netScore: score !== null ? score - newHandicapStrokes : null
+          };
+          
+          // Update the Map with new data
+          setPlayerScores(prev => {
+            const newMap = new Map(prev);
+            newMap.set(key, existingScores);
+            
+            // Also update team key
+            const teamKey = `${hole.number}-${player.teamId === 1 ? "aviator" : "producer"}`;
+            const teamScores = newMap.get(teamKey) || [];
+            const playerIndex = teamScores.findIndex(s => s.player === player.name);
+            
+            if (playerIndex >= 0) {
+              teamScores[playerIndex] = {
+                ...teamScores[playerIndex],
+                handicapStrokes: newHandicapStrokes,
+                netScore: score !== null ? score - newHandicapStrokes : null
+              };
+              newMap.set(teamKey, teamScores);
+            }
+            
+            return newMap;
+          });
+        }
+      }
+      
+      // Recalculate team scores for all holes
+      setTimeout(() => {
+        for (let i = 1; i <= 18; i++) {
+          updateBestBallScores(i, playerScores);
+        }
+      }, 500);
     }
   });
   
@@ -550,10 +612,24 @@ const EnhancedMatchScorecard = ({
       ? aviatorPlayersList.find((p: any) => p.name === playerName)?.id || 0
       : producerPlayersList.find((p: any) => p.name === playerName)?.id || 0;
     
-    // Get handicap strokes for this player on this hole (if Best Ball)
+    // Get player's course handicap
+    const courseHandicap = getPlayerCourseHandicap(playerId);
+    
+    // Find the hole with the matching number to get handicap rank
+    const hole = holes.find(h => h.number === holeNumber);
+    const handicapRank = hole?.handicapRank || 0;
+    
+    // Calculate handicap strokes for this player on this hole
     let handicapStrokes = 0;
-    if (isBestBall && matchData?.roundId && playerId) {
-      handicapStrokes = await getHandicapStrokes(playerId, holeNumber);
+    
+    // If player's handicap is higher than or equal to the hole's handicap rank, they get a stroke
+    if (isBestBall && handicapRank > 0 && courseHandicap >= handicapRank) {
+      handicapStrokes = 1;
+      
+      // Additional strokes for very high handicaps
+      if (handicapRank === 1 && courseHandicap >= 19) {
+        handicapStrokes = 2;
+      }
     }
     
     // Calculate net score if applicable
@@ -615,22 +691,65 @@ const EnhancedMatchScorecard = ({
 
     // If the match is Best Ball and we have handicap strokes, use net scores
     if (isBestBall) {
+      // First, calculate net scores for all players
+      for (const playerScore of [...aviatorHoleScores, ...producerHoleScores]) {
+        if (playerScore.score !== null) {
+          // Ensure handicap strokes are applied
+          const strokes = playerScore.handicapStrokes || 0;
+          playerScore.netScore = playerScore.score - strokes;
+        }
+      }
+      
       // Find the lowest net score for each team (ignoring null/undefined)
       if (aviatorHoleScores.length > 0) {
-        const validNetScores = aviatorHoleScores.filter((s) => s.netScore !== null);
+        const validNetScores = aviatorHoleScores.filter((s) => s.score !== null);
         if (validNetScores.length > 0) {
-          aviatorScore = Math.min(...validNetScores.map((s) => s.netScore || Infinity));
+          // Use net scores for team score calculation
+          aviatorScore = Math.min(
+            ...validNetScores.map((s) => {
+              // Calculate net score based on gross score and handicap strokes
+              const grossScore = s.score || Infinity;
+              const handicapStrokes = s.handicapStrokes || 0;
+              return grossScore - handicapStrokes;
+            })
+          );
           if (aviatorScore === Infinity) aviatorScore = null;
         }
       }
 
       if (producerHoleScores.length > 0) {
-        const validNetScores = producerHoleScores.filter((s) => s.netScore !== null);
+        const validNetScores = producerHoleScores.filter((s) => s.score !== null);
         if (validNetScores.length > 0) {
+          // Use net scores for team score calculation
           producerScore = Math.min(
-            ...validNetScores.map((s) => s.netScore || Infinity),
+            ...validNetScores.map((s) => {
+              // Calculate net score based on gross score and handicap strokes
+              const grossScore = s.score || Infinity;
+              const handicapStrokes = s.handicapStrokes || 0;
+              return grossScore - handicapStrokes;
+            })
           );
           if (producerScore === Infinity) producerScore = null;
+        }
+      }
+      
+      // Update player score objects with calculated net scores
+      for (const [key, scores] of scoreMap.entries()) {
+        if (key.includes('-aviator') || key.includes('-producer')) {
+          continue; // Skip team keys
+        }
+        
+        // This is a player-specific key (e.g., "1-John Smith")
+        if (scores.length > 0 && scores[0].score !== null) {
+          const playerScore = scores[0];
+          const handicapStrokes = playerScore.handicapStrokes || 0;
+          const netScore = playerScore.score! - handicapStrokes;
+          
+          // Update net score
+          if (netScore !== playerScore.netScore) {
+            scores[0] = {...playerScore, netScore};
+            scoreMap.set(key, scores);
+          }
         }
       }
     } else {
@@ -687,24 +806,34 @@ const EnhancedMatchScorecard = ({
     );
     
     // For best ball with handicaps, use net scores
-    if (isBestBall && currentPlayerScoreObj?.netScore !== undefined) {
-      const currentPlayerNetScore = currentPlayerScoreObj.netScore;
+    if (isBestBall) {
+      if (!currentPlayerScoreObj || currentPlayerScoreObj.score === null) {
+        return false; // No score recorded
+      }
       
-      if (currentPlayerNetScore === null) return false;
+      // Calculate current player's net score
+      const currentPlayerScore = currentPlayerScoreObj.score;
+      const currentPlayerHandicapStrokes = currentPlayerScoreObj.handicapStrokes || 0;
+      const currentPlayerNetScore = currentPlayerScore - currentPlayerHandicapStrokes;
       
-      // Find the minimum net score in this team for this hole (excluding nulls)
-      const validNetScores = holeScores
-        .filter((s) => s.netScore !== null && s.netScore !== undefined)
-        .map((s) => s.netScore || Infinity);
-        
-      if (validNetScores.length === 0) return false;
+      // Find the minimum net score in this team for this hole
+      let lowestNetScore = Infinity;
       
-      const lowestNetScore = Math.min(...validNetScores);
+      for (const playerScore of holeScores) {
+        if (playerScore.score !== null) {
+          const netScore = playerScore.score - (playerScore.handicapStrokes || 0);
+          if (netScore < lowestNetScore) {
+            lowestNetScore = netScore;
+          }
+        }
+      }
+      
+      if (lowestNetScore === Infinity) return false;
       
       // Check if this player has the lowest net score
       return currentPlayerNetScore === lowestNetScore;
     } else {
-      // Use gross scores if no handicap system or for other match types
+      // Use gross scores for other match types
       const currentPlayerScore = currentPlayerScoreObj?.score;
       
       if (currentPlayerScore === null || currentPlayerScore === undefined)
