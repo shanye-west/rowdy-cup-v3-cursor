@@ -24,6 +24,7 @@ interface Player {
   wins: number;
   losses: number;
   ties: number;
+  handicapIndex: number | null;
 }
 
 interface Team {
@@ -38,13 +39,16 @@ const AdminPlayersPage = () => {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [playerToDelete, setPlayerToDelete] = useState<number | null>(null);
+  const [playerToEdit, setPlayerToEdit] = useState<number | null>(null);
   const [playerFormData, setPlayerFormData] = useState({
     name: "",
     teamId: 0,
     wins: 0,
     losses: 0,
-    ties: 0
+    ties: 0,
+    handicapIndex: null as number | null
   });
 
   // Fetch teams data
@@ -112,6 +116,33 @@ const AdminPlayersPage = () => {
       setPlayerToDelete(null);
     },
   });
+  
+  // Update player mutation
+  const updatePlayerMutation = useMutation({
+    mutationFn: async (data: { id: number; playerData: any }) => {
+      const res = await apiRequest("PATCH", `/api/players/${data.id}`, data.playerData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      toast({
+        title: "Player updated",
+        description: "Player has been updated successfully",
+        duration: 1000,
+      });
+      setIsEditDialogOpen(false);
+      setPlayerToEdit(null);
+      resetPlayerForm();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update player",
+        description: error.message,
+        variant: "destructive",
+        duration: 1000,
+      });
+    },
+  });
 
   const handleAddPlayerForTeam = (teamId: number) => {
     resetPlayerForm();
@@ -136,7 +167,8 @@ const AdminPlayersPage = () => {
       teamId: teams && teams.length > 0 ? teams[0].id : 0,
       wins: 0,
       losses: 0,
-      ties: 0
+      ties: 0,
+      handicapIndex: null
     });
   };
 
@@ -144,13 +176,39 @@ const AdminPlayersPage = () => {
     const { name, value } = e.target;
     setPlayerFormData({
       ...playerFormData,
-      [name]: name === 'teamId' ? parseInt(value) : name === 'name' ? value : parseInt(value) || 0
+      [name]: name === 'teamId' 
+        ? parseInt(value) 
+        : name === 'name' 
+          ? value 
+          : name === 'handicapIndex' 
+            ? value === '' ? null : parseFloat(value) 
+            : parseInt(value) || 0
     });
   };
 
   const handlePlayerFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    addPlayerMutation.mutate(playerFormData);
+    if (playerToEdit) {
+      updatePlayerMutation.mutate({
+        id: playerToEdit,
+        playerData: playerFormData
+      });
+    } else {
+      addPlayerMutation.mutate(playerFormData);
+    }
+  };
+  
+  const handleEditPlayer = (player: Player) => {
+    setPlayerToEdit(player.id);
+    setPlayerFormData({
+      name: player.name,
+      teamId: player.teamId,
+      wins: player.wins,
+      losses: player.losses,
+      ties: player.ties,
+      handicapIndex: player.handicapIndex
+    });
+    setIsEditDialogOpen(true);
   };
 
   const handleBackClick = () => {
@@ -330,6 +388,26 @@ const AdminPlayersPage = () => {
                       </option>
                     ))}
                   </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Handicap Index
+                  </label>
+                  <input
+                    type="number"
+                    name="handicapIndex"
+                    value={playerFormData.handicapIndex === null ? '' : playerFormData.handicapIndex}
+                    onChange={handlePlayerInputChange}
+                    className="w-full px-3 py-2 border rounded-md"
+                    step="0.1"
+                    min="0"
+                    max="54"
+                    placeholder="Optional"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Enter a value between 0 and 54. Leave empty if not applicable.
+                  </p>
                 </div>
               </div>
               
