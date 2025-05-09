@@ -60,7 +60,16 @@ export const players = pgTable(
     };
   },
 );
-export const insertPlayerSchema = createInsertSchema(players);
+export const insertPlayerSchema = createInsertSchema(players).transform((player) => {
+  // Convert handicapIndex from number to string if it exists
+  if (player.handicapIndex !== undefined && player.handicapIndex !== null) {
+    return {
+      ...player,
+      handicapIndex: player.handicapIndex.toString()
+    };
+  }
+  return player;
+});
 export type InsertPlayer = z.infer<typeof insertPlayerSchema>;
 export type Player = typeof players.$inferSelect;
 
