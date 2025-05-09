@@ -899,8 +899,16 @@ const EnhancedMatchScorecard = ({
                                   "aviator",
                                 );
                                 return (
-                                  <td key={hole.number} className="py-2 px-2 text-center">
+                                  <td key={hole.number} className="py-2 px-2 text-center scorecard-cell">
                                     <div className="relative">
+                                      {/* Handicap Strokes Indicators */}
+                                      {playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 && (
+                                        <div className="handicap-strokes">
+                                          {Array.from({ length: playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes || 0 }).map((_, i) => (
+                                            <div key={i} className="handicap-indicator"></div>
+                                          ))}
+                                        </div>
+                                      )}
                                       <input
                                         type="tel"
                                         inputMode="numeric"
@@ -928,6 +936,13 @@ const EnhancedMatchScorecard = ({
                                         max="12"
                                         disabled={isHoleGreyedOut(hole.number) || locked}
                                       />
+                                      {/* Net Score Display */}
+                                      {playerScores.get(`${hole.number}-${player.name}`)?.[0]?.score !== null && 
+                                       playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 && (
+                                        <span className="net-score">
+                                          ({playerScores.get(`${hole.number}-${player.name}`)?.[0]?.netScore})
+                                        </span>
+                                      )}
                                     </div>
                                   </td>
                                 );
@@ -1173,61 +1188,16 @@ const EnhancedMatchScorecard = ({
                                   "producer",
                                 );
                                 return (
-                                  <td key={hole.number} className="py-2 px-2 text-center">
+                                  <td key={hole.number} className="py-2 px-2 text-center scorecard-cell">
                                     <div className="relative">
-                                      <input
-                                      type="tel"
-                                      inputMode="numeric"
-                                      pattern="[0-9]*"
-                                      data-strokes={playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes || 0}
-                                      className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
-                                        ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""} 
-                                        ${!isLowest ? "non-counting-score" : ""}
-                                        ${playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 ? "handicap-stroke" : ""}`}
-                                      value={getPlayerScoreValue(
-                                        hole.number,
-                                        player.name,
-                                        "producer",
+                                      {/* Handicap Strokes Indicators */}
+                                      {playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 && (
+                                        <div className="handicap-strokes">
+                                          {Array.from({ length: playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes || 0 }).map((_, i) => (
+                                            <div key={i} className="handicap-indicator"></div>
+                                          ))}
+                                        </div>
                                       )}
-                                      onChange={(e) =>
-                                        handlePlayerScoreChange(
-                                          hole.number,
-                                          player.name,
-                                          "producer",
-                                          e.target.value,
-                                          e.target
-                                        )
-                                      }
-                                      min="1"
-                                      max="12"
-                                      disabled={isHoleGreyedOut(hole.number) || locked}
-                                    />
-                                    {(playerScores.get(`${hole.number}-${player.name}`) &&
-                                      playerScores.get(`${hole.number}-${player.name}`)![0]?.handicapStrokes &&
-                                      playerScores.get(`${hole.number}-${player.name}`)![0]?.handicapStrokes > 0) ? (
-                                      <div className="handicap-indicator">
-                                        {Array.from({ length: playerScores.get(`${hole.number}-${player.name}`)![0]?.handicapStrokes || 0 }).map((_, i) => (
-                                          <span key={i} className="handicap-dot"></span>
-                                        ))}
-                                      </div>
-                                    ) : null}
-                                    </div>
-                                  </td>
-                                );
-                              })}
-                              <td className="py-2 px-2 text-center font-semibold bg-gray-100">
-                                {playerFrontNineTotals.get(player.name) || ""}
-                              </td>
-                              {/* Back Nine Producer Player Scores */}
-                              {backNine.map((hole) => {
-                                const isLowest = isLowestScore(
-                                  hole.number,
-                                  player.name,
-                                  "producer",
-                                );
-                                return (
-                                  <td key={hole.number} className="py-2 px-2 text-center">
-                                    <div className="relative">
                                       <input
                                         type="tel"
                                         inputMode="numeric"
@@ -1255,15 +1225,72 @@ const EnhancedMatchScorecard = ({
                                         max="12"
                                         disabled={isHoleGreyedOut(hole.number) || locked}
                                       />
-                                      {(playerScores.get(`${hole.number}-${player.name}`) &&
-                                        playerScores.get(`${hole.number}-${player.name}`)![0]?.handicapStrokes &&
-                                        playerScores.get(`${hole.number}-${player.name}`)![0]?.handicapStrokes > 0) ? (
-                                        <div className="handicap-indicator">
-                                          {Array.from({ length: playerScores.get(`${hole.number}-${player.name}`)![0]?.handicapStrokes || 0 }).map((_, i) => (
-                                            <span key={i} className="handicap-dot"></span>
+                                      {/* Net Score Display */}
+                                      {playerScores.get(`${hole.number}-${player.name}`)?.[0]?.score !== null && 
+                                       playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 && (
+                                        <span className="net-score">
+                                          ({playerScores.get(`${hole.number}-${player.name}`)?.[0]?.netScore})
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
+                                );
+                              })}
+                              <td className="py-2 px-2 text-center font-semibold bg-gray-100">
+                                {playerFrontNineTotals.get(player.name) || ""}
+                              </td>
+                              {/* Back Nine Producer Player Scores */}
+                              {backNine.map((hole) => {
+                                const isLowest = isLowestScore(
+                                  hole.number,
+                                  player.name,
+                                  "producer",
+                                );
+                                return (
+                                  <td key={hole.number} className="py-2 px-2 text-center scorecard-cell">
+                                    <div className="relative">
+                                      {/* Handicap Strokes Indicators */}
+                                      {playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 && (
+                                        <div className="handicap-strokes">
+                                          {Array.from({ length: playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes || 0 }).map((_, i) => (
+                                            <div key={i} className="handicap-indicator"></div>
                                           ))}
                                         </div>
-                                      ) : null}
+                                      )}
+                                      <input
+                                        type="tel"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        data-strokes={playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes || 0}
+                                        className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
+                                          ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""} 
+                                          ${!isLowest ? "non-counting-score" : ""}
+                                          ${playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 ? "handicap-stroke" : ""}`}
+                                        value={getPlayerScoreValue(
+                                          hole.number,
+                                          player.name,
+                                          "producer",
+                                        )}
+                                        onChange={(e) =>
+                                          handlePlayerScoreChange(
+                                            hole.number,
+                                            player.name,
+                                            "producer",
+                                            e.target.value,
+                                            e.target
+                                          )
+                                        }
+                                        min="1"
+                                        max="12"
+                                        disabled={isHoleGreyedOut(hole.number) || locked}
+                                      />
+                                      {/* Net Score Display */}
+                                      {playerScores.get(`${hole.number}-${player.name}`)?.[0]?.score !== null && 
+                                       playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 && (
+                                        <span className="net-score">
+                                          ({playerScores.get(`${hole.number}-${player.name}`)?.[0]?.netScore})
+                                        </span>
+                                      )}
                                     </div>
                                   </td>
                                 );
