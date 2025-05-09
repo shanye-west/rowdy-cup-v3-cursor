@@ -48,7 +48,7 @@ export const players = pgTable(
     losses: integer("losses").default(0),
     ties: integer("ties").default(0),
     status: text("status"),
-    handicapIndex: numeric("handicap_index"), // Player's handicap index (e.g., 8.4)
+    handicapIndex: text("handicap_index"), // Player's handicap index (e.g., 8.4)
   },
   (table) => {
     return {
@@ -60,16 +60,7 @@ export const players = pgTable(
     };
   },
 );
-export const insertPlayerSchema = createInsertSchema(players).transform((player) => {
-  // Convert handicapIndex from number to string if it exists
-  if (player.handicapIndex !== undefined && player.handicapIndex !== null) {
-    return {
-      ...player,
-      handicapIndex: player.handicapIndex.toString()
-    };
-  }
-  return player;
-});
+export const insertPlayerSchema = createInsertSchema(players);
 export type InsertPlayer = z.infer<typeof insertPlayerSchema>;
 export type Player = typeof players.$inferSelect;
 
@@ -314,7 +305,7 @@ export const tournament_player_stats = pgTable(
     wins: integer("wins").default(0),
     losses: integer("losses").default(0),
     ties: integer("ties").default(0),
-    points: numeric("points").default(0),
+    points: numeric("points").default("0"),
     matchesPlayed: integer("matches_played").default(0),
   },
   (table) => {
@@ -379,7 +370,7 @@ export const player_career_stats = pgTable(
     totalWins: integer("total_wins").default(0),
     totalLosses: integer("total_losses").default(0),
     totalTies: integer("total_ties").default(0),
-    totalPoints: numeric("total_points").default(0),
+    totalPoints: numeric("total_points").default("0"),
     tournamentsPlayed: integer("tournaments_played").default(0),
     matchesPlayed: integer("matches_played").default(0),
     lastUpdated: timestamp("last_updated").defaultNow(),
