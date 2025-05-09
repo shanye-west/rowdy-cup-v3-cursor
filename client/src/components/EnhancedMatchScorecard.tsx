@@ -110,11 +110,7 @@ const EnhancedMatchScorecard = ({
   
   // Fetch player handicaps for this round
   const { data: playerHandicaps = [] } = useQuery<any[]>({
-    queryKey: [`/api/players`],
-    select: (data) => {
-      // Return only players with handicap information
-      return data.filter((player) => player.handicapIndex !== null);
-    },
+    queryKey: [`/api/round-handicaps/${matchData?.roundId}`],
     enabled: !!matchData?.roundId && isBestBall,
   });
 
