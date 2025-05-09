@@ -859,10 +859,11 @@ const EnhancedMatchScorecard = ({
                               type="tel"
                               inputMode="numeric"
                               pattern="[0-9]*"
+                              data-strokes={playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes || 0}
                               className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
                                 ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""} 
                                 ${!isLowest ? "non-counting-score" : ""}
-                                ${playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes ? "handicap-stroke" : ""}`}
+                                ${playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 ? "handicap-stroke" : ""}`}
                               value={getPlayerScoreValue(
                                 hole.number,
                                 player.name,
@@ -902,10 +903,11 @@ const EnhancedMatchScorecard = ({
                                         type="tel"
                                         inputMode="numeric"
                                         pattern="[0-9]*"
+                                        data-strokes={playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes || 0}
                                         className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
                                           ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""} 
                                           ${!isLowest ? "non-counting-score" : ""}
-                                          ${playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes ? "handicap-stroke" : ""}`}
+                                          ${playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 ? "handicap-stroke" : ""}`}
                                         value={getPlayerScoreValue(
                                           hole.number,
                                           player.name,
@@ -1175,11 +1177,11 @@ const EnhancedMatchScorecard = ({
                                       type="tel"
                                       inputMode="numeric"
                                       pattern="[0-9]*"
+                                      data-strokes={playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes || 0}
                                       className={`score-input w-8 h-8 text-center border border-gray-300 rounded 
                                         ${isHoleGreyedOut(hole.number) ? "bg-gray-200 cursor-not-allowed" : ""} 
                                         ${!isLowest ? "non-counting-score" : ""}
-                                        ${playerScores.get(`${hole.number}-${player.name}`) && 
-                                          playerScores.get(`${hole.number}-${player.name}`)![0]?.handicapStrokes ? "handicap-stroke" : ""}`}
+                                        ${playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 ? "handicap-stroke" : ""}`}
                                       value={getPlayerScoreValue(
                                         hole.number,
                                         player.name,
