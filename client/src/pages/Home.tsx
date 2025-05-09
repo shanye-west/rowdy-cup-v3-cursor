@@ -7,7 +7,7 @@ import { useLocation } from "wouter";
 import rowdyCupLogo from "../assets/rowdy-cup-logo.svg";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Settings, Loader2 } from "lucide-react";
+import { Calendar, Settings, Loader2, PlusCircle, Trophy } from "lucide-react";
 import { useState, useEffect } from "react";
 import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 
@@ -17,7 +17,12 @@ const Home = () => {
   const { toast } = useToast();
   const [isTournamentDialogOpen, setIsTournamentDialogOpen] = useState(false);
   const [isAddRoundDialogOpen, setIsAddRoundDialogOpen] = useState(false);
+  const [isNewTournamentDialogOpen, setIsNewTournamentDialogOpen] = useState(false);
+  const [isTournamentListDialogOpen, setIsTournamentListDialogOpen] = useState(false);
   const [tournamentFormData, setTournamentFormData] = useState({
+    name: ""
+  });
+  const [newTournamentFormData, setNewTournamentFormData] = useState({
     name: ""
   });
   
@@ -101,6 +106,11 @@ const Home = () => {
   const { data: rounds, isLoading: isRoundsLoading } = useQuery<Round[]>({
     queryKey: ['/api/rounds'],
   });
+  
+  // Fetch all tournaments
+  const { data: allTournaments, isLoading: isAllTournamentsLoading } = useQuery<Tournament[]>({
+    queryKey: ['/api/tournaments'],
+  });
 
   // Tournament update mutation
   const updateTournamentMutation = useMutation({
@@ -154,6 +164,60 @@ const Home = () => {
       });
     },
   });
+  
+  // Create new tournament mutation
+  const createTournamentMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/tournaments", data);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tournaments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tournament'] });
+      toast({
+        title: "Tournament created",
+        description: "New tournament has been created successfully",
+        duration: 2000,
+      });
+      setIsNewTournamentDialogOpen(false);
+      setNewTournamentFormData({ name: "" });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to create tournament",
+        description: error.message,
+        variant: "destructive",
+        duration: 2000,
+      });
+    },
+  });
+  
+  // Set active tournament mutation
+  const setActiveTournamentMutation = useMutation({
+    mutationFn: async (tournamentId: number) => {
+      const res = await apiRequest("POST", `/api/tournaments/${tournamentId}/activate`, {});
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tournaments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tournament'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/rounds'] });
+      toast({
+        title: "Tournament activated",
+        description: "Active tournament has been changed successfully",
+        duration: 2000,
+      });
+      setIsTournamentListDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to change active tournament",
+        description: error.message,
+        variant: "destructive",
+        duration: 2000,
+      });
+    },
+  });
 
   // Handle form input changes
   const handleTournamentInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,11 +235,32 @@ const Home = () => {
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     });
   };
+  
+  const handleNewTournamentInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setNewTournamentFormData({
+      ...newTournamentFormData,
+      [name]: value,
+    });
+  };
 
   // Form submission handlers
   const handleTournamentFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateTournamentMutation.mutate(tournamentFormData);
+  };
+  
+  const handleNewTournamentFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTournamentFormData.name.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a tournament name",
+        variant: "destructive"
+      });
+      return;
+    }
+    createTournamentMutation.mutate(newTournamentFormData);
   };
 
   const handleRoundFormSubmit = (e: React.FormEvent) => {
@@ -229,7 +314,7 @@ const Home = () => {
     setIsTournamentDialogOpen(true);
   };
 
-  const isLoading = isTournamentLoading || isRoundsLoading;
+  const isLoading = isTournamentLoading || isRoundsLoading || isAllTournamentsLoading;
   
   // Process rounds data to include scores
   const roundsWithScores = rounds?.map((round: Round) => {
@@ -267,22 +352,45 @@ const Home = () => {
         <>
           {/* Admin Controls */}
           {isAdmin && (
-            <div className="mb-5 flex justify-between items-center">
-              <Button 
-                onClick={handleOpenTournamentDialog} 
-                variant="outline"
-                className="flex items-center space-x-2"
-              >
-                <Settings className="h-4 w-4" />
-                <span>Edit Tournament</span>
-              </Button>
-              <Button 
-                onClick={() => setIsAddRoundDialogOpen(true)}
-                className="flex items-center space-x-2"
-              >
-                <Calendar className="h-4 w-4" />
-                <span>Add New Round</span>
-              </Button>
+            <div className="mb-5 space-y-2">
+              <div className="flex justify-between items-center">
+                <div className="flex space-x-2">
+                  <Button 
+                    onClick={handleOpenTournamentDialog} 
+                    variant="outline"
+                    className="flex items-center space-x-2"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span>Edit Tournament</span>
+                  </Button>
+                  <Button 
+                    onClick={() => setIsNewTournamentDialogOpen(true)}
+                    variant="outline"
+                    className="flex items-center space-x-2"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    <span>Create Tournament</span>
+                  </Button>
+                  <Button 
+                    onClick={() => setIsTournamentListDialogOpen(true)}
+                    variant="outline"
+                    className="flex items-center space-x-2"
+                  >
+                    <Trophy className="h-4 w-4" />
+                    <span>Switch Tournament</span>
+                  </Button>
+                </div>
+                <Button 
+                  onClick={() => setIsAddRoundDialogOpen(true)}
+                  className="flex items-center space-x-2"
+                >
+                  <Calendar className="h-4 w-4" />
+                  <span>Add New Round</span>
+                </Button>
+              </div>
+              <div className="bg-muted/50 p-2 rounded-lg">
+                <p className="text-sm font-medium">Current Tournament: {tournament?.name || "Not set"}</p>
+              </div>
             </div>
           )}
           
@@ -499,6 +607,115 @@ const Home = () => {
                     </Button>
                   </div>
                 </form>
+              </div>
+            </div>
+          )}
+          
+          {/* Create New Tournament Dialog */}
+          {isNewTournamentDialogOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+                <h2 className="text-xl font-bold mb-4">Create New Tournament</h2>
+                
+                <form onSubmit={handleNewTournamentFormSubmit}>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Tournament Name
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={newTournamentFormData.name}
+                        onChange={handleNewTournamentInputChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                        required
+                        placeholder="e.g., Rowdy Cup 2026"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end mt-6 space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsNewTournamentDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit"
+                      disabled={createTournamentMutation.isPending}
+                    >
+                      {createTournamentMutation.isPending ? (
+                        <span className="flex items-center">
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating...
+                        </span>
+                      ) : (
+                        "Create Tournament"
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+          
+          {/* Tournament List Dialog */}
+          {isTournamentListDialogOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+                <h2 className="text-xl font-bold mb-4">Select Active Tournament</h2>
+                
+                {isAllTournamentsLoading ? (
+                  <div className="py-8 flex justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : allTournaments && allTournaments.length > 0 ? (
+                  <div className="space-y-3">
+                    {allTournaments.map((t) => (
+                      <div 
+                        key={t.id} 
+                        className={`p-3 border rounded-lg cursor-pointer hover:bg-muted transition-colors ${t.id === tournament?.id ? 'border-primary bg-primary/10' : ''}`}
+                        onClick={() => {
+                          if (t.id !== tournament?.id) {
+                            setActiveTournamentMutation.mutate(t.id);
+                          }
+                        }}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-medium">{t.name}</p>
+                            <div className="flex space-x-4 text-xs mt-1">
+                              <span>Aviators: {t.aviatorScore}</span>
+                              <span>Producers: {t.producerScore}</span>
+                            </div>
+                          </div>
+                          {t.id === tournament?.id && (
+                            <div className="bg-primary/20 text-primary text-xs font-medium py-1 px-2 rounded">
+                              Active
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <p>No tournaments found.</p>
+                  </div>
+                )}
+                
+                <div className="flex justify-end mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsTournamentListDialogOpen(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
               </div>
             </div>
           )}
