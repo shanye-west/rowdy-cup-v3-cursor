@@ -817,6 +817,11 @@ const EnhancedMatchScorecard = ({
               {frontNine.map((hole) => (
                 <td key={hole.number} className="py-2 px-2 text-center">
                   {hole.par}
+                  {hole.handicapRank && (
+                    <span className="ml-1 text-xs text-blue-600 font-semibold">
+                      ({hole.handicapRank})
+                    </span>
+                  )}
                 </td>
               ))}
               <td className="py-2 px-2 text-center font-semibold bg-gray-100">
@@ -826,6 +831,11 @@ const EnhancedMatchScorecard = ({
               {backNine.map((hole) => (
                 <td key={hole.number} className="py-2 px-2 text-center">
                   {hole.par}
+                  {hole.handicapRank && (
+                    <span className="ml-1 text-xs text-blue-600 font-semibold">
+                      ({hole.handicapRank})
+                    </span>
+                  )}
                 </td>
               ))}
               <td className="py-2 px-2 text-center font-semibold bg-gray-100">
@@ -855,8 +865,16 @@ const EnhancedMatchScorecard = ({
                         "aviator",
                       );
                       return (
-                        <td key={hole.number} className="py-2 px-2 text-center">
+                        <td key={hole.number} className="py-2 px-2 text-center scorecard-cell">
                           <div className="relative">
+                            {/* Handicap Strokes Indicators */}
+                            {playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 && (
+                              <div className="handicap-strokes">
+                                {Array.from({ length: playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes || 0 }).map((_, i) => (
+                                  <div key={i} className="handicap-indicator"></div>
+                                ))}
+                              </div>
+                            )}
                             <input
                               type="tel"
                               inputMode="numeric"
@@ -884,6 +902,13 @@ const EnhancedMatchScorecard = ({
                               max="12"
                               disabled={isHoleGreyedOut(hole.number) || locked}
                             />
+                            {/* Net Score Display */}
+                            {playerScores.get(`${hole.number}-${player.name}`)?.[0]?.score !== null && 
+                             playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 && (
+                              <span className="net-score">
+                                ({playerScores.get(`${hole.number}-${player.name}`)?.[0]?.netScore})
+                              </span>
+                            )}
                           </div>
                         </td>
                       );
