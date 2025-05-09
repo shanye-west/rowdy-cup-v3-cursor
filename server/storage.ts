@@ -1205,24 +1205,29 @@ export class DBStorage implements IStorage {
         totalLosses: totals.totalLosses + Number(tournStat.losses || 0),
         totalTies: totals.totalTies + Number(tournStat.ties || 0),
         totalPoints: totals.totalPoints + Number(tournStat.points || 0),
-        matchesPlayed: totals.matchesPlayed + Number(tournStat.matchesPlayed || 0)
+        matchesPlayed: totals.matchesPlayed + Number(tournStat.matchesPlayed || 0),
+        tournamentsPlayed: totals.tournamentsPlayed
       };
     }, {
       totalWins: 0,
       totalLosses: 0,
       totalTies: 0,
       totalPoints: 0,
-      matchesPlayed: 0
+      matchesPlayed: 0,
+      tournamentsPlayed: 0
     });
     
     // Add tournament count
     careerTotals.tournamentsPlayed = allTournamentStats.length;
     
-    // Convert numeric values to strings for database
-    careerTotals.totalPoints = careerTotals.totalPoints.toString();
+    // Convert total points to a number (not a string)
+    const careerTotalsForDb = {
+      ...careerTotals,
+      totalPoints: Number(careerTotals.totalPoints)
+    };
     
     // Update player career stats
-    const careerStats = await this.updatePlayerCareerStats(playerId, careerTotals);
+    const careerStats = await this.updatePlayerCareerStats(playerId, careerTotalsForDb);
     
     return {
       tournamentStats,
@@ -1265,9 +1270,13 @@ export class DBStorage implements IStorage {
     
     // Determine winning team
     let winningTeam = null;
-    if (tournamentData.aviatorScore > tournamentData.producerScore) {
+    // Convert scores to numbers for safe comparison
+    const aviatorScore = Number(tournamentData.aviatorScore || 0);
+    const producerScore = Number(tournamentData.producerScore || 0);
+    
+    if (aviatorScore > producerScore) {
       winningTeam = "aviators";
-    } else if (tournamentData.producerScore > tournamentData.aviatorScore) {
+    } else if (producerScore > aviatorScore) {
       winningTeam = "producers";
     }
     
@@ -1275,10 +1284,10 @@ export class DBStorage implements IStorage {
       year: currentYear,
       tournamentName: tournamentData.name,
       winningTeam,
-      aviatorScore: tournamentData.aviatorScore,
-      producerScore: tournamentData.producerScore,
-      tournamentId,
-      location: tournamentData.location
+      aviatorScore: aviatorScore,
+      producerScore: producerScore,
+      tournamentId
+      // location field removed as it's not part of Tournament schema
     };
     
     if (existingEntry) {
