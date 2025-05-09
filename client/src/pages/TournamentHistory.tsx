@@ -57,16 +57,16 @@ const TournamentHistory = () => {
   });
 
   // Get players with their career stats
-  const { data: players } = useQuery({
+  const { data: players = [] } = useQuery<any[]>({
     queryKey: ["/api/players"],
   });
 
   // Merge player data with their stats for display
   const playersWithStats = React.useMemo(() => {
-    if (!players || !playerStats) return [];
+    if (!playerStats) return [];
     
     return playerStats.map(stats => {
-      const player = players.find((p: any) => p.id === stats.playerId);
+      const player = players.find((p) => p.id === stats.playerId);
       return {
         ...stats,
         playerName: player ? player.name : `Player ${stats.playerId}`,

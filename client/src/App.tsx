@@ -13,6 +13,7 @@ import AdminPlayersPage from "@/pages/AdminPlayersPage";
 import LoginPage from "@/pages/Login";
 import SetPinPage from "@/pages/SetPin";
 import TestCourses from "@/pages/TestCourses";
+import TournamentHistory from "@/pages/TournamentHistory";
 import Layout from "@/components/Layout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -142,6 +143,7 @@ function Router() {
         {(params) => <Match id={parseInt(params.id)} />}
       </Route>
       <Route path="/teams" component={Teams} />
+      <Route path="/history" component={TournamentHistory} />
       <Route path="/login" component={LoginPage} />
       <Route path="/set-pin" component={SetPinPage} />
       <Route path="/auth" component={AuthPage} />

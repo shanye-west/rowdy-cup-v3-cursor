@@ -32,6 +32,16 @@ const FooterNavigation = ({ onNavigate }: FooterNavigationProps) => {
             </svg>
             <span className="text-xs">Teams</span>
           </button>
+          
+          <button 
+            className={`text-center p-2 rounded-md ${location.startsWith('/history') ? 'text-primary' : 'text-gray-600'}`}
+            onClick={() => onNavigate('/history')}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-xs">History</span>
+          </button>
         </div>
       </div>
     </footer>

@@ -1284,8 +1284,8 @@ export class DBStorage implements IStorage {
       year: currentYear,
       tournamentName: tournamentData.name,
       winningTeam,
-      aviatorScore: aviatorScore,
-      producerScore: producerScore,
+      aviatorScore: aviatorScore.toString(),
+      producerScore: producerScore.toString(),
       tournamentId
       // location field removed as it's not part of Tournament schema
     };
