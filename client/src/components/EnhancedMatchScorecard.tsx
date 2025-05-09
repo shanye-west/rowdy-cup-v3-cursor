@@ -1073,7 +1073,7 @@ const EnhancedMatchScorecard = ({
                       return (
                         <td key={hole.number} className="py-2 px-2 text-center scorecard-cell">
                           <div className="relative">
-                            {/* Handicap Strokes Indicators */}
+                            {/* Handicap Strokes Indicators - Always show if available */}
                             {playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 && (
                               <div className="handicap-strokes">
                                 {Array.from({ length: playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes || 0 }).map((_, i) => (
