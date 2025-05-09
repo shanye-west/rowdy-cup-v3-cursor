@@ -81,8 +81,10 @@ export interface IStorage {
 
   // Tournament methods
   getTournament(): Promise<any | undefined>;
+  getAllTournaments(): Promise<any[]>;
   createTournament(data: any): Promise<any>;
   updateTournament(id: number, data: Partial<any>): Promise<any | undefined>;
+  setActiveTournament(id: number): Promise<any>;
 
   // Calculation methods
   calculateRoundScores(roundId: number): Promise<{
