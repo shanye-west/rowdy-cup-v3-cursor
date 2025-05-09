@@ -1139,7 +1139,7 @@ export class DBStorage implements IStorage {
       
     const [row] = await db
       .update(players)
-      .set({ handicapIndex: numericHandicapIndex })
+      .set({ handicapIndex: sql`${numericHandicapIndex}` })
       .where(eq(players.id, playerId))
       .returning();
     return row;

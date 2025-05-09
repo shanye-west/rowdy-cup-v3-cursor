@@ -7,6 +7,7 @@ interface Hole {
   id: number;
   number: number;
   par: number;
+  handicapRank?: number | null;
 }
 
 interface Score {

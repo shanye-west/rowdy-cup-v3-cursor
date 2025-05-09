@@ -66,13 +66,16 @@ input[type="number"].score-input::-webkit-inner-spin-button {
   top: -4px;
   right: 2px;
   gap: 2px;
+  z-index: 20;
 }
 
 .net-score {
-  font-size: 0.75rem;
+  position: absolute;
+  font-size: 0.7rem;
   color: #2563eb;
   font-weight: bold;
-  margin-left: 4px;
+  bottom: -5px;
+  right: 2px;
 }
 
 :root {
