@@ -328,7 +328,7 @@ const AdminPlayersPage = () => {
                     <div className="flex items-center space-x-3">
                       {player.handicapIndex !== null && (
                         <div className="flex items-center text-sm space-x-1">
-                          <Circle className="h-3 w-3 text-green-600 fill-green-600" />
+                          <span className="inline-block h-3 w-3 rounded-full bg-green-600" />
                           <span className="font-medium">{player.handicapIndex.toFixed(1)}</span>
                         </div>
                       )}
