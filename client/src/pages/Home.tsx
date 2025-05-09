@@ -18,8 +18,7 @@ const Home = () => {
   const [isTournamentDialogOpen, setIsTournamentDialogOpen] = useState(false);
   const [isAddRoundDialogOpen, setIsAddRoundDialogOpen] = useState(false);
   const [tournamentFormData, setTournamentFormData] = useState({
-    name: "",
-    year: new Date().getFullYear()
+    name: ""
   });
   
   // State for courses
@@ -73,7 +72,6 @@ const Home = () => {
   interface Tournament {
     id: number;
     name: string;
-    year: number;
     aviatorScore: number;
     producerScore: number;
     pendingAviatorScore?: number;
@@ -162,7 +160,7 @@ const Home = () => {
     const { name, value } = e.target;
     setTournamentFormData({
       ...tournamentFormData,
-      [name]: name === 'year' ? parseInt(value) : value,
+      [name]: value,
     });
   };
 
@@ -225,8 +223,7 @@ const Home = () => {
   const handleOpenTournamentDialog = () => {
     if (tournament) {
       setTournamentFormData({
-        name: tournament.name,
-        year: tournament.year
+        name: tournament.name
       });
     }
     setIsTournamentDialogOpen(true);
@@ -329,21 +326,7 @@ const Home = () => {
                       />
                     </div>
                     
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Year
-                      </label>
-                      <input
-                        type="number"
-                        name="year"
-                        value={tournamentFormData.year}
-                        onChange={handleTournamentInputChange}
-                        className="w-full px-3 py-2 border rounded-md"
-                        min="2000"
-                        max="2099"
-                        required
-                      />
-                    </div>
+
                   </div>
                   
                   <div className="flex justify-end mt-6 space-x-2">
