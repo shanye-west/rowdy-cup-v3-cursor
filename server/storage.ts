@@ -1,7 +1,7 @@
 // server/storage.ts
 
 import { db } from "./db";
-import { eq, and, isNull, not, sql } from "drizzle-orm";
+import { eq, and, isNull, not, sql, desc } from "drizzle-orm";
 import {
   users,
   players,
@@ -808,13 +808,49 @@ export class DBStorage implements IStorage {
 
   // Tournament
   async getTournament() {
-    const [row] = await db.select().from(tournament);
+    // Get the active tournament
+    const [row] = await db.select()
+      .from(tournament)
+      .where(eq(tournament.isActive, true));
     return row;
   }
 
+  async getAllTournaments() {
+    // Get all tournaments
+    return db.select().from(tournament).orderBy(desc(tournament.id));
+  }
+
   async createTournament(data: any) {
-    const [row] = await db.insert(tournament).values(data).returning();
-    return row;
+    // Start a transaction to ensure tournament creation and active status updates are atomic
+    return await db.transaction(async (tx) => {
+      // If this is the first tournament or requested to be active, set all others to inactive
+      if (!data.isActive || data.isActive === true) {
+        await tx.update(tournament)
+          .set({ isActive: false })
+          .where(eq(tournament.isActive, true));
+      }
+      
+      // Create tournament data with required fields
+      // Convert numeric values to strings since the schema types expect them as strings
+      const tournamentData = {
+        name: data.name,
+        year: new Date().getFullYear(), // Default to current year
+        isActive: true, // New tournaments are active by default
+        startDate: data.startDate || new Date().toISOString(),
+        endDate: data.endDate || null,
+        aviatorScore: "0",
+        producerScore: "0",
+        pendingAviatorScore: "0",
+        pendingProducerScore: "0"
+      };
+      
+      // Insert the new tournament
+      const [row] = await tx.insert(tournament)
+        .values(tournamentData)
+        .returning();
+      
+      return row;
+    });
   }
 
   async updateTournament(id: number, data: Partial<any>) {
@@ -824,6 +860,22 @@ export class DBStorage implements IStorage {
       .where(eq(tournament.id, id))
       .returning();
     return row;
+  }
+  
+  async setActiveTournament(id: number) {
+    return await db.transaction(async (tx) => {
+      // Set all tournaments as inactive
+      await tx.update(tournament)
+        .set({ isActive: false });
+      
+      // Set the requested tournament as active
+      const [row] = await tx.update(tournament)
+        .set({ isActive: true })
+        .where(eq(tournament.id, id))
+        .returning();
+        
+      return row;
+    });
   }
 
   // Match state update - Crucial for scoring

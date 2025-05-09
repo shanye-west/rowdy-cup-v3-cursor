@@ -171,6 +171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   // Tournament API
+  // Get current active tournament
   app.get("/api/tournament", async (req, res) => {
     const tournament = await storage.getTournament();
 
@@ -183,13 +184,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(tournament);
     }
   });
-
-  app.put("/api/tournament/:id", async (req, res) => {
+  
+  // Get all tournaments
+  app.get("/api/tournaments", async (req, res) => {
+    try {
+      const tournaments = await storage.getAllTournaments();
+      res.json(tournaments);
+    } catch (error) {
+      console.error("Error fetching tournaments:", error);
+      res.status(500).json({ message: "Failed to fetch tournaments" });
+    }
+  });
+  
+  // Create new tournament
+  app.post("/api/tournaments", isAdmin, async (req, res) => {
+    try {
+      const newTournament = await storage.createTournament(req.body);
+      broadcast("tournament-created", newTournament);
+      res.json(newTournament);
+    } catch (error) {
+      console.error("Error creating tournament:", error);
+      res.status(500).json({ message: "Failed to create tournament" });
+    }
+  });
+  
+  // Set active tournament
+  app.put("/api/tournaments/:id/activate", isAdmin, async (req, res) => {
     try {
       const tournamentId = parseInt(req.params.id);
-      const tournament = await storage.getTournament();
+      
+      if (isNaN(tournamentId)) {
+        return res.status(400).json({ message: "Invalid tournament ID" });
+      }
+      
+      const tournament = await storage.setActiveTournament(tournamentId);
+      
+      if (!tournament) {
+        return res.status(404).json({ message: "Tournament not found" });
+      }
+      
+      broadcast("tournament-activated", tournament);
+      return res.json(tournament);
+    } catch (error) {
+      console.error("Error activating tournament:", error);
+      res.status(500).json({ message: "Failed to activate tournament" });
+    }
+  });
 
-      if (!tournament || tournament.id !== tournamentId) {
+  // Update tournament
+  app.put("/api/tournament/:id", isAdmin, async (req, res) => {
+    try {
+      const tournamentId = parseInt(req.params.id);
+      const tournaments = await storage.getAllTournaments();
+      const tournament = tournaments.find(t => t.id === tournamentId);
+
+      if (!tournament) {
         return res.status(404).json({ message: "Tournament not found" });
       }
 
