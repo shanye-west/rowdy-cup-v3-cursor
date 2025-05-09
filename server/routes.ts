@@ -1267,6 +1267,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to get player course handicap" });
     }
   });
+  
+  // Get all player handicaps for a specific round
+  app.get("/api/round-handicaps/:roundId", async (req, res) => {
+    try {
+      const roundId = parseInt(req.params.roundId);
+      
+      if (isNaN(roundId)) {
+        return res.status(400).json({ error: "Invalid roundId" });
+      }
+      
+      // Get the round to find the course
+      const round = await storage.getRound(roundId);
+      if (!round) {
+        return res.status(404).json({ error: "Round not found" });
+      }
+      
+      // Get all player handicaps for this round
+      const handicaps = await storage.getAllPlayerCourseHandicaps(roundId);
+      res.json(handicaps);
+    } catch (error) {
+      console.error("Error getting round handicaps:", error);
+      res.status(500).json({ error: "Failed to get round handicaps" });
+    }
+  });
 
   // Get player's handicap strokes for a specific hole in a round
   app.get("/api/rounds/:roundId/players/:playerId/holes/:holeNumber/strokes", async (req, res) => {
