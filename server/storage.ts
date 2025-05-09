@@ -1,7 +1,7 @@
 // server/storage.ts
 
 import { db } from "./db";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, not, sql } from "drizzle-orm";
 import {
   users,
   players,
@@ -263,36 +263,47 @@ export class DBStorage implements IStorage {
   }
 
   async deletePlayer(id: number) {
-    // Find player to get userId
-    const [player] = await db
-      .select()
-      .from(players)
-      .where(eq(players.id, id));
-
-    if (player && player.userId) {
-      // Delete associated match participants first
-      await db
-        .delete(match_players)
-        .where(eq(match_players.playerId, id));
-
-      // Then delete the player
-      await db
-        .delete(players)
+    try {
+      // Find player to get userId
+      const [player] = await db
+        .select()
+        .from(players)
         .where(eq(players.id, id));
 
-      // Finally delete the user
-      await db
-        .delete(users)
-        .where(eq(users.id, player.userId));
+      if (player && player.userId) {
+        // First, update user to remove playerId reference (resolves FK constraint)
+        await db
+          .update(users)
+          .set({ playerId: null })
+          .where(eq(users.id, player.userId));
 
-      // Reset sequences
-      await this.resetSequence('players');
-      await this.resetSequence('users');
+        // Delete associated match participants
+        await db
+          .delete(match_players)
+          .where(eq(match_players.playerId, id));
 
-      return true;
+        // Delete the player
+        await db
+          .delete(players)
+          .where(eq(players.id, id));
+
+        // Finally delete the user
+        await db
+          .delete(users)
+          .where(eq(users.id, player.userId));
+
+        // Reset sequences
+        await this.resetSequence('players');
+        await this.resetSequence('users');
+
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error("Error in deletePlayer:", error);
+      throw error;
     }
-
-    return false;
   }
 
   async deleteAllPlayers() {
@@ -305,7 +316,13 @@ export class DBStorage implements IStorage {
           userId: players.userId
         }).from(players);
 
-        // Delete all match participants first (foreign key constraint)
+        // First, remove references from user table to avoid FK constraint violations
+        await tx
+          .update(users)
+          .set({ playerId: null })
+          .where(not(isNull(users.playerId)));
+
+        // Delete all match participants (foreign key constraint)
         await tx.delete(match_players);
 
         // Then delete all players
@@ -318,6 +335,11 @@ export class DBStorage implements IStorage {
           }
         }
       });
+
+      // Reset sequences
+      await this.resetSequence('players');
+      await this.resetSequence('users');
+      await this.resetSequence('match_participants');
 
       return true;
     } catch (error) {
@@ -1128,7 +1150,7 @@ export class DBStorage implements IStorage {
       const [row] = await db
         .update(courses)
         .set({
-          courseRating: data.courseRating.toString(),
+          courseRating: data.courseRating.toString(), // Keep as string since schema expects string
           slopeRating: data.slopeRating,
           par: data.par
         })
