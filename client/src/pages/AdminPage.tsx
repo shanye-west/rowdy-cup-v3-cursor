@@ -285,7 +285,8 @@ function RoundsTab() {
     courseName: "", // keeping for backward compatibility
     date: new Date().toISOString().split('T')[0],
     startTime: "08:00",
-    isComplete: false
+    isComplete: false,
+    tournamentId: 1 // Default tournament ID
   });
   
   // Define Round interface with courseId
@@ -432,7 +433,8 @@ function RoundsTab() {
       courseName: round.courseName,
       date: round.date,
       startTime: round.startTime,
-      isComplete: round.isComplete || false
+      isComplete: round.isComplete || false,
+      tournamentId: 1 // Use the current tournament ID
     });
     setIsEditDialogOpen(true);
   };
@@ -450,7 +452,8 @@ function RoundsTab() {
       courseName: defaultCourseName,
       date: new Date().toISOString().split('T')[0],
       startTime: "08:00",
-      isComplete: false
+      isComplete: false,
+      tournamentId: 1 // Default tournament ID
     });
 
     console.log("Round form data after reset:", {
@@ -582,7 +585,8 @@ function RoundsTab() {
                 setRoundFormData({
                   ...roundFormData,
                   courseId: courseId,
-                  courseName: selectedCourse ? selectedCourse.name : ""
+                  courseName: selectedCourse ? selectedCourse.name : "",
+                  tournamentId: 1 // Keep the tournament ID
                 });
               }}
               className="w-full px-3 py-2 border rounded-md"
