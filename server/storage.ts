@@ -14,6 +14,9 @@ import {
   holes,
   courses,
   player_course_handicaps,
+  tournament_player_stats,
+  tournament_history,
+  player_career_stats,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -100,6 +103,25 @@ export interface IStorage {
     tournamentId: number,
     playerId: number,
   ): Promise<{ wins: number; losses: number; draws: number }>;
+
+  // Tournament history methods
+  getTournamentHistory(): Promise<any[]>;
+  getTournamentHistoryEntry(id: number): Promise<any | undefined>;
+  createTournamentHistoryEntry(data: any): Promise<any>;
+  
+  // Tournament player stats methods
+  getTournamentPlayerStats(tournamentId: number): Promise<any[]>;
+  getPlayerTournamentStats(playerId: number, tournamentId: number): Promise<any | undefined>;
+  updatePlayerTournamentStats(playerId: number, tournamentId: number, stats: any): Promise<any>;
+  
+  // Player career stats methods
+  getPlayerCareerStats(playerId: number): Promise<any | undefined>;
+  updatePlayerCareerStats(playerId: number, stats: any): Promise<any>;
+  
+  // Stats calculations methods
+  calculateAndUpdatePlayerStats(playerId: number, tournamentId: number): Promise<any>;
+  calculateAndUpdateAllPlayerStats(tournamentId: number): Promise<any[]>;
+  updateTournamentHistory(tournamentId: number): Promise<any>;
 
   // Handicap system methods
   updatePlayerHandicapIndex(playerId: number, handicapIndex: number): Promise<any>;
@@ -1036,6 +1058,245 @@ export class DBStorage implements IStorage {
     }
     
     return { wins, losses, draws: ties };
+  }
+  
+  // Tournament history methods
+  async getTournamentHistory() {
+    return db.select().from(tournament_history);
+  }
+  
+  async getTournamentHistoryEntry(id: number) {
+    const [row] = await db
+      .select()
+      .from(tournament_history)
+      .where(eq(tournament_history.id, id));
+    return row;
+  }
+  
+  async createTournamentHistoryEntry(data: any) {
+    const [row] = await db
+      .insert(tournament_history)
+      .values(data)
+      .returning();
+    return row;
+  }
+  
+  // Tournament player stats methods
+  async getTournamentPlayerStats(tournamentId: number) {
+    return db
+      .select()
+      .from(tournament_player_stats)
+      .where(eq(tournament_player_stats.tournamentId, tournamentId));
+  }
+  
+  async getPlayerTournamentStats(playerId: number, tournamentId: number) {
+    const [row] = await db
+      .select()
+      .from(tournament_player_stats)
+      .where(
+        and(
+          eq(tournament_player_stats.playerId, playerId),
+          eq(tournament_player_stats.tournamentId, tournamentId)
+        )
+      );
+    return row;
+  }
+  
+  async updatePlayerTournamentStats(playerId: number, tournamentId: number, stats: any) {
+    // Check if stats already exist for this player/tournament
+    const existingStats = await this.getPlayerTournamentStats(playerId, tournamentId);
+    
+    if (existingStats) {
+      // Update existing stats
+      const [row] = await db
+        .update(tournament_player_stats)
+        .set(stats)
+        .where(
+          and(
+            eq(tournament_player_stats.playerId, playerId),
+            eq(tournament_player_stats.tournamentId, tournamentId)
+          )
+        )
+        .returning();
+      return row;
+    } else {
+      // Create new stats
+      const [row] = await db
+        .insert(tournament_player_stats)
+        .values({
+          playerId,
+          tournamentId,
+          ...stats
+        })
+        .returning();
+      return row;
+    }
+  }
+  
+  // Player career stats methods
+  async getPlayerCareerStats(playerId: number) {
+    const [row] = await db
+      .select()
+      .from(player_career_stats)
+      .where(eq(player_career_stats.playerId, playerId));
+    return row;
+  }
+  
+  async updatePlayerCareerStats(playerId: number, stats: any) {
+    // Check if career stats already exist for this player
+    const existingStats = await this.getPlayerCareerStats(playerId);
+    
+    if (existingStats) {
+      // Update existing stats
+      const [row] = await db
+        .update(player_career_stats)
+        .set({
+          ...stats,
+          lastUpdated: new Date() // Update the lastUpdated timestamp
+        })
+        .where(eq(player_career_stats.playerId, playerId))
+        .returning();
+      return row;
+    } else {
+      // Create new career stats
+      const [row] = await db
+        .insert(player_career_stats)
+        .values({
+          playerId,
+          ...stats,
+          lastUpdated: new Date()
+        })
+        .returning();
+      return row;
+    }
+  }
+  
+  // Stats calculations methods
+  async calculateAndUpdatePlayerStats(playerId: number, tournamentId: number) {
+    // Get basic stats (wins, losses, ties)
+    const basicStats = await this.calculatePlayerStats(tournamentId, playerId);
+    
+    // Calculate points (1 point for win, 0.5 for tie, 0 for loss)
+    const points = basicStats.wins + (basicStats.draws * 0.5);
+    
+    // Get completed match count
+    const matchCount = basicStats.wins + basicStats.losses + basicStats.draws;
+    
+    // Update tournament stats for this player
+    const tournamentStats = await this.updatePlayerTournamentStats(playerId, tournamentId, {
+      wins: basicStats.wins,
+      losses: basicStats.losses,
+      ties: basicStats.draws,
+      points: points.toString(), // Convert to string for numeric type
+      matchesPlayed: matchCount
+    });
+    
+    // Update career stats
+    // First, get all tournament stats for this player
+    const allTournamentStats = await db
+      .select()
+      .from(tournament_player_stats)
+      .where(eq(tournament_player_stats.playerId, playerId));
+    
+    // Calculate career totals
+    const careerTotals = allTournamentStats.reduce((totals, tournStat) => {
+      return {
+        totalWins: totals.totalWins + Number(tournStat.wins || 0),
+        totalLosses: totals.totalLosses + Number(tournStat.losses || 0),
+        totalTies: totals.totalTies + Number(tournStat.ties || 0),
+        totalPoints: totals.totalPoints + Number(tournStat.points || 0),
+        matchesPlayed: totals.matchesPlayed + Number(tournStat.matchesPlayed || 0)
+      };
+    }, {
+      totalWins: 0,
+      totalLosses: 0,
+      totalTies: 0,
+      totalPoints: 0,
+      matchesPlayed: 0
+    });
+    
+    // Add tournament count
+    careerTotals.tournamentsPlayed = allTournamentStats.length;
+    
+    // Convert numeric values to strings for database
+    careerTotals.totalPoints = careerTotals.totalPoints.toString();
+    
+    // Update player career stats
+    const careerStats = await this.updatePlayerCareerStats(playerId, careerTotals);
+    
+    return {
+      tournamentStats,
+      careerStats
+    };
+  }
+  
+  async calculateAndUpdateAllPlayerStats(tournamentId: number) {
+    // Get all players
+    const allPlayers = await this.getPlayers();
+    
+    // Calculate and update stats for each player
+    const results = [];
+    for (const player of allPlayers) {
+      const result = await this.calculateAndUpdatePlayerStats(player.id, tournamentId);
+      results.push({
+        playerId: player.id,
+        playerName: player.name,
+        ...result
+      });
+    }
+    
+    return results;
+  }
+  
+  async updateTournamentHistory(tournamentId: number) {
+    // Get tournament data
+    const tournamentData = await this.getTournament();
+    if (!tournamentData) {
+      throw new Error("Tournament not found");
+    }
+    
+    // Check if history entry already exists
+    const [existingEntry] = await db
+      .select()
+      .from(tournament_history)
+      .where(eq(tournament_history.tournamentId, tournamentId));
+    
+    const currentYear = new Date().getFullYear();
+    
+    // Determine winning team
+    let winningTeam = null;
+    if (tournamentData.aviatorScore > tournamentData.producerScore) {
+      winningTeam = "aviators";
+    } else if (tournamentData.producerScore > tournamentData.aviatorScore) {
+      winningTeam = "producers";
+    }
+    
+    const historyData = {
+      year: currentYear,
+      tournamentName: tournamentData.name,
+      winningTeam,
+      aviatorScore: tournamentData.aviatorScore,
+      producerScore: tournamentData.producerScore,
+      tournamentId,
+      location: tournamentData.location
+    };
+    
+    if (existingEntry) {
+      // Update existing entry
+      const [updatedEntry] = await db
+        .update(tournament_history)
+        .set(historyData)
+        .where(eq(tournament_history.id, existingEntry.id))
+        .returning();
+      return updatedEntry;
+    } else {
+      // Create new entry
+      const [newEntry] = await db
+        .insert(tournament_history)
+        .values(historyData)
+        .returning();
+      return newEntry;
+    }
   }
 
   async initializeData() {
