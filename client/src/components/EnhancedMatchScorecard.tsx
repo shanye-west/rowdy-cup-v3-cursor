@@ -93,15 +93,17 @@ const EnhancedMatchScorecard = ({
     
     try {
       // Make API request to fetch handicap strokes
-      const endpoint = `/api/rounds/${matchData.roundId}/players/${playerId}/holes/${holeNumber}/strokes`;
-      const response = await fetch(endpoint);
+      const response = await apiRequest(
+        "GET", 
+        `/api/players/${playerId}/rounds/${matchData.roundId}/holes/${holeNumber}/handicap-strokes`
+      );
       
       if (!response.ok) {
         throw new Error(`Failed to fetch handicap strokes: ${response.statusText}`);
       }
       
       const data = await response.json();
-      return data?.strokes || 0;
+      return data?.handicapStrokes || 0;
     } catch (error) {
       console.error("Error fetching handicap strokes:", error);
       return 0;
@@ -110,7 +112,7 @@ const EnhancedMatchScorecard = ({
   
   // Fetch player handicaps for this round
   const { data: playerHandicaps = [] } = useQuery<any[]>({
-    queryKey: [`/api/round-handicaps/${matchData?.roundId}`],
+    queryKey: [`/api/rounds/${matchData?.roundId}/handicaps`],
     enabled: !!matchData?.roundId && isBestBall,
   });
 

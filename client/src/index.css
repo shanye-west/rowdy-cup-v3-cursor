@@ -44,6 +44,37 @@ input[type="number"].score-input::-webkit-inner-spin-button {
   margin: 0;
 }
 
+/* Handicap system styling */
+.handicap-indicator {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #2563eb; /* Blue dots for handicap strokes */
+  margin-right: 2px;
+  margin-top: 1px;
+}
+
+.scorecard-cell {
+  position: relative;
+}
+
+.handicap-strokes {
+  display: flex;
+  flex-wrap: wrap;
+  position: absolute;
+  top: -4px;
+  right: 2px;
+  gap: 2px;
+}
+
+.net-score {
+  font-size: 0.75rem;
+  color: #2563eb;
+  font-weight: bold;
+  margin-left: 4px;
+}
+
 :root {
   --background: 0 0% 97%;
   --foreground: 210 7% 16%;
