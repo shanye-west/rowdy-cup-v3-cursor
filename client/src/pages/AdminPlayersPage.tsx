@@ -24,7 +24,6 @@ interface Player {
   wins: number;
   losses: number;
   ties: number;
-  handicapIndex: number | null;
 }
 
 interface Team {
@@ -47,8 +46,7 @@ const AdminPlayersPage = () => {
     teamId: 0,
     wins: 0,
     losses: 0,
-    ties: 0,
-    handicapIndex: null as number | null
+    ties: 0
   });
 
   // Fetch teams data
@@ -167,8 +165,7 @@ const AdminPlayersPage = () => {
       teamId: teams && teams.length > 0 ? teams[0].id : 0,
       wins: 0,
       losses: 0,
-      ties: 0,
-      handicapIndex: null
+      ties: 0
     });
   };
 
@@ -180,9 +177,7 @@ const AdminPlayersPage = () => {
         ? parseInt(value) 
         : name === 'name' 
           ? value 
-          : name === 'handicapIndex' 
-            ? value === '' ? null : parseFloat(value) 
-            : parseInt(value) || 0
+          : parseInt(value) || 0
     });
   };
 
@@ -205,8 +200,7 @@ const AdminPlayersPage = () => {
       teamId: player.teamId,
       wins: player.wins,
       losses: player.losses,
-      ties: player.ties,
-      handicapIndex: player.handicapIndex
+      ties: player.ties
     });
     setIsEditDialogOpen(true);
   };
@@ -326,12 +320,6 @@ const AdminPlayersPage = () => {
                       </Button>
                     </div>
                     <div className="flex items-center space-x-3">
-                      {player.handicapIndex !== null && player.handicapIndex !== undefined && (
-                        <div className="flex items-center text-sm space-x-1">
-                          <span className="inline-block h-3 w-3 rounded-full bg-green-600" />
-                          <span className="font-medium">{Number(player.handicapIndex).toFixed(1)}</span>
-                        </div>
-                      )}
                       <div className="text-sm text-muted-foreground">
                         Record:
                       </div>
@@ -404,25 +392,7 @@ const AdminPlayersPage = () => {
                   </select>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Handicap Index
-                  </label>
-                  <input
-                    type="number"
-                    name="handicapIndex"
-                    value={playerFormData.handicapIndex === null ? '' : playerFormData.handicapIndex}
-                    onChange={handlePlayerInputChange}
-                    className="w-full px-3 py-2 border rounded-md"
-                    step="0.1"
-                    min="0"
-                    max="54"
-                    placeholder="Optional"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Enter a value between 0 and 54. Leave empty if not applicable.
-                  </p>
-                </div>
+                {/* Handicap fields removed - now managed per course via match scorecard */}
               </div>
               
               <div className="flex justify-end mt-6 space-x-2">
@@ -486,7 +456,6 @@ const AdminPlayersPage = () => {
                     onChange={handlePlayerInputChange}
                     className="w-full px-3 py-2 border rounded-md"
                     required
-                    disabled={true}
                   >
                     {teams?.map(team => (
                       <option key={team.id} value={team.id}>
@@ -496,24 +465,50 @@ const AdminPlayersPage = () => {
                   </select>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Handicap Index
-                  </label>
-                  <input
-                    type="number"
-                    name="handicapIndex"
-                    value={playerFormData.handicapIndex === null ? '' : playerFormData.handicapIndex}
-                    onChange={handlePlayerInputChange}
-                    className="w-full px-3 py-2 border rounded-md"
-                    step="0.1"
-                    min="0"
-                    max="54"
-                    placeholder="Optional"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Enter a value between 0 and 54. Leave empty if not applicable.
-                  </p>
+                {/* Handicap fields removed - now managed per course via match scorecard */}
+                
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Wins
+                    </label>
+                    <input
+                      type="number"
+                      name="wins"
+                      value={playerFormData.wins}
+                      onChange={handlePlayerInputChange}
+                      className="w-full px-3 py-2 border rounded-md"
+                      min="0"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Losses
+                    </label>
+                    <input
+                      type="number"
+                      name="losses"
+                      value={playerFormData.losses}
+                      onChange={handlePlayerInputChange}
+                      className="w-full px-3 py-2 border rounded-md"
+                      min="0"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Ties
+                    </label>
+                    <input
+                      type="number"
+                      name="ties"
+                      value={playerFormData.ties}
+                      onChange={handlePlayerInputChange}
+                      className="w-full px-3 py-2 border rounded-md"
+                      min="0"
+                    />
+                  </div>
                 </div>
               </div>
               
@@ -546,22 +541,19 @@ const AdminPlayersPage = () => {
           </div>
         </div>
       )}
-
-      {/* Delete Player Confirmation Dialog */}
+      
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isConfirmDeleteOpen} onOpenChange={setIsConfirmDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Player</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete this player and their associated data.
+              Are you sure you want to delete this player? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDeletePlayer} 
-              className="bg-red-600 hover:bg-red-700"
-            >
+            <AlertDialogAction onClick={confirmDeletePlayer} className="bg-red-600 hover:bg-red-700">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
