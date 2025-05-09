@@ -1317,5 +1317,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // TOURNAMENT HISTORY AND PLAYER STATS
+
+  // Get all tournament history entries
+  app.get("/api/tournament-history", async (req, res) => {
+    try {
+      const history = await storage.getTournamentHistory();
+      res.json(history);
+    } catch (error) {
+      console.error("Error getting tournament history:", error);
+      res.status(500).json({ error: "Failed to get tournament history" });
+    }
+  });
+
+  // Get specific tournament history entry
+  app.get("/api/tournament-history/:id", async (req, res) => {
+    try {
+      const tournamentId = parseInt(req.params.id);
+      
+      if (isNaN(tournamentId)) {
+        return res.status(400).json({ error: "Invalid tournament ID" });
+      }
+      
+      const tournamentHistory = await storage.getTournamentHistoryEntry(tournamentId);
+      
+      if (!tournamentHistory) {
+        return res.status(404).json({ error: "Tournament history not found" });
+      }
+      
+      res.json(tournamentHistory);
+    } catch (error) {
+      console.error("Error getting tournament history entry:", error);
+      res.status(500).json({ error: "Failed to get tournament history entry" });
+    }
+  });
+
+  // Get player stats for a specific tournament
+  app.get("/api/tournament-player-stats/:tournamentId", async (req, res) => {
+    try {
+      const tournamentId = parseInt(req.params.tournamentId);
+      
+      if (isNaN(tournamentId)) {
+        return res.status(400).json({ error: "Invalid tournament ID" });
+      }
+      
+      const playerStats = await storage.getTournamentPlayerStats(tournamentId);
+      res.json(playerStats);
+    } catch (error) {
+      console.error("Error getting tournament player stats:", error);
+      res.status(500).json({ error: "Failed to get tournament player stats" });
+    }
+  });
+
+  // Get specific player's stats for a specific tournament
+  app.get("/api/players/:playerId/tournament-stats/:tournamentId", async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      const tournamentId = parseInt(req.params.tournamentId);
+      
+      if (isNaN(playerId) || isNaN(tournamentId)) {
+        return res.status(400).json({ error: "Invalid player ID or tournament ID" });
+      }
+      
+      const stats = await storage.getPlayerTournamentStats(playerId, tournamentId);
+      
+      if (!stats) {
+        return res.status(404).json({ error: "Player tournament stats not found" });
+      }
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error getting player tournament stats:", error);
+      res.status(500).json({ error: "Failed to get player tournament stats" });
+    }
+  });
+
+  // Get player's career stats
+  app.get("/api/players/:playerId/career-stats", async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      
+      if (isNaN(playerId)) {
+        return res.status(400).json({ error: "Invalid player ID" });
+      }
+      
+      const careerStats = await storage.getPlayerCareerStats(playerId);
+      
+      if (!careerStats) {
+        return res.status(404).json({ error: "Player career stats not found" });
+      }
+      
+      res.json(careerStats);
+    } catch (error) {
+      console.error("Error getting player career stats:", error);
+      res.status(500).json({ error: "Failed to get player career stats" });
+    }
+  });
+
+  // Admin: Update tournament history (recalculate and store current tournament statistics)
+  app.post("/api/admin/tournament-history/update", isAdmin, async (req, res) => {
+    try {
+      const tournament = await storage.getTournament();
+      
+      if (!tournament) {
+        return res.status(404).json({ error: "Tournament not found" });
+      }
+      
+      const updatedHistory = await storage.updateTournamentHistory(tournament.id);
+      
+      // Also update all player stats
+      await storage.calculateAndUpdateAllPlayerStats(tournament.id);
+      
+      res.json(updatedHistory);
+    } catch (error) {
+      console.error("Error updating tournament history:", error);
+      res.status(500).json({ error: "Failed to update tournament history" });
+    }
+  });
+
   return httpServer;
 }
