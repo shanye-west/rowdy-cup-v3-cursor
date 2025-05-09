@@ -326,10 +326,10 @@ const AdminPlayersPage = () => {
                       </Button>
                     </div>
                     <div className="flex items-center space-x-3">
-                      {player.handicapIndex !== null && (
+                      {player.handicapIndex !== null && player.handicapIndex !== undefined && (
                         <div className="flex items-center text-sm space-x-1">
                           <span className="inline-block h-3 w-3 rounded-full bg-green-600" />
-                          <span className="font-medium">{player.handicapIndex.toFixed(1)}</span>
+                          <span className="font-medium">{Number(player.handicapIndex).toFixed(1)}</span>
                         </div>
                       )}
                       <div className="text-sm text-muted-foreground">
