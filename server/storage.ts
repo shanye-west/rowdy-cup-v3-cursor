@@ -209,8 +209,10 @@ export class DBStorage implements IStorage {
       
       // Ensure handicapIndex is properly typed for database
       if (playerData.handicapIndex !== undefined && playerData.handicapIndex !== null) {
-        // Make sure it's saved as a string in the database
-        playerData.handicapIndex = playerData.handicapIndex.toString();
+        // Make sure it's saved as a number in the database
+        playerData.handicapIndex = typeof playerData.handicapIndex === 'string' 
+          ? parseFloat(playerData.handicapIndex) 
+          : Number(playerData.handicapIndex);
       }
 
       // Then create the player with reference to the user
@@ -231,9 +233,20 @@ export class DBStorage implements IStorage {
   }
 
   async updatePlayer(id: number, data: Partial<any>) {
+    // Process the player data - convert handicapIndex if needed
+    const playerData = { ...data };
+    
+    // Ensure handicapIndex is properly typed for database
+    if (playerData.handicapIndex !== undefined && playerData.handicapIndex !== null) {
+      // Make sure it's saved as a number in the database
+      playerData.handicapIndex = typeof playerData.handicapIndex === 'string' 
+        ? parseFloat(playerData.handicapIndex) 
+        : Number(playerData.handicapIndex);
+    }
+    
     const [updatedPlayer] = await db
       .update(players)
-      .set(data)
+      .set(playerData)
       .where(eq(players.id, id))
       .returning();
 
@@ -1097,9 +1110,14 @@ export class DBStorage implements IStorage {
 
   // Handicap system methods
   async updatePlayerHandicapIndex(playerId: number, handicapIndex: number) {
+    // Ensure the handicapIndex is a number
+    const numericHandicapIndex = typeof handicapIndex === 'string' 
+      ? parseFloat(handicapIndex) 
+      : Number(handicapIndex);
+      
     const [row] = await db
       .update(players)
-      .set({ handicapIndex: handicapIndex.toString() })
+      .set({ handicapIndex: numericHandicapIndex })
       .where(eq(players.id, playerId))
       .returning();
     return row;
