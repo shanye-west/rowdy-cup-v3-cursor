@@ -140,7 +140,6 @@ export const tournament = pgTable("tournament", {
   producerScore: numeric("producer_score"),
   pendingAviatorScore: numeric("pending_aviator_score"),
   pendingProducerScore: numeric("pending_producer_score"),
-  year: integer("year").notNull(),
   isActive: boolean("is_active").default(true),
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),

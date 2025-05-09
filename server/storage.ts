@@ -444,6 +444,11 @@ export class DBStorage implements IStorage {
             .where(eq(match_players.matchId, match.id));
         }
         
+        // Delete all player course handicaps for this round (this was causing foreign key constraint errors)
+        await tx
+          .delete(player_course_handicaps)
+          .where(eq(player_course_handicaps.roundId, id));
+        
         // Delete all matches in the round
         await tx
           .delete(matches)
@@ -459,6 +464,7 @@ export class DBStorage implements IStorage {
       await db.execute(`SELECT SETVAL('matches_id_seq', COALESCE((SELECT MAX(id) FROM matches), 0) + 1, false)`);
       await db.execute(`SELECT SETVAL('scores_id_seq', COALESCE((SELECT MAX(id) FROM scores), 0) + 1, false)`);
       await db.execute(`SELECT SETVAL('match_participants_id_seq', COALESCE((SELECT MAX(id) FROM match_participants), 0) + 1, false)`);
+      await db.execute(`SELECT SETVAL('player_course_handicaps_id_seq', COALESCE((SELECT MAX(id) FROM player_course_handicaps), 0) + 1, false)`);
       await db.execute(`SELECT SETVAL('rounds_id_seq', COALESCE((SELECT MAX(id) FROM rounds), 0) + 1, false)`);
       
       console.log(`Successfully deleted round ID: ${id} from database`);
@@ -477,6 +483,9 @@ export class DBStorage implements IStorage {
       // Delete all match participants
       await tx.delete(match_players);
       
+      // Delete all player course handicaps
+      await tx.delete(player_course_handicaps);
+      
       // Delete all matches
       await tx.delete(matches);
       
@@ -489,6 +498,7 @@ export class DBStorage implements IStorage {
     await this.resetSequence('scores');
     await this.resetSequence('match_participants');
     await this.resetSequence('rounds');
+    await this.resetSequence('player_course_handicaps');
     
     // Update tournament scores to zero
     const tournament = await this.getTournament();
