@@ -48,7 +48,7 @@ export const players = pgTable(
     losses: integer("losses").default(0),
     ties: integer("ties").default(0),
     status: text("status"),
-    handicapIndex: text("handicap_index"), // Player's handicap index (e.g., 8.4)
+    handicapIndex: numeric("handicap_index"), // Player's handicap index (e.g., 8.4)
   },
   (table) => {
     return {

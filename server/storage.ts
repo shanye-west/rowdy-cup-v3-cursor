@@ -204,9 +204,18 @@ export class DBStorage implements IStorage {
         needsPasswordChange: true, // Require password change on first login
       }).returning();
 
+      // Process the player data - convert handicapIndex if needed
+      const playerData = { ...data };
+      
+      // Ensure handicapIndex is properly typed for database
+      if (playerData.handicapIndex !== undefined && playerData.handicapIndex !== null) {
+        // Make sure it's saved as a string in the database
+        playerData.handicapIndex = playerData.handicapIndex.toString();
+      }
+
       // Then create the player with reference to the user
       const [player] = await tx.insert(players).values({
-        ...data,
+        ...playerData,
         userId: user.id // Link player to user
       }).returning();
 
