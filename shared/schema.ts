@@ -140,9 +140,10 @@ export const tournament = pgTable("tournament", {
   producerScore: numeric("producer_score"),
   pendingAviatorScore: numeric("pending_aviator_score"),
   pendingProducerScore: numeric("pending_producer_score"),
+  year: integer("year").notNull(), // Keep for backward compatibility
   isActive: boolean("is_active").default(true),
-  startDate: timestamp("start_date"),
-  endDate: timestamp("end_date"),
+  startDate: timestamp("start_date", { mode: 'string' }),
+  endDate: timestamp("end_date", { mode: 'string' }),
 });
 export const insertTournamentSchema = createInsertSchema(tournament);
 export type InsertTournament = z.infer<typeof insertTournamentSchema>;
@@ -197,6 +198,7 @@ export const matches = pgTable(
     leadAmount: integer("lead_amount").default(0),
     result: text("result"),
     locked: boolean("locked").default(false),
+    tournamentId: integer("tournament_id"),
   },
   (table) => {
     return {
@@ -204,6 +206,11 @@ export const matches = pgTable(
         columns: [table.roundId],
         foreignColumns: [rounds.id],
         name: "matches_round_id_fk",
+      }),
+      tournamentIdFk: foreignKey({
+        columns: [table.tournamentId],
+        foreignColumns: [tournament.id],
+        name: "matches_tournament_id_fk",
       }),
     };
   },
@@ -221,6 +228,7 @@ export const match_players = pgTable(
     playerId: integer("user_id").notNull(),
     team: text("team").notNull(),
     result: text("result"),
+    tournamentId: integer("tournament_id"),
   },
   (table) => {
     return {
@@ -233,6 +241,11 @@ export const match_players = pgTable(
         columns: [table.playerId],
         foreignColumns: [players.id],
         name: "match_participants_player_id_fk",
+      }),
+      tournamentIdFk: foreignKey({
+        columns: [table.tournamentId],
+        foreignColumns: [tournament.id],
+        name: "match_participants_tournament_id_fk",
       }),
     };
   },
@@ -252,6 +265,7 @@ export const scores = pgTable(
     producerScore: integer("producer_score"),
     winningTeam: text("winning_team"),
     matchStatus: text("match_status"),
+    tournamentId: integer("tournament_id"),
   },
   (table) => {
     return {
@@ -259,6 +273,11 @@ export const scores = pgTable(
         columns: [table.matchId],
         foreignColumns: [matches.id],
         name: "scores_match_id_fk",
+      }),
+      tournamentIdFk: foreignKey({
+        columns: [table.tournamentId],
+        foreignColumns: [tournament.id],
+        name: "scores_tournament_id_fk",
       }),
     };
   },
@@ -383,7 +402,7 @@ export const player_career_stats = pgTable(
     totalPoints: numeric("total_points").default("0"),
     tournamentsPlayed: integer("tournaments_played").default(0),
     matchesPlayed: integer("matches_played").default(0),
-    lastUpdated: timestamp("last_updated").defaultNow(),
+    lastUpdated: timestamp("last_updated", { mode: 'string' }).defaultNow(),
   },
   (table) => {
     return {
