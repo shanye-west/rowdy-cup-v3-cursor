@@ -48,7 +48,7 @@ export const players = pgTable(
     losses: integer("losses").default(0),
     ties: integer("ties").default(0),
     status: text("status"),
-    handicapIndex: numeric("handicap_index"), // Player's handicap index (e.g., 8.4)
+    // handicapIndex removed - now using player_course_handicaps table
   },
   (table) => {
     return {
@@ -60,7 +60,7 @@ export const players = pgTable(
     };
   },
 );
-// Create a custom schema for players that allows handicapIndex to be a number
+// Create a custom schema for players
 export const insertPlayerSchema = z.object({
   id: z.number().optional(),
   name: z.string(),
@@ -70,7 +70,7 @@ export const insertPlayerSchema = z.object({
   losses: z.number().optional().default(0),
   ties: z.number().optional().default(0),
   status: z.string().optional(),
-  handicapIndex: z.number().nullable().optional(),
+  // handicapIndex removed - now using player_course_handicaps table
 });
 export type InsertPlayer = z.infer<typeof insertPlayerSchema>;
 export type Player = typeof players.$inferSelect;
