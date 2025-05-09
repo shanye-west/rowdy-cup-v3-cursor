@@ -60,7 +60,18 @@ export const players = pgTable(
     };
   },
 );
-export const insertPlayerSchema = createInsertSchema(players);
+// Create a custom schema for players that allows handicapIndex to be a number
+export const insertPlayerSchema = z.object({
+  id: z.number().optional(),
+  name: z.string(),
+  teamId: z.number(),
+  userId: z.number().optional(),
+  wins: z.number().optional().default(0),
+  losses: z.number().optional().default(0),
+  ties: z.number().optional().default(0),
+  status: z.string().optional(),
+  handicapIndex: z.number().nullable().optional(),
+});
 export type InsertPlayer = z.infer<typeof insertPlayerSchema>;
 export type Player = typeof players.$inferSelect;
 

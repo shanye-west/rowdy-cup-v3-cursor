@@ -1153,10 +1153,22 @@ export class DBStorage implements IStorage {
 
     // Apply the USGA formula:
     // Course Handicap = (Handicap Index × Slope Rating / 113) + (Course Rating – Par)
-    const handicapIndex = parseFloat(player.handicapIndex.toString());
-    const slopeRating = parseFloat(course.slopeRating.toString());
-    const courseRating = parseFloat(course.courseRating.toString());
-    const par = parseInt(course.par.toString());
+    // Make sure to convert all values to numbers
+    const handicapIndex = typeof player.handicapIndex === 'string' 
+      ? parseFloat(player.handicapIndex) 
+      : (player.handicapIndex as number);
+      
+    const slopeRating = typeof course.slopeRating === 'string' 
+      ? parseFloat(course.slopeRating) 
+      : (course.slopeRating as number);
+      
+    const courseRating = typeof course.courseRating === 'string' 
+      ? parseFloat(course.courseRating) 
+      : (course.courseRating as number);
+      
+    const par = typeof course.par === 'string' 
+      ? parseInt(course.par) 
+      : (course.par as number);
     
     const courseHandicap = Math.round(
       (handicapIndex * slopeRating / 113) + (courseRating - par)
@@ -1325,8 +1337,24 @@ export class DBStorage implements IStorage {
         for (const player of allPlayers) {
           if (player.handicapIndex !== null && player.handicapIndex !== undefined) {
             // Calculate course handicap
+            const handicapIndex = typeof player.handicapIndex === 'string' 
+              ? parseFloat(player.handicapIndex) 
+              : (player.handicapIndex as number);
+              
+            const slopeRating = typeof course.slopeRating === 'string' 
+              ? parseFloat(course.slopeRating) 
+              : (course.slopeRating as number);
+              
+            const courseRating = typeof course.courseRating === 'string' 
+              ? parseFloat(course.courseRating) 
+              : (course.courseRating as number);
+              
+            const par = typeof course.par === 'string' 
+              ? parseInt(course.par) 
+              : (course.par as number);
+            
             const courseHandicap = Math.round(
-              (player.handicapIndex * course.slopeRating / 113) + (course.courseRating - course.par)
+              (handicapIndex * slopeRating / 113) + (courseRating - par)
             );
             
             // Store it
