@@ -33,7 +33,8 @@ const Home = () => {
     courseName: "",
     date: new Date().toISOString().split('T')[0],
     startTime: "08:00",
-    isComplete: false
+    isComplete: false,
+    tournamentId: 1 // Default tournament ID
   });
   
   // Fetch courses on component mount
@@ -215,7 +216,8 @@ const Home = () => {
       courseName: defaultCourseName,
       date: new Date().toISOString().split('T')[0],
       startTime: "08:00",
-      isComplete: false
+      isComplete: false,
+      tournamentId: tournament?.id || 1
     });
   };
 
@@ -431,7 +433,8 @@ const Home = () => {
                             setRoundFormData({
                               ...roundFormData,
                               courseId: courseId,
-                              courseName: selectedCourse ? selectedCourse.name : ""
+                              courseName: selectedCourse ? selectedCourse.name : "",
+                              tournamentId: tournament?.id || 1
                             });
                           }}
                           className="w-full px-3 py-2 border rounded-md"
