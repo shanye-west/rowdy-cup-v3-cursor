@@ -109,6 +109,7 @@ export interface IStorage {
   getPlayerCourseHandicap(playerId: number, roundId: number): Promise<any>;
   getHoleHandicapStrokes(playerId: number, roundId: number, holeNumber: number): Promise<number>;
   storePlayerCourseHandicap(playerId: number, roundId: number, courseHandicap: number): Promise<any>;
+  getAllPlayerCourseHandicaps(roundId: number): Promise<any[]>;
   
   initializeData(): Promise<void>;
 }
@@ -1284,6 +1285,54 @@ export class DBStorage implements IStorage {
         })
         .returning();
       return inserted;
+    }
+  }
+
+  async getAllPlayerCourseHandicaps(roundId: number) {
+    try {
+      // Get all handicaps for this round
+      const handicaps = await db
+        .select()
+        .from(player_course_handicaps)
+        .where(eq(player_course_handicaps.roundId, roundId));
+      
+      if (handicaps.length === 0) {
+        // If no handicaps are found for this round, check if we need to calculate them
+        const allPlayers = await this.getPlayers();
+        const round = await this.getRound(roundId);
+        
+        if (!round || !round.courseId) {
+          return [];
+        }
+        
+        // Get course info
+        const course = await this.getCourse(round.courseId);
+        if (!course || !course.courseRating || !course.slopeRating || !course.par) {
+          return []; // Missing course data needed for calculation
+        }
+        
+        // Calculate and store handicaps for all players with handicap indexes
+        const calculatedHandicaps = [];
+        for (const player of allPlayers) {
+          if (player.handicapIndex !== null && player.handicapIndex !== undefined) {
+            // Calculate course handicap
+            const courseHandicap = Math.round(
+              (player.handicapIndex * course.slopeRating / 113) + (course.courseRating - course.par)
+            );
+            
+            // Store it
+            const handicapEntry = await this.storePlayerCourseHandicap(player.id, roundId, courseHandicap);
+            calculatedHandicaps.push(handicapEntry);
+          }
+        }
+        
+        return calculatedHandicaps;
+      }
+      
+      return handicaps;
+    } catch (error) {
+      console.error("Error getting all player course handicaps:", error);
+      return [];
     }
   }
 }
