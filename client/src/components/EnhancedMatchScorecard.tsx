@@ -1,6 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 
 // DEFINE INTERFACES
 interface Hole {
@@ -113,9 +115,68 @@ const EnhancedMatchScorecard = ({
   
   // Fetch player handicaps for this round
   const { data: playerHandicaps = [] } = useQuery<any[]>({
-    queryKey: [`/api/rounds/${matchData?.roundId}/handicaps`],
+    queryKey: [`/api/round-handicaps/${matchData?.roundId}`],
     enabled: !!matchData?.roundId && isBestBall,
   });
+  
+  // Get authentication status to determine if user can edit handicaps
+  const { isAdmin } = useAuth();
+  
+  // Add queryClient for mutations
+  const queryClient = useQueryClient();
+  
+  // Mutation for updating a player's course handicap
+  const updateHandicapMutation = useMutation({
+    mutationFn: async ({ playerId, roundId, courseHandicap }: { 
+      playerId: number;
+      roundId: number;
+      courseHandicap: number;
+    }) => {
+      const response = await apiRequest("PUT", `/api/players/${playerId}/course-handicap`, {
+        roundId,
+        courseHandicap
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to update handicap");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: [`/api/round-handicaps/${matchData?.roundId}`] });
+    }
+  });
+  
+  // Function to get a player's course handicap
+  const getPlayerCourseHandicap = (playerId: number): number => {
+    if (!playerHandicaps || !playerHandicaps.length) return 0;
+    
+    const handicapEntry = playerHandicaps.find(h => h.playerId === playerId);
+    return handicapEntry?.courseHandicap || 0;
+  };
+  
+  // Function to handle handicap edit
+  const handleHandicapEdit = (playerId: number, currentHandicap: number) => {
+    if (!isAdmin || !matchData?.roundId) return;
+    
+    const newHandicap = prompt("Enter new course handicap:", currentHandicap.toString());
+    if (newHandicap === null) return; // User cancelled
+    
+    const handicapValue = parseInt(newHandicap);
+    if (isNaN(handicapValue)) {
+      alert("Please enter a valid number");
+      return;
+    }
+    
+    // Update the handicap
+    updateHandicapMutation.mutate({
+      playerId,
+      roundId: matchData.roundId,
+      courseHandicap: handicapValue
+    });
+  };
 
   // Split participants into teams
   const aviatorPlayersList = useMemo(() => {
@@ -854,8 +915,23 @@ const EnhancedMatchScorecard = ({
                 {aviatorPlayersList.map((player: any) => (
                   <tr key={player.id} className="border-b border-gray-200">
                     <td className="py-2 px-2 sticky-column bg-white border-l-4 border-aviator">
-                      <div className="text-xs font-medium text-black">
-                        {player.name}
+                      <div className="flex justify-between items-center">
+                        <div className="text-xs font-medium text-black">
+                          {player.name} 
+                          <span className="ml-1 text-blue-600 font-semibold">
+                            (HCP: {getPlayerCourseHandicap(player.id)})
+                          </span>
+                        </div>
+                        {isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 p-1 ml-1 text-xs"
+                            onClick={() => handleHandicapEdit(player.id, getPlayerCourseHandicap(player.id))}
+                          >
+                            Edit
+                          </Button>
+                        )}
                       </div>
                     </td>
                     {/* Front Nine Aviator Player Scores */}
@@ -1202,8 +1278,23 @@ const EnhancedMatchScorecard = ({
                           {producerPlayersList.map((player: any) => (
                             <tr key={player.id} className="border-b border-gray-200">
                               <td className="py-2 px-2 sticky-column bg-white border-l-4 border-producer">
-                                <div className="text-xs font-medium text-black">
-                                  {player.name}
+                                <div className="flex justify-between items-center">
+                                  <div className="text-xs font-medium text-black">
+                                    {player.name}
+                                    <span className="ml-1 text-blue-600 font-semibold">
+                                      (HCP: {getPlayerCourseHandicap(player.id)})
+                                    </span>
+                                  </div>
+                                  {isAdmin && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 p-1 ml-1 text-xs"
+                                      onClick={() => handleHandicapEdit(player.id, getPlayerCourseHandicap(player.id))}
+                                    >
+                                      Edit
+                                    </Button>
+                                  )}
                                 </div>
                               </td>
                               {/* Front Nine Producer Player Scores */}
