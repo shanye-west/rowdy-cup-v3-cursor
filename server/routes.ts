@@ -1198,21 +1198,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Handicap System Routes
 
-  // Update player's handicap index
-  app.put("/api/players/:id/handicap", isAdmin, async (req, res) => {
+  // Update player's course handicap for a specific round
+  app.put("/api/players/:id/course-handicap", isAdmin, async (req, res) => {
     try {
       const playerId = parseInt(req.params.id);
-      const handicapIndex = parseFloat(req.body.handicapIndex);
+      const roundId = parseInt(req.body.roundId);
+      const courseHandicap = parseInt(req.body.courseHandicap);
       
-      if (isNaN(playerId) || isNaN(handicapIndex)) {
-        return res.status(400).json({ error: "Invalid playerId or handicapIndex" });
+      if (isNaN(playerId) || isNaN(roundId) || isNaN(courseHandicap)) {
+        return res.status(400).json({ 
+          error: "Invalid parameters. Require playerId, roundId, and courseHandicap."
+        });
       }
       
-      const updatedPlayer = await storage.updatePlayerHandicapIndex(playerId, handicapIndex);
-      res.json(updatedPlayer);
+      // Store the course handicap
+      const updatedHandicap = await storage.storePlayerCourseHandicap(
+        playerId, 
+        roundId, 
+        courseHandicap
+      );
+      
+      res.json(updatedHandicap);
     } catch (error) {
-      console.error("Error updating player handicap:", error);
-      res.status(500).json({ error: "Failed to update player handicap" });
+      console.error("Error updating player course handicap:", error);
+      res.status(500).json({ error: "Failed to update player course handicap" });
     }
   });
 

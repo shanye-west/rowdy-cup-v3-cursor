@@ -124,7 +124,6 @@ export interface IStorage {
   updateTournamentHistory(tournamentId: number): Promise<any>;
 
   // Handicap system methods
-  updatePlayerHandicapIndex(playerId: number, handicapIndex: number): Promise<any>;
   updateCourseRatings(courseId: number, data: { courseRating: number, slopeRating: number, par: number }): Promise<any>;
   updateHoleHandicapRank(holeId: number, handicapRank: number): Promise<any>;
   calculateCourseHandicap(playerId: number, roundId: number): Promise<number>;
@@ -1401,19 +1400,9 @@ export class DBStorage implements IStorage {
   }
 
   // Handicap system methods
-  async updatePlayerHandicapIndex(playerId: number, handicapIndex: number) {
-    // Ensure the handicapIndex is a number
-    const numericHandicapIndex = typeof handicapIndex === 'string' 
-      ? parseFloat(handicapIndex) 
-      : Number(handicapIndex);
-      
-    const [row] = await db
-      .update(players)
-      .set({ handicapIndex: sql`${numericHandicapIndex}` })
-      .where(eq(players.id, playerId))
-      .returning();
-    return row;
-  }
+  // Method removed: updatePlayerHandicapIndex 
+  // We no longer store handicap index in the players table
+  // Instead, we directly store course handicaps in the player_course_handicaps table
 
   async updateCourseRatings(courseId: number, data: { courseRating: number, slopeRating: number, par: number }) {
     try {
@@ -1443,51 +1432,27 @@ export class DBStorage implements IStorage {
   }
 
   async calculateCourseHandicap(playerId: number, roundId: number): Promise<number> {
-    // Get the player's handicap index
-    const player = await this.getPlayer(playerId);
-    if (!player || player.handicapIndex === null) {
-      return 0; // No handicap if player has no index
-    }
-
-    // Get the round to find the course
-    const round = await this.getRound(roundId);
-    if (!round || !round.courseId) {
-      return 0; // No handicap if no course is assigned to the round
-    }
-
-    // Get the course details
-    const course = await this.getCourse(round.courseId);
-    if (!course || !course.courseRating || !course.slopeRating || !course.par) {
-      return 0; // No handicap if course data is incomplete
-    }
-
-    // Apply the USGA formula:
-    // Course Handicap = (Handicap Index × Slope Rating / 113) + (Course Rating – Par)
-    // Make sure to convert all values to numbers
-    const handicapIndex = typeof player.handicapIndex === 'string' 
-      ? parseFloat(player.handicapIndex) 
-      : (player.handicapIndex as number);
-      
-    const slopeRating = typeof course.slopeRating === 'string' 
-      ? parseFloat(course.slopeRating) 
-      : (course.slopeRating as number);
-      
-    const courseRating = typeof course.courseRating === 'string' 
-      ? parseFloat(course.courseRating) 
-      : (course.courseRating as number);
-      
-    const par = typeof course.par === 'string' 
-      ? parseInt(course.par) 
-      : (course.par as number);
+    // This method is now simplified since handicaps are manually entered
+    // and stored directly in player_course_handicaps table
     
-    const courseHandicap = Math.round(
-      (handicapIndex * slopeRating / 113) + (courseRating - par)
-    );
+    // Check if we already have a stored handicap with the roundId
+    const [storedHandicap] = await db
+      .select()
+      .from(player_course_handicaps)
+      .where(
+        and(
+          eq(player_course_handicaps.playerId, playerId),
+          eq(player_course_handicaps.roundId, roundId)
+        )
+      );
+      
+    if (storedHandicap) {
+      return storedHandicap.courseHandicap;
+    }
     
-    // Store the calculated course handicap
-    await this.storePlayerCourseHandicap(playerId, roundId, courseHandicap);
-    
-    return courseHandicap;
+    // If no handicap is found, return 0 (no handicap)
+    // The admin will need to manually enter course handicaps
+    return 0;
   }
 
   async getPlayerCourseHandicap(playerId: number, roundId: number) {
@@ -1627,55 +1592,8 @@ export class DBStorage implements IStorage {
         .from(player_course_handicaps)
         .where(eq(player_course_handicaps.roundId, roundId));
       
-      if (handicaps.length === 0) {
-        // If no handicaps are found for this round, check if we need to calculate them
-        const allPlayers = await this.getPlayers();
-        const round = await this.getRound(roundId);
-        
-        if (!round || !round.courseId) {
-          return [];
-        }
-        
-        // Get course info
-        const course = await this.getCourse(round.courseId);
-        if (!course || !course.courseRating || !course.slopeRating || !course.par) {
-          return []; // Missing course data needed for calculation
-        }
-        
-        // Calculate and store handicaps for all players with handicap indexes
-        const calculatedHandicaps = [];
-        for (const player of allPlayers) {
-          if (player.handicapIndex !== null && player.handicapIndex !== undefined) {
-            // Calculate course handicap
-            const handicapIndex = typeof player.handicapIndex === 'string' 
-              ? parseFloat(player.handicapIndex) 
-              : (player.handicapIndex as number);
-              
-            const slopeRating = typeof course.slopeRating === 'string' 
-              ? parseFloat(course.slopeRating) 
-              : (course.slopeRating as number);
-              
-            const courseRating = typeof course.courseRating === 'string' 
-              ? parseFloat(course.courseRating) 
-              : (course.courseRating as number);
-              
-            const par = typeof course.par === 'string' 
-              ? parseInt(course.par) 
-              : (course.par as number);
-            
-            const courseHandicap = Math.round(
-              (handicapIndex * slopeRating / 113) + (courseRating - par)
-            );
-            
-            // Store it
-            const handicapEntry = await this.storePlayerCourseHandicap(player.id, roundId, courseHandicap);
-            calculatedHandicaps.push(handicapEntry);
-          }
-        }
-        
-        return calculatedHandicaps;
-      }
-      
+      // With the new approach, handicaps are manually entered
+      // So we simply return what's in the database
       return handicaps;
     } catch (error) {
       console.error("Error getting all player course handicaps:", error);
