@@ -333,7 +333,10 @@ const EnhancedMatchScorecard = ({
       loadPlayerHandicapData(player);
     });
     
-  }, [matchData?.roundId, isBestBall, aviatorPlayersList, producerPlayersList, holes]);
+    // This comment added for clarity: The handicap dots will display as soon as a courseHandicap is assigned,
+    // as long as the handicapStrokes value is properly calculated and is > 0
+    
+  }, [matchData?.roundId, isBestBall, aviatorPlayersList, producerPlayersList, holes, playerHandicaps]);
 
   // Compute player score totals
   const playerTotals = useMemo(() => {
