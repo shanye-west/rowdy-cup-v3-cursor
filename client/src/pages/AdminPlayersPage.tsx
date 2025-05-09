@@ -2,7 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Trash, Edit } from "lucide-react";
+import { UserPlus, Trash, Edit, Circle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -311,13 +311,27 @@ const AdminPlayersPage = () => {
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => handleEditPlayer(player)}
+                        className="ml-2 text-blue-500 hover:text-blue-700 hover:bg-blue-100 p-1 h-auto"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleDeletePlayer(player.id)}
-                        className="ml-2 text-red-500 hover:text-red-700 hover:bg-red-100 p-1 h-auto"
+                        className="ml-1 text-red-500 hover:text-red-700 hover:bg-red-100 p-1 h-auto"
                       >
                         <Trash className="h-4 w-4" />
                       </Button>
                     </div>
                     <div className="flex items-center space-x-3">
+                      {player.handicapIndex !== null && (
+                        <div className="flex items-center text-sm space-x-1">
+                          <Circle className="h-3 w-3 text-green-600 fill-green-600" />
+                          <span className="font-medium">{player.handicapIndex.toFixed(1)}</span>
+                        </div>
+                      )}
                       <div className="text-sm text-muted-foreground">
                         Record:
                       </div>
@@ -433,6 +447,98 @@ const AdminPlayersPage = () => {
                     </span>
                   ) : (
                     "Add Player"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Player Dialog */}
+      {isEditDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">Edit Player</h2>
+            <form onSubmit={handlePlayerFormSubmit}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Player Name
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={playerFormData.name}
+                    onChange={handlePlayerInputChange}
+                    className="w-full px-3 py-2 border rounded-md"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Team
+                  </label>
+                  <select
+                    name="teamId"
+                    value={playerFormData.teamId}
+                    onChange={handlePlayerInputChange}
+                    className="w-full px-3 py-2 border rounded-md"
+                    required
+                    disabled={true}
+                  >
+                    {teams?.map(team => (
+                      <option key={team.id} value={team.id}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Handicap Index
+                  </label>
+                  <input
+                    type="number"
+                    name="handicapIndex"
+                    value={playerFormData.handicapIndex === null ? '' : playerFormData.handicapIndex}
+                    onChange={handlePlayerInputChange}
+                    className="w-full px-3 py-2 border rounded-md"
+                    step="0.1"
+                    min="0"
+                    max="54"
+                    placeholder="Optional"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Enter a value between 0 and 54. Leave empty if not applicable.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex justify-end mt-6 space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={updatePlayerMutation.isPending}
+                >
+                  {updatePlayerMutation.isPending ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Updating...
+                    </span>
+                  ) : (
+                    "Update Player"
                   )}
                 </Button>
               </div>
