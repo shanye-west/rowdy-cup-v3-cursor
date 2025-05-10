@@ -42,7 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
     refetchOnWindowFocus: true,
-    staleTime: 0
+    staleTime: 0,
+    refetchInterval: 30000,
   });
 
   const user = authData?.authenticated ? authData.user || null : null;
@@ -52,7 +53,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
+      const data = await res.json();
+      if (!data.authenticated) {
+        throw new Error("Login failed");
+      }
+      return data.user;
     },
     onSuccess: async (user: User) => {
       queryClient.setQueryData(["/api/user"], { authenticated: true, user });

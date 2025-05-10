@@ -104,31 +104,59 @@ const Match = ({ id }: { id: number }) => {
   }, []);
 
   // Fetch match data
-  const { data: match, isLoading: isMatchLoading } = useQuery<MatchData>({
+  const { data: match, isLoading: isMatchLoading, error: matchError } = useQuery<MatchData>({
     queryKey: [`/api/matches/${id}`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/matches/${id}`);
+      return res.json();
+    },
+    retry: (failureCount, error: any) => {
+      if (error?.status === 401) return false;
+      return failureCount < 3;
+    },
   });
 
   // Fetch scores for this match
-  const { data: scores, isLoading: isScoresLoading } = useQuery<ScoreData[]>({
+  const { data: scores, isLoading: isScoresLoading, error: scoresError } = useQuery<ScoreData[]>({
     queryKey: [`/api/scores?matchId=${id}`],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/scores?matchId=${id}`);
+      return res.json();
+    },
+    retry: (failureCount, error: any) => {
+      if (error?.status === 401) return false;
+      return failureCount < 3;
+    },
   });
 
   // Fetch round data
-  const { data: round, isLoading: isRoundLoading } = useQuery<RoundData>({
+  const { data: round, isLoading: isRoundLoading, error: roundError } = useQuery<RoundData>({
     queryKey: [`/api/rounds/${match?.roundId}`],
+    queryFn: async () => {
+      if (!match?.roundId) throw new Error("No round ID available");
+      const res = await apiRequest("GET", `/api/rounds/${match.roundId}`);
+      return res.json();
+    },
     enabled: !!match?.roundId,
+    retry: (failureCount, error: any) => {
+      if (error?.status === 401) return false;
+      return failureCount < 3;
+    },
   });
 
   // Fetch holes data for the specific course of this round
-  const { data: holes, isLoading: isHolesLoading } = useQuery<HoleData[]>({
+  const { data: holes, isLoading: isHolesLoading, error: holesError } = useQuery<HoleData[]>({
     queryKey: [`/api/holes`, round?.courseId],
     queryFn: async () => {
-      if (!round?.courseId) return [];
-      const response = await fetch(`/api/holes?courseId=${round.courseId}`);
-      if (!response.ok) throw new Error('Failed to fetch holes');
-      return response.json();
+      if (!round?.courseId) throw new Error("No course ID available");
+      const res = await apiRequest("GET", `/api/holes?courseId=${round.courseId}`);
+      return res.json();
     },
     enabled: !!round?.courseId,
+    retry: (failureCount, error: any) => {
+      if (error?.status === 401) return false;
+      return failureCount < 3;
+    },
   });
 
   // Fetch players data for match editing
@@ -143,6 +171,18 @@ const Match = ({ id }: { id: number }) => {
   });
 
   const { isAdmin } = useAuth();
+
+  // Show error toast if any of the queries fail
+  useEffect(() => {
+    const errors = [matchError, scoresError, roundError, holesError].filter(Boolean);
+    if (errors.length > 0) {
+      toast({
+        title: "Error loading match data",
+        description: errors[0]?.message || "An error occurred while loading the match",
+        variant: "destructive",
+      });
+    }
+  }, [matchError, scoresError, roundError, holesError, toast]);
 
   // Combine all loading states
   const isLoading = isMatchLoading || isScoresLoading || isRoundLoading || isHolesLoading || isPlayersLoading || isParticipantsLoading;

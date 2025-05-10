@@ -74,15 +74,14 @@ export function setupAuth(app: Express) {
   // Configure session
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || 'rowdy-cup-secret',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none', // Always use 'none' for cross-origin requests
+      sameSite: 'none',
       httpOnly: true,
       path: '/',
-      // Remove domain setting to allow cross-origin cookies
     }
   };
 
@@ -143,12 +142,21 @@ export function setupAuth(app: Express) {
         if (err) {
           return next(err);
         }
-        return res.json({
-          id: user.id,
-          username: user.username,
-          isAdmin: user.isAdmin,
-          needsPasswordChange: user.needsPasswordChange,
-          playerId: user.playerId
+        // Set session cookie explicitly
+        req.session.save((err) => {
+          if (err) {
+            return next(err);
+          }
+          return res.json({
+            authenticated: true,
+            user: {
+              id: user.id,
+              username: user.username,
+              isAdmin: user.isAdmin,
+              needsPasswordChange: user.needsPasswordChange,
+              playerId: user.playerId
+            }
+          });
         });
       });
     })(req, res, next);
@@ -207,7 +215,7 @@ export function setupAuth(app: Express) {
         isAdmin: req.user.isAdmin,
         needsPasswordChange: req.user.needsPasswordChange,
         playerId: req.user.playerId
-      },
+      }
     });
   });
 }
