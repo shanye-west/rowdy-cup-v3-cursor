@@ -99,9 +99,34 @@ async function buildServer() {
       dependencies: packageJson.dependencies,
     };
     await fs.writeFile(
-      'dist/package.json',
+      path.join('dist', 'package.json'),
       JSON.stringify(distPackageJson, null, 2)
     );
+
+    // Copy .env file if it exists
+    try {
+      await fs.copyFile('.env', path.join('dist', '.env'));
+    } catch (error) {
+      console.log('No .env file found, skipping...');
+    }
+
+    // Create a start script in dist
+    const startScript = `#!/usr/bin/env node
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+process.env.NODE_ENV = 'production';
+process.chdir(__dirname);
+
+import('./index.js');
+`;
+    await fs.writeFile(path.join('dist', 'start.js'), startScript);
+    await fs.chmod(path.join('dist', 'start.js'), 0o755);
 
     console.log('Server build completed successfully!');
   } catch (error) {
