@@ -61,7 +61,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: async (user: User) => {
       queryClient.setQueryData(["/api/user"], { authenticated: true, user });
+      
       await refetch();
+      
+      const currentData = queryClient.getQueryData(["/api/user"]);
+      if (!currentData?.authenticated) {
+        throw new Error("Session not maintained");
+      }
+      
       toast({
         title: "Logged in successfully",
         description: `Welcome back, ${user.username}`,
@@ -69,6 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
+      queryClient.setQueryData(["/api/user"], { authenticated: false, user: null });
+      
       toast({
         title: "Login failed",
         description: error.message,
@@ -84,7 +93,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: async () => {
       queryClient.setQueryData(["/api/user"], { authenticated: false, user: null });
+      
       await refetch();
+      
       toast({
         title: "Logged out",
         description: "You have been logged out successfully",
@@ -107,6 +118,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refetch();
       }
     };
+
+    refetch();
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {

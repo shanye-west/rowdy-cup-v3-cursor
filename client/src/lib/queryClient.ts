@@ -65,9 +65,22 @@ export const queryClient = new QueryClient({
         if (error?.status === 401) return false;
         return failureCount < 3;
       },
+      cacheTime: 5 * 60 * 1000, // 5 minutes
     },
     mutations: {
       retry: false,
+    },
+  },
+});
+
+// Add global error handler for 401 responses
+queryClient.setDefaultOptions({
+  queries: {
+    onError: (error: any) => {
+      if (error?.status === 401) {
+        // Clear any potentially invalid session data
+        queryClient.setQueryData(["/api/user"], { authenticated: false, user: null });
+      }
     },
   },
 });
