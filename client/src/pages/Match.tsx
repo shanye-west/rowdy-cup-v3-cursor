@@ -144,6 +144,9 @@ const Match = ({ id }: { id: number }) => {
 
   const { isAdmin } = useAuth();
 
+  // Combine all loading states
+  const isLoading = isMatchLoading || isScoresLoading || isRoundLoading || isHolesLoading || isPlayersLoading || isParticipantsLoading;
+
   // Update lock status when match data changes
   useEffect(() => {
     if (match) {
@@ -225,9 +228,6 @@ const Match = ({ id }: { id: number }) => {
       });
     },
   });
-
-  const isLoading =
-    isMatchLoading || isScoresLoading || isHolesLoading || isRoundLoading || isPlayersLoading || isParticipantsLoading;
 
   // Calculate proper match play result (e.g., "3&2", "4&3", "1 UP")
   const calculateMatchPlayResult = (completedScores: ScoreData[]): string => {
