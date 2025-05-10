@@ -102,6 +102,9 @@ async function buildServer() {
       name: packageJson.name,
       version: packageJson.version,
       type: 'module',
+      scripts: {
+        start: 'node dist/server/index.js'
+      },
       dependencies: packageJson.dependencies,
     };
     await fs.writeFile(

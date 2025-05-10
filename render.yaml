@@ -2,6 +2,7 @@ services:
   - type: web
     name: rowdy-cup-api
     env: node
+    rootDir: .
     buildCommand: npm install --production=false && npm run build
     startCommand: npm start
     envVars:
