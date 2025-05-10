@@ -7,6 +7,7 @@ async function buildServer() {
   try {
     // Create dist directory if it doesn't exist
     await fs.mkdir('dist', { recursive: true });
+    await fs.mkdir('dist/server', { recursive: true });
 
     // Build the server
     await esbuild.build({
@@ -15,7 +16,7 @@ async function buildServer() {
       platform: 'node',
       target: 'node18',
       format: 'esm',
-      outdir: 'dist',
+      outdir: 'dist/server',
       external: [
         // Core dependencies
         'express',
@@ -114,42 +115,6 @@ async function buildServer() {
     } catch (error) {
       console.log('No .env file found, skipping...');
     }
-
-    // Create a start script in dist
-    const startScript = `#!/usr/bin/env node
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import { createRequire } from 'module';
-
-const require = createRequire(import.meta.url);
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Set environment variables
-process.env.NODE_ENV = 'production';
-
-// Change to the dist directory
-process.chdir(__dirname);
-
-// Override process.cwd to always return the dist directory
-const originalCwd = process.cwd;
-process.cwd = () => __dirname;
-
-// Ensure package.json is in the correct location
-const fs = require('fs');
-const path = require('path');
-const packageJsonPath = path.join(__dirname, 'package.json');
-
-if (!fs.existsSync(packageJsonPath)) {
-  console.error('package.json not found in:', packageJsonPath);
-  process.exit(1);
-}
-
-// Start the server
-import('./index.js');
-`;
-    await fs.writeFile(path.join('dist', 'start.js'), startScript);
-    await fs.chmod(path.join('dist', 'start.js'), 0o755);
 
     console.log('Server build completed successfully!');
   } catch (error) {
