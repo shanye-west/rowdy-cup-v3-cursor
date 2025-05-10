@@ -2,8 +2,12 @@
   "version": 2,
   "builds": [
     {
-      "src": "client/**",
-      "use": "@vercel/static"
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "buildCommand": "npm run build:client",
+        "outputDirectory": "dist/public"
+      }
     }
   ],
   "routes": [
@@ -13,7 +17,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "client/$1"
+      "dest": "/$1"
     }
   ]
 } 
