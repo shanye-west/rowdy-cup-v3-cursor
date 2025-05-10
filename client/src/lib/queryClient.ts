@@ -12,9 +12,9 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const baseUrl = process.env.NODE_ENV === 'production'
+  const baseUrl = process.env.VITE_API_URL || (process.env.NODE_ENV === 'production'
     ? 'https://rowdy-cup-v3-cursor.onrender.com'
-    : 'http://localhost:5000';
+    : 'http://localhost:5000');
     
   const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
   
@@ -43,9 +43,9 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const baseUrl = process.env.NODE_ENV === 'production'
+    const baseUrl = process.env.VITE_API_URL || (process.env.NODE_ENV === 'production'
       ? 'https://rowdy-cup-v3-cursor.onrender.com'
-      : 'http://localhost:5000';
+      : 'http://localhost:5000');
       
     const url = queryKey[0] as string;
     const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
@@ -53,6 +53,9 @@ export const getQueryFn: <T>(options: {
     const res = await fetch(fullUrl, {
       credentials: "include",
       mode: "cors",
+      headers: {
+        "Accept": "application/json",
+      },
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

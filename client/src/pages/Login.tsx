@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { KeyRound, LogIn } from "lucide-react";
 import RowdyCupLogo from "../assets/rowdy-cup-logo.svg";
+import { apiRequest } from "@/lib/queryClient";
 
 function LoginPage() {
   const [, navigate] = useLocation();
@@ -20,20 +21,10 @@ function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ username, password: passcode }),
+      const response = await apiRequest("POST", "/api/login", {
+        username,
+        password: passcode
       });
-
-      if (!response.ok) {
-        if (response.status === 503 || response.status === 502) {
-          throw new Error("The service is currently unavailable. Please try again later.");
-        }
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Invalid username or passcode.");
-      }
 
       const data = await response.json();
 

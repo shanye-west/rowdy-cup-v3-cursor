@@ -74,15 +74,16 @@ export function setupAuth(app: Express) {
   // Configure session
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || 'rowdy-cup-secret',
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none', // Required for cross-domain cookies
+      sameSite: 'none',
       httpOnly: true,
       path: '/',
-    }
+    },
+    name: 'rowdy-cup.sid' // Explicit session cookie name
   };
 
   // Add error handling for session middleware
@@ -96,7 +97,10 @@ export function setupAuth(app: Express) {
     next(err);
   });
 
+  // Initialize session before passport
   app.use(session(sessionSettings));
+  
+  // Initialize passport after session
   app.use(passport.initialize());
   app.use(passport.session());
 
