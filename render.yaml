@@ -3,7 +3,7 @@ services:
     name: rowdy-cup-api
     env: node
     buildCommand: npm install --production=false && npm run build
-    startCommand: node dist/server/index.js
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
