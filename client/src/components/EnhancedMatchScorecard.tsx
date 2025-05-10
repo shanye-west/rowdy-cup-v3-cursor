@@ -60,6 +60,7 @@ interface MatchScorecardProps {
     holeNumber: number,
     playerScores: BestBallPlayerScore[],
   ) => void;
+  participants?: any[]; // Match participants
 }
 
 const EnhancedMatchScorecard = ({
@@ -137,8 +138,23 @@ const EnhancedMatchScorecard = ({
     enabled: !!matchData?.roundId && isBestBall,
   });
   
-  // Get authentication status to determine if user can edit handicaps
-  const { isAdmin } = useAuth();
+  // Get authentication status to determine if user can edit scores
+  const { isAdmin, user } = useAuth();
+  
+  // Check if current user is a participant in this match
+  const isParticipant = useMemo(() => {
+    if (!user) return false;
+    
+    const participantPlayerIds = participants?.map((p: any) => p.playerId) || [];
+    const userPlayers = allPlayers.filter((player: any) => player.userId === user.id);
+    const userPlayerIds = userPlayers.map((player: any) => player.id);
+    
+    // Check if any of user's players are participants in this match
+    return userPlayerIds.some(id => participantPlayerIds.includes(id));
+  }, [user, participants, allPlayers]);
+  
+  // Determine if user can edit scores (is admin or participant)
+  const canEditScores = isAdmin || isParticipant;
   
   // Add queryClient for mutations
   const queryClient = useQueryClient();
