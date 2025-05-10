@@ -73,6 +73,11 @@ export function setupAuth(app: Express) {
     saveUninitialized: false,
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      httpOnly: true,
+      path: '/',
+      domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined
     }
   };
 

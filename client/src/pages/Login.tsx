@@ -23,22 +23,25 @@ function LoginPage() {
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, passcode }),
+        credentials: "include",
+        body: JSON.stringify({ username, password: passcode }),
       });
 
       if (!response.ok) {
-        throw new Error("Invalid username or passcode.");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Invalid username or passcode.");
       }
 
       const data = await response.json();
 
       if (data.needsPasswordChange) {
-        navigate("/");
+        navigate("/change-password");
       } else {
         navigate("/");
       }
     } catch (err: any) {
       setError(err.message);
+    } finally {
       setIsLoading(false);
     }
   };
