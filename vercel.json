@@ -9,7 +9,8 @@
       "config": {
         "buildCommand": "npm run build:client",
         "outputDirectory": "dist/public",
-        "installCommand": "npm install"
+        "installCommand": "npm install",
+        "devCommand": "npm run dev"
       }
     }
   ],
@@ -25,5 +26,8 @@
       "src": "/(.*)",
       "dest": "/$1"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 } 
