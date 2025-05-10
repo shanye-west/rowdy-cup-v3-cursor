@@ -36,6 +36,9 @@ export default defineConfig(({ mode }) => {
         }
       }
     },
+    optimizeDeps: {
+      include: ['react', 'react-dom', '@vitejs/plugin-react']
+    },
     server: {
       port: 3000,
       strictPort: true,
