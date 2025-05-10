@@ -1104,13 +1104,13 @@ const EnhancedMatchScorecard = ({
                   <tr key={player.id} className="border-b border-gray-200">
                     <td className="py-2 px-2 sticky-column bg-white border-l-4 border-aviator">
                       <div className="flex justify-between items-center">
-                        <div className="text-xs font-medium text-black">
-                          {player.name} 
-                          <span className="ml-1 text-blue-600 font-semibold">
-                            (HCP: {getPlayerCourseHandicap(player.id)})
-                          </span>
+                        <div className="text-xs font-medium text-black leading-tight">
+                          <div className="font-semibold">{player.name}</div>
+                          <div className="text-blue-600">
+                            HCP: {getPlayerCourseHandicap(player.id)}
+                          </div>
                         </div>
-                        {isAdmin && (
+                        {canEditScores && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -1467,13 +1467,13 @@ const EnhancedMatchScorecard = ({
                             <tr key={player.id} className="border-b border-gray-200">
                               <td className="py-2 px-2 sticky-column bg-white border-l-4 border-producer">
                                 <div className="flex justify-between items-center">
-                                  <div className="text-xs font-medium text-black">
-                                    {player.name}
-                                    <span className="ml-1 text-blue-600 font-semibold">
-                                      (HCP: {getPlayerCourseHandicap(player.id)})
-                                    </span>
+                                  <div className="text-xs font-medium text-black leading-tight">
+                                    <div className="font-semibold">{player.name}</div>
+                                    <div className="text-blue-600">
+                                      HCP: {getPlayerCourseHandicap(player.id)}
+                                    </div>
                                   </div>
-                                  {isAdmin && (
+                                  {canEditScores && (
                                     <Button
                                       variant="ghost"
                                       size="sm"

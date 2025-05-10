@@ -52,7 +52,7 @@ const MatchHeader = ({
     queryKey: ["/api/players"],
   });
 
-  // Split participants into teams
+  // Split participants into teams - now keeping them as array instead of joining with comma
   const aviatorPlayers = Array.isArray(participants) 
     ? participants
         .filter((p: any) => p.team === "aviators")
@@ -62,8 +62,7 @@ const MatchHeader = ({
             : null;
           return player ? player.name : `Player ${p.playerId}`;
         })
-        .join(", ") 
-    : "";
+    : [];
 
   const producerPlayers = Array.isArray(participants)
     ? participants
@@ -74,8 +73,7 @@ const MatchHeader = ({
             : null;
           return player ? player.name : `Player ${p.playerId}`;
         })
-        .join(", ")
-    : "";
+    : [];
 
   const handleBackClick = () => {
     navigate(`/rounds/${roundId}`);
@@ -106,7 +104,11 @@ const MatchHeader = ({
                 <img src={aviatorsLogo} alt="Aviators" className="w-5 h-5 mr-2" />
                 <span className="font-semibold text-sm">AVIATORS</span>
               </div>
-              <div className="text-sm font-semibold">{aviatorPlayers}</div>
+              <div className="text-sm font-semibold">
+                {aviatorPlayers.map((player, index) => (
+                  <div key={index} className="leading-tight mb-1">{player}</div>
+                ))}
+              </div>
             </div>
             
             <div className="w-1/2 pl-3">
