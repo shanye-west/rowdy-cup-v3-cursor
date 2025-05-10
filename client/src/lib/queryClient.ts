@@ -20,12 +20,19 @@ export async function apiRequest(
   
   const res = await fetch(fullUrl, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: {
+      ...(data ? { "Content-Type": "application/json" } : {}),
+      "Accept": "application/json",
+    },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
 
-  await throwIfResNotOk(res);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`${res.status}: ${text || res.statusText}`);
+  }
+  
   return res;
 }
 
@@ -51,23 +58,15 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "returnNull" }),
-      refetchInterval: false,
       refetchOnWindowFocus: true,
       staleTime: 0,
-      retry: false,
+      retry: (failureCount, error: any) => {
+        if (error?.status === 401) return false;
+        return failureCount < 3;
+      },
     },
     mutations: {
       retry: false,
-    },
-  },
-});
-
-// Add a global error handler for 401 responses
-queryClient.setDefaultOptions({
-  queries: {
-    retry: (failureCount, error: any) => {
-      if (error?.status === 401) return false;
-      return failureCount < 3;
     },
   },
 });
