@@ -52,12 +52,15 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Max-Age', '86400'); // 24 hours
+  res.header('Vary', 'Origin');
+  res.header('Access-Control-Expose-Headers', 'Set-Cookie');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
+  
   next();
 });
 

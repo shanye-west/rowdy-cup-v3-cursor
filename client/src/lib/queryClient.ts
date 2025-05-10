@@ -43,8 +43,16 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    const baseUrl = process.env.NODE_ENV === 'production'
+      ? 'https://rowdy-cup-v3-cursor.onrender.com'
+      : 'http://localhost:5000';
+      
+    const url = queryKey[0] as string;
+    const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+    
+    const res = await fetch(fullUrl, {
       credentials: "include",
+      mode: "cors",
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
