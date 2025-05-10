@@ -263,7 +263,8 @@ const EnhancedMatchScorecard = ({
   
   // Function to handle handicap edit
   const handleHandicapEdit = (playerId: number, currentHandicap: number) => {
-    if (!isAdmin || !matchData?.roundId) return;
+    // Only admins or match participants can edit handicaps
+    if (!canEditScores || !matchData?.roundId) return;
     
     const newHandicap = prompt("Enter new course handicap:", currentHandicap.toString());
     if (newHandicap === null) return; // User cancelled
@@ -598,6 +599,12 @@ const EnhancedMatchScorecard = ({
     value: string,
     target: HTMLInputElement,
   ) => {
+    // Check if user has permission to edit scores
+    if (!canEditScores) {
+      console.log("User doesn't have permission to update scores");
+      return;
+    }
+    
     let numValue: number | null = null;
 
     // Only parse if the value is not empty
@@ -632,6 +639,12 @@ const EnhancedMatchScorecard = ({
     value: string,
     target: HTMLInputElement,
   ) => {
+    // Check if user has permission to edit scores
+    if (!canEditScores) {
+      console.log("User doesn't have permission to update scores");
+      return;
+    }
+    
     let numValue = null;
 
     // Only parse if the value is not empty

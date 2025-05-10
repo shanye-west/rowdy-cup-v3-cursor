@@ -579,6 +579,7 @@ const Match = ({ id }: { id: number }) => {
             matchStatus={match.status}
             matchType={round?.matchType || ""}
             locked={isLocked}
+            participants={participants}
           />
         </>
       )}
