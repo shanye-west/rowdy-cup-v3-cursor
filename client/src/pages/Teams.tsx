@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLocation } from "wouter";
+import { useState } from "react";
 
 interface Player {
   id: number;
@@ -20,6 +21,7 @@ interface Team {
 
 const Teams = () => {
   const [_, navigate] = useLocation();
+  const [selectedTeamId, setSelectedTeamId] = useState<number>(1); // Default to Aviators (team 1)
 
   // Fetch teams data
   const { data: teams, isLoading: isTeamsLoading } = useQuery<Team[]>({
@@ -89,27 +91,38 @@ const Teams = () => {
               ))}
             </div>
           </div>
-          
-          <div>
-            <Skeleton className="h-10 w-36 mb-3" />
-            <div className="space-y-2">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
-            </div>
-          </div>
         </div>
       ) : (
         <div className="space-y-8">
-          {teams?.map((team: Team) => (
-            <div key={team.id}>
-              <h2 
-                className="font-heading text-xl font-bold mb-3 pb-2 border-b-2" 
-                style={{ borderColor: team.colorCode }}
+          {/* Team Selection Header */}
+          <div className="flex justify-between items-center mb-6">
+            {teams?.map((team: Team) => (
+              <button
+                key={team.id}
+                onClick={() => setSelectedTeamId(team.id)}
+                className={`font-heading text-xl font-bold pb-2 border-b-2 transition-colors duration-200 ${
+                  selectedTeamId === team.id 
+                    ? `text-${team.id === 1 ? 'blue' : 'red'}-600 border-${team.id === 1 ? 'blue' : 'red'}-600`
+                    : 'text-gray-400 border-gray-200'
+                }`}
+                style={{
+                  borderColor: selectedTeamId === team.id ? team.colorCode : '#e5e7eb',
+                  color: selectedTeamId === team.id ? team.colorCode : '#9ca3af'
+                }}
               >
                 {team.name}
-              </h2>
-              
+              </button>
+            ))}
+          </div>
+          
+          {/* Selected Team's Players */}
+          {teams?.map((team: Team) => (
+            <div 
+              key={team.id} 
+              className={`transition-opacity duration-200 ${
+                selectedTeamId === team.id ? 'opacity-100' : 'hidden'
+              }`}
+            >
               <div className="divide-y">
                 {playersByTeam?.[team.id]?.map((player: Player) => (
                   <div key={player.id} className="py-3 flex justify-between items-center">
