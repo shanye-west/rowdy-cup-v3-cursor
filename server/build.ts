@@ -16,6 +16,7 @@ async function buildServer() {
       format: 'esm',
       outdir: 'dist',
       external: [
+        // Core dependencies
         'express',
         'express-session',
         'passport',
@@ -32,10 +33,49 @@ async function buildServer() {
         'zod',
         'zod-validation-error',
         'debug',
-        'dotenv'
+        'dotenv',
+        
+        // Build tool dependencies
+        '@babel/*',
+        'lightningcss',
+        'esbuild',
+        'typescript',
+        'tsx',
+        
+        // Node.js built-ins
+        'path',
+        'fs',
+        'crypto',
+        'stream',
+        'util',
+        'url',
+        'http',
+        'https',
+        'net',
+        'tls',
+        'zlib',
+        'events',
+        'buffer',
+        'process',
+        'os',
+        'child_process',
+        'cluster',
+        'dgram',
+        'dns',
+        'module',
+        'readline',
+        'repl',
+        'string_decoder',
+        'timers',
+        'tty',
+        'vm',
+        'worker_threads'
       ],
       sourcemap: true,
       minify: true,
+      banner: {
+        js: 'import { createRequire } from "module"; const require = createRequire(import.meta.url);',
+      },
     });
 
     // Copy package.json to dist
