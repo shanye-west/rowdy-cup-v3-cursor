@@ -116,7 +116,11 @@ const MatchHeader = ({
                 <img src={producersLogo} alt="Producers" className="w-5 h-5 mr-2" />
                 <span className="font-semibold text-sm">PRODUCERS</span>
               </div>
-              <div className="text-sm font-semibold">{producerPlayers}</div>
+              <div className="text-sm font-semibold">
+                {producerPlayers.map((player, index) => (
+                  <div key={index} className="leading-tight mb-1">{player}</div>
+                ))}
+              </div>
             </div>
           </div>
           
