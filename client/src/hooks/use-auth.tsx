@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -36,9 +36,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: authData,
     error,
     isLoading,
+    refetch
   } = useQuery<{authenticated: boolean, user?: User} | null, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
+    retry: false,
+    refetchOnWindowFocus: true,
+    staleTime: 0
   });
 
   const user = authData?.authenticated ? authData.user || null : null;
@@ -50,8 +54,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/login", credentials);
       return await res.json();
     },
-    onSuccess: (user: User) => {
+    onSuccess: async (user: User) => {
       queryClient.setQueryData(["/api/user"], { authenticated: true, user });
+      await refetch();
       toast({
         title: "Logged in successfully",
         description: `Welcome back, ${user.username}`,
@@ -72,8 +77,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async () => {
       await apiRequest("POST", "/api/logout");
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.setQueryData(["/api/user"], { authenticated: false, user: null });
+      await refetch();
       toast({
         title: "Logged out",
         description: "You have been logged out successfully",
@@ -89,6 +95,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
   });
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refetch();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refetch]);
 
   return (
     <AuthContext.Provider

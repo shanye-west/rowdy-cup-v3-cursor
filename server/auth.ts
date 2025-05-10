@@ -66,6 +66,11 @@ export function isAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 export function setupAuth(app: Express) {
+  // Ensure SESSION_SECRET is set
+  if (!process.env.SESSION_SECRET) {
+    console.warn('Warning: SESSION_SECRET is not set. Using a default secret is not recommended for production.');
+  }
+
   // Configure session
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || 'rowdy-cup-secret',
@@ -74,11 +79,23 @@ export function setupAuth(app: Express) {
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       httpOnly: true,
-      path: '/'
+      path: '/',
+      domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined
     }
   };
+
+  // Add error handling for session middleware
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    if (err.code === 'EBADCSRFTOKEN') {
+      // Handle CSRF token errors
+      return res.status(403).json({
+        error: 'Invalid CSRF token. Please refresh the page and try again.'
+      });
+    }
+    next(err);
+  });
 
   app.use(session(sessionSettings));
   app.use(passport.initialize());

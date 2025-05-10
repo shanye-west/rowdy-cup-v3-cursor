@@ -12,7 +12,13 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  const baseUrl = process.env.NODE_ENV === 'production'
+    ? 'https://rowdy-cup-v3-cursor.onrender.com'
+    : 'http://localhost:5000';
+    
+  const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+  
+  const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
@@ -44,14 +50,24 @@ export const getQueryFn: <T>(options: {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
+      queryFn: getQueryFn({ on401: "returnNull" }),
       refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
+      refetchOnWindowFocus: true,
+      staleTime: 0,
       retry: false,
     },
     mutations: {
       retry: false,
+    },
+  },
+});
+
+// Add a global error handler for 401 responses
+queryClient.setDefaultOptions({
+  queries: {
+    retry: (failureCount, error: any) => {
+      if (error?.status === 401) return false;
+      return failureCount < 3;
     },
   },
 });

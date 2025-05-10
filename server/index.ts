@@ -27,11 +27,15 @@ app.use(express.urlencoded({ extended: false }));
 
 // Enable CORS for Vercel frontend
 app.use((req, res, next) => {
-  const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const allowedOrigin = process.env.NODE_ENV === 'production' 
+    ? 'https://rowdy-cup-v3-cursor.vercel.app'
+    : 'http://localhost:3000';
+    
   res.header('Access-Control-Allow-Origin', allowedOrigin);
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
+  
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
   }
