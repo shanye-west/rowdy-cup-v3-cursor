@@ -26,6 +26,7 @@ export async function apiRequest(
     },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
+    mode: "cors",
   });
 
   if (!res.ok) {
