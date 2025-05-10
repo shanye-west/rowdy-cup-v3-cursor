@@ -35,6 +35,7 @@ async function buildServer() {
         'zod-validation-error',
         'debug',
         'dotenv',
+        'fsevents',
         
         // Build tool dependencies
         '@babel/*',
@@ -133,6 +134,16 @@ process.chdir(__dirname);
 // Override process.cwd to always return the dist directory
 const originalCwd = process.cwd;
 process.cwd = () => __dirname;
+
+// Ensure package.json is in the correct location
+const fs = require('fs');
+const path = require('path');
+const packageJsonPath = path.join(__dirname, 'package.json');
+
+if (!fs.existsSync(packageJsonPath)) {
+  console.error('package.json not found in:', packageJsonPath);
+  process.exit(1);
+}
 
 // Start the server
 import('./index.js');
