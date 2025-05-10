@@ -2,6 +2,7 @@
   "version": 2,
   "buildCommand": "npm run build:client",
   "outputDirectory": "dist/public",
+  "installCommand": "npm install",
   "builds": [
     {
       "src": "package.json",
@@ -10,7 +11,8 @@
         "buildCommand": "npm run build:client",
         "outputDirectory": "dist/public",
         "installCommand": "npm install",
-        "devCommand": "npm run dev"
+        "devCommand": "npm run dev",
+        "installPath": "."
       }
     }
   ],
