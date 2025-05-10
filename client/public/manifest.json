@@ -1,0 +1,16 @@
+{
+  "name": "Rowdy Cup Scoreboard",
+  "short_name": "Rowdy Cup",
+  "description": "Live scoring and tournament management for the Rowdy Cup",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/rowdy-cup-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+} 

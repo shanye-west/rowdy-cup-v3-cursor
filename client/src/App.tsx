@@ -28,107 +28,40 @@ function Router() {
   }, [window.location.pathname]);
 
   useEffect(() => {
-    let ws: WebSocket | null = null;
-    let reconnectTimer: number | null = null;
+    const wsUrl = process.env.NODE_ENV === 'production'
+      ? 'wss://rowdy-cup-v3-cursor.onrender.com/ws'
+      : 'ws://localhost:5000/ws';
 
-    // Function to create and setup the WebSocket connection
-    const setupWebSocket = () => {
-      try {
-        // Create WebSocket connection with explicit path
-        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-        const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const connectWebSocket = () => {
+      const ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        console.log('WebSocket connected');
+        setSocket(ws);
+      };
 
-        // Close existing connection if any
-        if (ws) {
-          ws.close();
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+
+      ws.onclose = (event) => {
+        console.log('WebSocket connection closed with code', event.code);
+        setSocket(null);
+        
+        // Only attempt to reconnect if the connection was lost unexpectedly
+        if (event.code === 1006) {
+          console.log('Attempting to reconnect WebSocket...');
+          setTimeout(connectWebSocket, 5000);
         }
+      };
 
-        ws = new WebSocket(wsUrl);
-
-        ws.onopen = () => {
-          console.log("WebSocket connection established");
-          // Clear reconnect timer if connection is successful
-          if (reconnectTimer) {
-            window.clearTimeout(reconnectTimer);
-            reconnectTimer = null;
-          }
-          setSocket(ws);
-        };
-
-        ws.onmessage = (event) => {
-          try {
-            const message = JSON.parse(event.data);
-
-            // Handle different message types
-            switch (message.type) {
-              case "score-updated":
-              case "score-created":
-                // Invalidate score queries
-                queryClient.invalidateQueries({
-                  queryKey: [`/api/scores?matchId=${message.data.matchId}`],
-                });
-                break;
-
-              case "match-updated":
-                // Invalidate match queries
-                queryClient.invalidateQueries({
-                  queryKey: [`/api/matches/${message.data.id}`],
-                });
-                queryClient.invalidateQueries({
-                  queryKey: [`/api/matches?roundId=${message.data.roundId}`],
-                });
-                break;
-
-              case "tournament-updated":
-                // Invalidate tournament query
-                queryClient.invalidateQueries({
-                  queryKey: ["/api/tournament"],
-                });
-                break;
-            }
-          } catch (error) {
-            console.error("Failed to parse WebSocket message:", error);
-          }
-        };
-
-        ws.onerror = (error) => {
-          console.error("WebSocket error:", error);
-        };
-
-        ws.onclose = (event) => {
-          console.log(`WebSocket connection closed with code ${event.code}`);
-          setSocket(null);
-
-          // Attempt to reconnect after 3 seconds
-          if (!reconnectTimer) {
-            reconnectTimer = window.setTimeout(() => {
-              console.log("Attempting to reconnect WebSocket...");
-              setupWebSocket();
-            }, 3000);
-          }
-        };
-      } catch (error) {
-        console.error("Failed to setup WebSocket:", error);
-        // Attempt to reconnect after 5 seconds in case of setup error
-        if (!reconnectTimer) {
-          reconnectTimer = window.setTimeout(() => {
-            console.log("Attempting to reconnect WebSocket after error...");
-            setupWebSocket();
-          }, 5000);
-        }
-      }
+      return ws;
     };
 
-    // Initial setup
-    setupWebSocket();
-
-    // Clean up WebSocket connection and timers on unmount
+    const ws = connectWebSocket();
     return () => {
-      if (ws) {
+      if (ws.readyState === WebSocket.OPEN) {
         ws.close();
-      }
-      if (reconnectTimer) {
-        window.clearTimeout(reconnectTimer);
       }
     };
   }, []);
