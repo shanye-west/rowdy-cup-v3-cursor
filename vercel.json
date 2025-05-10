@@ -6,7 +6,7 @@
     "routes": [
       {
         "src": "/api/(.*)",
-        "dest": "https://rowdy-cup-api.onrender.com/api/$1"
+        "dest": "https://rowdy-cup-v3-cursor.onrender.com/api/$1"
       },
       {
         "handle": "filesystem"
