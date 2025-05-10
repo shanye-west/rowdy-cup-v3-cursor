@@ -98,23 +98,32 @@ const EnhancedMatchScorecard = ({
       // Get player's course handicap
       const courseHandicap = getPlayerCourseHandicap(playerId);
       
+      // Find player details for logging
+      const playerName = [...aviatorPlayersList, ...producerPlayersList].find(p => p.id === playerId)?.name || `Player ${playerId}`;
+      
       // Find the hole with the matching number
       const hole = holes.find(h => h.number === holeNumber);
       const handicapRank = hole?.handicapRank || 0;
+      
+      console.log(`Calculating handicap strokes for ${playerName} (id: ${playerId}) on hole ${holeNumber}`);
+      console.log(`- Course Handicap: ${courseHandicap}, Hole Handicap Rank: ${handicapRank}`);
       
       // Calculate strokes based on hole handicap rank
       // If player's handicap is higher than or equal to the hole's handicap rank, they get a stroke
       // For example, if player has handicap 8 and hole rank is 5, they get a stroke
       if (handicapRank > 0 && courseHandicap >= handicapRank) {
+        console.log(`- ${playerName} gets 1 stroke on hole ${holeNumber}`);
         return 1;
       }
       
       // Calculate additional strokes for very high handicaps
       // If player has handicap 19+ on hole rank 1, they get 2 strokes
       if (handicapRank === 1 && courseHandicap >= 19) {
+        console.log(`- ${playerName} gets 2 strokes on hole ${holeNumber}`);
         return 2;
       }
       
+      console.log(`- ${playerName} gets 0 strokes on hole ${holeNumber}`);
       return 0;
     } catch (error) {
       console.error("Error calculating handicap strokes:", error);
@@ -197,6 +206,23 @@ const EnhancedMatchScorecard = ({
               newMap.set(teamKey, teamScores);
             }
             
+            return newMap;
+          });
+        } else {
+          // Create a new score entry with handicap info even if no score has been entered yet
+          // This ensures handicap dots will show immediately
+          const newScore: BestBallPlayerScore = {
+            player: player.name,
+            score: null,
+            teamId: player.teamId === 1 ? "aviator" : "producer",
+            playerId: player.id,
+            handicapStrokes: newHandicapStrokes,
+            netScore: null
+          };
+          
+          setPlayerScores(prev => {
+            const newMap = new Map(prev);
+            newMap.set(key, [newScore]);
             return newMap;
           });
         }
@@ -333,8 +359,9 @@ const EnhancedMatchScorecard = ({
       loadPlayerHandicapData(player);
     });
     
-    // This comment added for clarity: The handicap dots will display as soon as a courseHandicap is assigned,
-    // as long as the handicapStrokes value is properly calculated and is > 0
+    // The handicap dots need to be visible immediately when handicap strokes are calculated
+    // We need to make sure playerScores is correctly populated with handicapStrokes
+    // even before any actual scores are entered
     
   }, [matchData?.roundId, isBestBall, aviatorPlayersList, producerPlayersList, holes, playerHandicaps]);
 
@@ -1111,7 +1138,7 @@ const EnhancedMatchScorecard = ({
                               max="12"
                               disabled={isHoleGreyedOut(hole.number) || locked}
                             />
-                            {/* Net Score Display */}
+                            {/* Net Score Display - only show when score is entered */}
                             {playerScores.get(`${hole.number}-${player.name}`)?.[0]?.score !== null && 
                              playerScores.get(`${hole.number}-${player.name}`)?.[0]?.handicapStrokes > 0 && (
                               <span className="net-score">
