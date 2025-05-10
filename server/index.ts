@@ -4,6 +4,8 @@
 import "dotenv/config";
 
 import express, { Request, Response, NextFunction } from "express";
+import { createServer } from 'http';
+import { WebSocketServer } from 'ws';
 // 2) Import both your Drizzle ORM client and Neon Pool
 import { db, pool } from "./db";
 import { registerRoutes } from "./routes";
@@ -20,6 +22,20 @@ function captureError(err: any) {
 }
 
 const app = express();
+const server = createServer(app);
+
+// WebSocket server setup
+const wss = new WebSocketServer({ server });
+
+wss.on('connection', (ws) => {
+  console.log('Client connected');
+  
+  ws.on('error', console.error);
+  
+  ws.on('close', () => {
+    console.log('Client disconnected');
+  });
+});
 
 // Parse JSON and URL-encoded bodies
 app.use(express.json());
@@ -124,7 +140,7 @@ export default appPromise;
 // Start the server
 const port = Number(process.env.PORT) || 5000;
 appPromise.then(app => {
-  app.listen(port, () => {
+  server.listen(port, () => {
     log(`Server running on port ${port}`);
   });
 });
