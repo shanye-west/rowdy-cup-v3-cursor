@@ -28,6 +28,9 @@ function LoginPage() {
       });
 
       if (!response.ok) {
+        if (response.status === 503 || response.status === 502) {
+          throw new Error("The service is currently unavailable. Please try again later.");
+        }
         const errorData = await response.json();
         throw new Error(errorData.error || "Invalid username or passcode.");
       }
