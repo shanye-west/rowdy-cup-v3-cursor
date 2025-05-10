@@ -1,12 +1,15 @@
 {
   "version": 2,
+  "buildCommand": "npm run build:client",
+  "outputDirectory": "dist/public",
   "builds": [
     {
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
         "buildCommand": "npm run build:client",
-        "outputDirectory": "dist/public"
+        "outputDirectory": "dist/public",
+        "installCommand": "npm install"
       }
     }
   ],
@@ -14,6 +17,9 @@
     {
       "src": "/api/(.*)",
       "dest": "https://rowdy-cup-api.onrender.com/api/$1"
+    },
+    {
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
