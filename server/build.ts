@@ -78,11 +78,15 @@ async function buildServer() {
         js: `
           import { createRequire } from 'module';
           import { fileURLToPath } from 'url';
-          import { dirname } from 'path';
+          import { dirname, join } from 'path';
           
           const require = createRequire(import.meta.url);
           const __filename = fileURLToPath(import.meta.url);
           const __dirname = dirname(__filename);
+          
+          // Override process.cwd to always return the dist directory
+          const originalCwd = process.cwd;
+          process.cwd = () => __dirname;
         `,
       },
       define: {
@@ -120,9 +124,17 @@ const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Set environment variables
 process.env.NODE_ENV = 'production';
+
+// Change to the dist directory
 process.chdir(__dirname);
 
+// Override process.cwd to always return the dist directory
+const originalCwd = process.cwd;
+process.cwd = () => __dirname;
+
+// Start the server
 import('./index.js');
 `;
     await fs.writeFile(path.join('dist', 'start.js'), startScript);
