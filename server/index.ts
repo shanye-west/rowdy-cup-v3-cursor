@@ -9,11 +9,32 @@ import { db, pool } from "./db";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+// Error capture utility
+function captureError(err: any) {
+  return {
+    timestamp: new Date().toISOString(),
+    message: err.message,
+    stack: err.stack,
+    ...(err.code && { code: err.code }),
+  };
+}
+
 const app = express();
 
 // Parse JSON and URL-encoded bodies
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Enable CORS for Vercel frontend
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', process.env.FRONTEND_URL || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Logging middleware for all /api routes
 app.use((req, res, next) => {
@@ -44,7 +65,8 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
+// Initialize the app
+async function initializeApp() {
   // 3) Smoke-test Neon on startup
   try {
     const result = await pool.query<{ now: Date }>("SELECT NOW() AS now");
@@ -54,8 +76,8 @@ app.use((req, res, next) => {
     process.exit(1);
   }
 
-  // 4) Register your routes and get the underlying HTTP server
-  const server = await registerRoutes(app);
+  // 4) Register your routes
+  await registerRoutes(app);
 
   // 5) Global error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -81,23 +103,19 @@ app.use((req, res, next) => {
     next();
   });
 
-  // 7) Vite in dev, static in prod
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+  return app;
+}
 
-  // 8) Listen on Replit’s PORT or default to 5000
-  const port = Number(process.env.PORT) || 5000;
-  server.listen(
-    {
-      host: "0.0.0.0",
-      port,
-      reusePort: true,
-    },
-    () => {
-      log(`serving on port ${port}`);
-    },
-  );
-})(); // ← Close the IIFE
+// Initialize the app
+const appPromise = initializeApp();
+
+// Export the app for both development and production
+export default appPromise;
+
+// Start the server
+const port = Number(process.env.PORT) || 5000;
+appPromise.then(app => {
+  app.listen(port, () => {
+    log(`Server running on port ${port}`);
+  });
+});
