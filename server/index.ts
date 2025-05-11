@@ -9,7 +9,7 @@ import { WebSocketServer } from 'ws';
 // 2) Import both your Drizzle ORM client and Neon Pool
 import { db, pool } from "./db";
 import { registerRoutes } from "./routes";
-import { log } from "./vite";
+const log = console.log.bind(console);
 
 const app = express();
 const server = createServer(app);
