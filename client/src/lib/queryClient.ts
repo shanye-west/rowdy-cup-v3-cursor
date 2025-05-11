@@ -23,7 +23,8 @@ export async function apiRequest(
     url: fullUrl,
     data,
     baseUrl,
-    env: import.meta.env.VITE_API_URL
+    env: import.meta.env.VITE_API_URL,
+    isProd: import.meta.env.PROD
   });
   
   const res = await fetch(fullUrl, {
@@ -63,6 +64,13 @@ export const getQueryFn: <T>(options: {
       
     const url = queryKey[0] as string;
     const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+    
+    console.log('Making query request:', {
+      url: fullUrl,
+      baseUrl,
+      env: import.meta.env.VITE_API_URL,
+      isProd: import.meta.env.PROD
+    });
     
     const res = await fetch(fullUrl, {
       credentials: "include",
