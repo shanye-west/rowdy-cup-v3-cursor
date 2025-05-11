@@ -4,14 +4,17 @@
 import "dotenv/config";
 
 import express, { Request, Response, NextFunction } from "express";
+import { setupAuth } from "./auth";            // ← add this
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 // 2) Import both your Drizzle ORM client and Neon Pool
 import { db, pool } from "./db";
 import { registerRoutes } from "./routes";
+
 const log = console.log.bind(console);
 
 const app = express();
+setupAuth(app);
 const server = createServer(app);
 
 // WebSocket server setup
