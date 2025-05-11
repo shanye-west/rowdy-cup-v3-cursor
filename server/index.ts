@@ -90,18 +90,49 @@ const wss = new WebSocketServer({
     if (allowedOrigins.includes(origin)) {
       callback(true);
     } else {
+      debug.warn('WebSocket connection rejected', {}, {
+        origin,
+        allowedOrigins
+      });
       callback(false, 403, 'Forbidden');
     }
   }
 });
 
-wss.on('connection', (ws: WebSocket) => {
-  console.log('Client connected');
+wss.on('connection', (ws: WebSocket, req: Request) => {
+  debug.info('WebSocket connection attempt', {
+    requestId: req.requestId,
+    headers: req.headers,
+    cookies: req.cookies
+  });
   
-  ws.on('error', console.error);
+  // Handle authentication
+  const session = req.session as any;
+  if (!session?.passport?.user) {
+    debug.warn('WebSocket connection rejected - not authenticated', {
+      requestId: req.requestId
+    });
+    ws.close(1008, 'Authentication required');
+    return;
+  }
+
+  debug.info('WebSocket client connected', {
+    requestId: req.requestId,
+    userId: session.passport.user
+  });
+  
+  ws.on('error', (error) => {
+    debug.error('WebSocket error', {
+      requestId: req.requestId,
+      userId: session?.passport?.user
+    }, null, error);
+  });
   
   ws.on('close', () => {
-    console.log('Client disconnected');
+    debug.info('WebSocket client disconnected', {
+      requestId: req.requestId,
+      userId: session?.passport?.user
+    });
   });
 });
 
