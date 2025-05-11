@@ -13,7 +13,7 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   const baseUrl = process.env.VITE_API_URL || (process.env.NODE_ENV === 'production'
-    ? 'https://rowdy-cup-v3-cursor.onrender.com'
+    ? 'https://rowdy-cup-api.onrender.com'
     : 'http://localhost:5000');
     
   const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
@@ -44,7 +44,7 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     const baseUrl = process.env.VITE_API_URL || (process.env.NODE_ENV === 'production'
-      ? 'https://rowdy-cup-v3-cursor.onrender.com'
+      ? 'https://rowdy-cup-api.onrender.com'
       : 'http://localhost:5000');
       
     const url = queryKey[0] as string;
@@ -91,11 +91,13 @@ queryClient.setDefaultOptions({
     refetchOnMount: true,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
-    onError: (error: any) => {
-      if (error?.status === 401) {
-        // Clear any potentially invalid session data
-        queryClient.setQueryData(["/api/user"], { authenticated: false, user: null });
-      }
-    },
   },
+});
+
+// Add global error handler for 401 responses
+queryClient.getQueryCache().subscribe((event) => {
+  if (event.type === 'updated' && event.query.state.error?.status === 401) {
+    // Clear any potentially invalid session data
+    queryClient.setQueryData(["/api/user"], { authenticated: false, user: null });
+  }
 });
