@@ -26,7 +26,7 @@ type AuthContextType = {
 
 type LoginData = {
   username: string;
-  password: string;
+  passcode: string;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       await refetch();
       
-      const currentData = queryClient.getQueryData(["/api/user"]);
+      const currentData = queryClient.getQueryData<{authenticated: boolean, user?: User}>(["/api/user"]);
       if (!currentData?.authenticated) {
         throw new Error("Session not maintained");
       }

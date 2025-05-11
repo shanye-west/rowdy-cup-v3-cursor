@@ -10,11 +10,11 @@ import { Redirect } from "wouter";
 export default function AuthPage() {
   const { user, loginMutation } = useAuth();
   const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [passcode, setPasscode] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    loginMutation.mutate({ username, password });
+    loginMutation.mutate({ username, passcode });
   };
 
   // Redirect to home if already logged in
@@ -47,14 +47,17 @@ export default function AuthPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="passcode">PIN Code</Label>
                 <Input
-                  id="password"
+                  id="passcode"
                   type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your 4-digit PIN"
+                  value={passcode}
+                  onChange={(e) => setPasscode(e.target.value)}
                   required
+                  inputMode="numeric"
+                  pattern="\d{4}"
+                  maxLength={4}
                 />
               </div>
             </CardContent>

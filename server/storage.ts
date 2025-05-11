@@ -1388,7 +1388,7 @@ export class DBStorage implements IStorage {
   
   // Ensures an admin user exists in the system
   async ensureAdminUserExists() {
-    const adminUsername = "superadmin";
+    const adminUsername = "admin";
     const existingAdmin = await this.getUserByUsername(adminUsername);
     
     if (!existingAdmin) {
@@ -1397,9 +1397,9 @@ export class DBStorage implements IStorage {
         username: adminUsername,
         passcode: "$2b$10$LLNIo.a42c8YTxffFVi0wezkcKquF.JPizZQ9XnZ.JMYgg4PH/XOy", // "1111" hashed
         isAdmin: true,
-        needsPasswordChange: true
+        needsPasswordChange: false
       });
-      console.log("Created new admin user");
+      console.log("Created new admin user with username: admin and PIN: 1111");
     }
   }
 
