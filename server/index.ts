@@ -18,7 +18,22 @@ setupAuth(app);
 const server = createServer(app);
 
 // WebSocket server setup
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ 
+  server,
+  verifyClient: (info, callback) => {
+    const origin = info.origin;
+    const allowedOrigins = [
+      'https://rowdy-cup-v3-cursor.vercel.app',
+      'http://localhost:3000'
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(true);
+    } else {
+      callback(false, 403, 'Forbidden');
+    }
+  }
+});
 
 wss.on('connection', (ws: WebSocket) => {
   console.log('Client connected');
@@ -36,11 +51,16 @@ app.use(express.urlencoded({ extended: false }));
 
 // Enable CORS for Vercel frontend
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const allowedOrigin = process.env.NODE_ENV === 'production' 
-    ? 'https://rowdy-cup-v3-cursor.vercel.app'
-    : 'http://localhost:3000';
-    
-  res.header('Access-Control-Allow-Origin', allowedOrigin);
+  const allowedOrigins = [
+    'https://rowdy-cup-v3-cursor.vercel.app',
+    'http://localhost:3000'
+  ];
+  
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
