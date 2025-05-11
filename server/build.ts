@@ -1,14 +1,13 @@
+// server/build.ts
 import * as esbuild from 'esbuild';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
 async function buildServer() {
   try {
     // Create dist directory if it doesn't exist
     await fs.mkdir('dist', { recursive: true });
     await fs.mkdir('dist/server', { recursive: true });
-    await fs.mkdir('dist/public', { recursive: true });
 
     // Build the server
     await esbuild.build({
@@ -113,21 +112,6 @@ async function buildServer() {
       JSON.stringify(distPackageJson, null, 2)
     );
 
-    // Copy .env file if it exists
-    try {
-      await fs.copyFile('.env', path.join('dist', '.env'));
-    } catch (error) {
-      console.log('No .env file found, skipping...');
-    }
-
-    // Copy client build output to dist/public
-    try {
-      await fs.cp('dist/public', 'dist/public', { recursive: true, force: true });
-    } catch (error) {
-      console.error('Failed to copy client build output:', error);
-      process.exit(1);
-    }
-
     console.log('Server build completed successfully!');
   } catch (error) {
     console.error('Server build failed:', error);
@@ -135,4 +119,4 @@ async function buildServer() {
   }
 }
 
-buildServer(); 
+buildServer();
