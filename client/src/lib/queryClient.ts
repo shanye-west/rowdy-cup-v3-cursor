@@ -92,7 +92,7 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "returnNull" }),
-      refetchOnWindowFocus: true,
+      refetchOnWindowFocus: false,
       staleTime: 0,
       retry: (failureCount, error: any) => {
         if (error?.status === 401) return false;
@@ -110,9 +110,9 @@ export const queryClient = new QueryClient({
 queryClient.setDefaultOptions({
   queries: {
     retryOnMount: false,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   },
 });
 
