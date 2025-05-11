@@ -132,7 +132,7 @@ input[type="number"].score-input::-webkit-inner-spin-button {
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-[hsl(var(--border))];
   }
 
   body {
@@ -141,7 +141,7 @@ input[type="number"].score-input::-webkit-inner-spin-button {
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading;
+    @apply font-bold;
   }
 }
 
@@ -207,7 +207,8 @@ input[type="number"].score-input::-webkit-inner-spin-button {
 }
 
 .tab-active {
-  border-bottom: 3px solid #FFD700;
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
 }
 
 /* Style for non-counting scores in Best Ball */
@@ -242,12 +243,12 @@ input[type="number"].score-input::-webkit-inner-spin-button {
 
 /* Special styling for scorecard team rows */
 tr:has(td.bg-aviator) td:not(.bg-gray-100, .bg-gray-200) {
-  background-color: #00214D !important;
+  background-color: rgba(0, 33, 77, 0.1);
   color: white;
 }
 
 tr:has(td.bg-producer) td:not(.bg-gray-100, .bg-gray-200) {
-  background-color: #BF1238 !important;
+  background-color: rgba(191, 18, 56, 0.1);
   color: white;
 }
 
@@ -264,30 +265,30 @@ html {
 .handicap-stroke::after {
   content: "";
   position: absolute;
-  top: -2px;
-  right: -2px;
-  width: 6px;
-  height: 6px;
-  background-color: #f97316; /* orange-500 */
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  z-index: 10;
+  background-color: #2563eb;
 }
 
 .handicap-indicator {
-  position: absolute;
-  bottom: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 2px;
-  justify-content: center;
-  z-index: 10;
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #2563eb;
+  margin-right: 2px;
+  margin-top: 1px;
 }
 
 .handicap-dot {
+  display: inline-block;
   width: 4px;
   height: 4px;
-  background-color: #f97316; /* orange-500 */
   border-radius: 50%;
-  display: inline-block;
+  background-color: #2563eb;
+  margin-right: 2px;
 }

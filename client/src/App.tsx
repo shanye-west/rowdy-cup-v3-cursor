@@ -10,7 +10,6 @@ import Match from "@/pages/Match";
 import Teams from "@/pages/Teams";
 import AuthPage from "@/pages/AuthPage";
 import AdminPlayersPage from "@/pages/AdminPlayersPage";
-import LoginPage from "@/pages/Login";
 import SetPinPage from "@/pages/SetPin";
 import TestCourses from "@/pages/TestCourses";
 import TournamentHistory from "@/pages/TournamentHistory";
@@ -29,10 +28,8 @@ function App() {
               <Route path="/" component={Home} />
               <Route path="/teams" component={Teams} />
               <Route path="/auth" component={AuthPage} />
-              <Route path="/login" component={LoginPage} />
               <Route path="/tournament-history" component={TournamentHistory} />
-              
-              {/* Protected Routes */}
+              {/* Protected Routes with params */}
               <Route path="/round/:roundId">
                 {(params: { roundId: string }) => (
                   <ProtectedRoute path="/round/:roundId">
@@ -48,11 +45,9 @@ function App() {
                 )}
               </Route>
               <ProtectedRoute path="/set-pin" component={SetPinPage} />
-              
               {/* Admin Only Routes */}
               <ProtectedRoute path="/admin/players" component={AdminPlayersPage} adminOnly />
               <ProtectedRoute path="/test-courses" component={TestCourses} adminOnly />
-              
               {/* 404 Route */}
               <Route component={NotFound} />
             </Switch>
