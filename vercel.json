@@ -14,13 +14,11 @@
       ]
     }
   ],
-  "routes": [
+  "redirects": [
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html",
+      "permanent": false
     }
   ],
   "env": {
