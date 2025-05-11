@@ -117,12 +117,26 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, passcode, done) => {
       try {
+        console.log('Login attempt:', { username });
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(passcode, user.passcode))) {
+        
+        if (!user) {
+          console.log('User not found:', username);
           return done(null, false);
         }
+        
+        console.log('User found, comparing passwords');
+        const passwordMatch = await comparePasswords(passcode, user.passcode);
+        
+        if (!passwordMatch) {
+          console.log('Password mismatch for user:', username);
+          return done(null, false);
+        }
+        
+        console.log('Login successful for user:', username);
         return done(null, user);
       } catch (err) {
+        console.error('Login error:', err);
         return done(err);
       }
     })
@@ -144,22 +158,32 @@ export function setupAuth(app: Express) {
 
   // Auth endpoints
   app.post("/api/login", (req, res, next) => {
+    console.log('Login request received:', {
+      username: req.body.username,
+      hasPasscode: !!req.body.passcode
+    });
+    
     passport.authenticate("local", (err: Error | null, user: Express.User | false, info: any) => {
       if (err) {
+        console.error('Passport authentication error:', err);
         return next(err);
       }
       if (!user) {
+        console.log('Authentication failed - invalid credentials');
         return res.status(401).json({ error: "Invalid credentials" });
       }
       req.login(user, (err) => {
         if (err) {
+          console.error('Session login error:', err);
           return next(err);
         }
         // Set session cookie explicitly
         req.session.save((err) => {
           if (err) {
+            console.error('Session save error:', err);
             return next(err);
           }
+          console.log('Login successful, session saved for user:', user.username);
           return res.json({
             authenticated: true,
             user: {
