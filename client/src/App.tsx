@@ -28,9 +28,12 @@ function Router() {
   }, [window.location.pathname]);
 
   useEffect(() => {
-    const wsUrl = process.env.NODE_ENV === 'production'
-      ? 'wss://rowdy-cup-v3-cursor.onrender.com/ws'
-      : 'ws://localhost:5000/ws';
+    const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD
+      ? 'https://rowdy-cup-api.onrender.com'
+      : 'http://localhost:5000');
+    
+    // Convert http(s):// to ws(s):// for WebSocket connection
+    const wsUrl = apiUrl.replace(/^http/, 'ws') + '/ws';
 
     const connectWebSocket = () => {
       const ws = new WebSocket(wsUrl);

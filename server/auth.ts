@@ -93,8 +93,8 @@ export function setupAuth(app: Express) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'none',
       httpOnly: true,
-      path: '/',
-      domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined
+      path: '/'
+      // Remove domain restriction to allow cross-domain cookies
     },
     name: 'rowdy-cup.sid'
   };

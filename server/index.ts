@@ -98,7 +98,9 @@ const wss = new WebSocketServer({
     const origin = info.origin;
     const allowedOrigins = [
       'https://rowdy-cup-v3-cursor.vercel.app',
-      'http://localhost:3000'
+      'https://rowdy-cup.vercel.app',
+      'http://localhost:3000',
+      'http://localhost:5000'
     ];
     
     if (allowedOrigins.includes(origin)) {
