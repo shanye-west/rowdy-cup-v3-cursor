@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
     staleTime: 0,
     refetchInterval: 30000,
   });
@@ -61,7 +61,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: async (user: User) => {
       queryClient.setQueryData(["/api/user"], { authenticated: true, user });
-      
       await refetch();
       
       const currentData = queryClient.getQueryData<{authenticated: boolean, user?: User}>(["/api/user"]);
@@ -93,7 +92,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: async () => {
       queryClient.setQueryData(["/api/user"], { authenticated: false, user: null });
-      
       await refetch();
       
       toast({

@@ -43,6 +43,7 @@ export default function AuthPage() {
     );
   }
 
+  // If we're not loading and there's no user, show the login form
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Auth Form */}
