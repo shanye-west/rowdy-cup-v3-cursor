@@ -85,10 +85,6 @@ async function buildServer() {
           const require = createRequire(import.meta.url);
           const __filename = fileURLToPath(import.meta.url);
           const __dirname = dirname(__filename);
-          
-          // Override process.cwd to always return the dist directory
-          const originalCwd = process.cwd;
-          process.cwd = () => __dirname;
         `,
       },
       define: {

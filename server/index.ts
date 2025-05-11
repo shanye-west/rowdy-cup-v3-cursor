@@ -3,23 +3,13 @@
 // 1) Load .env so process.env.DATABASE_URL is defined
 import "dotenv/config";
 
-import express, { Request, Response, NextFunction } from "express";
+import express from "express";
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 // 2) Import both your Drizzle ORM client and Neon Pool
 import { db, pool } from "./db";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
-
-// Error capture utility
-function captureError(err: any) {
-  return {
-    timestamp: new Date().toISOString(),
-    message: err.message,
-    stack: err.stack,
-    ...(err.code && { code: err.code }),
-  };
-}
+import { log } from "./vite";
 
 const app = express();
 const server = createServer(app);
@@ -107,28 +97,13 @@ async function initializeApp() {
   // 4) Register your routes
   await registerRoutes(app);
 
-  // 5) Global error handler
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-    const errorDetails = captureError(err);
-    
-    res.status(status).json({
-      message,
-      errorId: errorDetails.timestamp,
-      path: _req.path,
-      method: _req.method,
-      ...(process.env.NODE_ENV !== "production" && { details: errorDetails }),
-    });
-  });
-
-  // 6) Health-check endpoints
+  // 5) Health-check endpoints
   app.get("/_health", (_req, res) => res.status(200).send("OK"));
-  app.get("/", (req, res, next) => {
+  app.get("/", (req, res) => {
     if (req.method === "HEAD" || !req.accepts("html")) {
       return res.status(200).send("OK");
     }
-    next();
+    res.status(200).json({ status: "API server is running" });
   });
 
   return app;
