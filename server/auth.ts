@@ -10,6 +10,7 @@ import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { User as SelectUser } from "@shared/schema";
 import connectPgSimple from 'connect-pg-simple';
+import { debug } from './debug';
 
 declare global {
   namespace Express {
@@ -69,7 +70,10 @@ export function isAdmin(req: Request, res: Response, next: NextFunction) {
 export function setupAuth(app: Express) {
   // Ensure SESSION_SECRET is set
   if (!process.env.SESSION_SECRET) {
-    console.warn('Warning: SESSION_SECRET is not set. Using a default secret is not recommended for production.');
+    debug.warn('SESSION_SECRET is not set', {}, {
+      environment: process.env.NODE_ENV,
+      recommendation: 'Set SESSION_SECRET for production'
+    });
   }
 
   // Configure session with PostgreSQL store
@@ -78,26 +82,26 @@ export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     store: new PostgresStore({
       pool: pool,
-      tableName: 'session', // Use a custom table name
+      tableName: 'session',
       createTableIfMissing: true,
     }),
     secret: process.env.SESSION_SECRET || 'rowdy-cup-secret',
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 24 * 60 * 60 * 1000,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'none',
       httpOnly: true,
       path: '/',
       domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined
     },
-    name: 'rowdy-cup.sid' // Explicit session cookie name
+    name: 'rowdy-cup.sid'
   };
 
   // Add error handling for session middleware
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    console.error('Session error:', err);
+    debug.error('Session middleware error', { requestId: req.requestId }, null, err);
     if (err.code === 'EBADCSRFTOKEN') {
       return res.status(403).json({
         error: 'Invalid CSRF token. Please refresh the page and try again.'
@@ -116,27 +120,28 @@ export function setupAuth(app: Express) {
   // Configure passport with local strategy
   passport.use(
     new LocalStrategy(async (username, passcode, done) => {
+      const context = { username };
       try {
-        console.log('Login attempt:', { username });
+        debug.info('Login attempt', context);
         const user = await storage.getUserByUsername(username);
         
         if (!user) {
-          console.log('User not found:', username);
+          debug.warn('User not found', context);
           return done(null, false);
         }
         
-        console.log('User found, comparing passwords');
+        debug.debug('User found, comparing passwords', context);
         const passwordMatch = await comparePasswords(passcode, user.passcode);
         
         if (!passwordMatch) {
-          console.log('Password mismatch for user:', username);
+          debug.warn('Password mismatch', context);
           return done(null, false);
         }
         
-        console.log('Login successful for user:', username);
+        debug.info('Login successful', { ...context, userId: user.id });
         return done(null, user);
       } catch (err) {
-        console.error('Login error:', err);
+        debug.error('Login error', context, null, err as Error);
         return done(err);
       }
     })
@@ -158,32 +163,35 @@ export function setupAuth(app: Express) {
 
   // Auth endpoints
   app.post("/api/login", (req, res, next) => {
-    console.log('Login request received:', {
+    const context = {
+      requestId: req.requestId,
       username: req.body.username,
       hasPasscode: !!req.body.passcode
-    });
+    };
+    
+    debug.info('Login request received', context);
     
     passport.authenticate("local", (err: Error | null, user: Express.User | false, info: any) => {
       if (err) {
-        console.error('Passport authentication error:', err);
+        debug.error('Passport authentication error', context, null, err);
         return next(err);
       }
       if (!user) {
-        console.log('Authentication failed - invalid credentials');
+        debug.warn('Authentication failed - invalid credentials', context);
         return res.status(401).json({ error: "Invalid credentials" });
       }
       req.login(user, (err) => {
         if (err) {
-          console.error('Session login error:', err);
+          debug.error('Session login error', context, null, err);
           return next(err);
         }
         // Set session cookie explicitly
         req.session.save((err) => {
           if (err) {
-            console.error('Session save error:', err);
+            debug.error('Session save error', context, null, err);
             return next(err);
           }
-          console.log('Login successful, session saved for user:', user.username);
+          debug.info('Login successful, session saved', { ...context, userId: user.id });
           return res.json({
             authenticated: true,
             user: {

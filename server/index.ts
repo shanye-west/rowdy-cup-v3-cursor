@@ -10,10 +10,14 @@ import { WebSocketServer, WebSocket } from 'ws';
 // 2) Import both your Drizzle ORM client and Neon Pool
 import { db, pool } from "./db";
 import { registerRoutes } from "./routes";
+import { debug } from './debug';
 
 const log = console.log.bind(console);
 
 const app = express();
+
+// Add debug middleware first
+app.use(debug.middleware);
 
 // CORS middleware - MUST be first
 app.use((req: Request, res: Response, next: NextFunction) => {
