@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 interface Course {
   id: number;
@@ -25,7 +26,7 @@ export default function TestCourses() {
     setIsLoading(true);
     try {
       console.log('Fetching courses...');
-      const response = await fetch('/api/courses');
+      const response = await apiRequest("GET", "/api/courses");
       console.log('Response status:', response.status);
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
@@ -60,13 +61,7 @@ export default function TestCourses() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/courses', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
+      const response = await apiRequest("POST", "/api/courses", formData);
       
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);

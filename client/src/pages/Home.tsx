@@ -41,7 +41,7 @@ const Home = () => {
     const fetchCourses = async () => {
       try {
         console.log("Fetching courses for Home page");
-        const response = await fetch('/api/courses');
+        const response = await apiRequest("GET", "/api/courses");
         if (response.ok) {
           const data = await response.json();
           console.log("Home page got courses:", data);

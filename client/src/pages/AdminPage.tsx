@@ -324,7 +324,7 @@ function RoundsTab() {
     const fetchCourses = async () => {
       try {
         console.log("Fetching courses directly...");
-        const response = await fetch('/api/courses');
+        const response = await apiRequest("GET", "/api/courses");
         if (response.ok) {
           const data = await response.json();
           console.log("Got courses data:", data);
