@@ -32,15 +32,29 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     'http://localhost:5000'
   ];
   
+  console.log('CORS Request:', {
+    origin,
+    method: req.method,
+    path: req.path,
+    headers: req.headers,
+    isProd: process.env.NODE_ENV === 'production'
+  });
+  
   // For production, always allow from Vercel domains
   if (process.env.NODE_ENV === 'production') {
     if (origin && (origin.includes('.vercel.app') || allowedOrigins.includes(origin))) {
       res.header('Access-Control-Allow-Origin', origin);
+      console.log('CORS: Allowed production origin:', origin);
+    } else {
+      console.log('CORS: Rejected production origin:', origin);
     }
   } else {
     // For local development, use dynamic origin handling
     if (origin && allowedOrigins.includes(origin)) {
       res.header('Access-Control-Allow-Origin', origin);
+      console.log('CORS: Allowed development origin:', origin);
+    } else {
+      console.log('CORS: Rejected development origin:', origin);
     }
   }
   
@@ -53,6 +67,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
   // Handle preflight
   if (req.method === 'OPTIONS') {
+    console.log('CORS: Handling preflight request');
     res.status(200).end();
     return;
   }
