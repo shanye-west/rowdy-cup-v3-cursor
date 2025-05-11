@@ -21,8 +21,22 @@ app.use(debug.middleware);
 
 // CORS middleware - MUST be first
 app.use((req: Request, res: Response, next: NextFunction) => {
-  // Always allow the Vercel domain
-  res.header('Access-Control-Allow-Origin', 'https://rowdy-cup-v3-cursor.vercel.app');
+  // Get the origin from the request headers
+  const origin = req.headers.origin;
+  
+  // Allow list of trusted domains
+  const allowedOrigins = [
+    'https://rowdy-cup-v3-cursor.vercel.app',
+    'https://rowdy-cup.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5000'
+  ];
+  
+  // If the origin is in our allowed list, set it specifically
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
