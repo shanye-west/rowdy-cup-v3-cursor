@@ -5,10 +5,11 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { User as SelectUser } from "@shared/schema";
+import connectPgSimple from 'connect-pg-simple';
 
 declare global {
   namespace Express {
@@ -71,8 +72,15 @@ export function setupAuth(app: Express) {
     console.warn('Warning: SESSION_SECRET is not set. Using a default secret is not recommended for production.');
   }
 
-  // Configure session
+  // Configure session with PostgreSQL store
+  const PostgresStore = connectPgSimple(session);
+  
   const sessionSettings: session.SessionOptions = {
+    store: new PostgresStore({
+      pool: pool,
+      tableName: 'session', // Use a custom table name
+      createTableIfMissing: true,
+    }),
     secret: process.env.SESSION_SECRET || 'rowdy-cup-secret',
     resave: false,
     saveUninitialized: false,
@@ -82,14 +90,15 @@ export function setupAuth(app: Express) {
       sameSite: 'none',
       httpOnly: true,
       path: '/',
+      domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined
     },
     name: 'rowdy-cup.sid' // Explicit session cookie name
   };
 
   // Add error handling for session middleware
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    console.error('Session error:', err);
     if (err.code === 'EBADCSRFTOKEN') {
-      // Handle CSRF token errors
       return res.status(403).json({
         error: 'Invalid CSRF token. Please refresh the page and try again.'
       });
