@@ -17,6 +17,12 @@ interface DebugContext {
   path?: string;
   method?: string;
   timestamp: string;
+  duration?: number;
+  memoryUsage?: {
+    heapUsed: number;
+    heapTotal: number;
+    external: number;
+  };
 }
 
 // Debug entry
@@ -28,8 +34,27 @@ interface DebugEntry {
   error?: Error;
 }
 
+// Performance metrics
+interface PerformanceMetrics {
+  totalRequests: number;
+  averageResponseTime: number;
+  requestsByPath: Map<string, { count: number; totalTime: number }>;
+  errorsByPath: Map<string, number>;
+  lastError?: {
+    timestamp: string;
+    path: string;
+    error: string;
+  };
+}
+
 // Debug store for request tracking
 const requestDebugStore = new Map<string, DebugEntry[]>();
+const performanceMetrics: PerformanceMetrics = {
+  totalRequests: 0,
+  averageResponseTime: 0,
+  requestsByPath: new Map(),
+  errorsByPath: new Map()
+};
 
 // Generate a unique request ID
 function generateRequestId(): string {
@@ -46,11 +71,41 @@ function formatDebugEntry(entry: DebugEntry): string {
   if (context.username) output += ` [Username: ${context.username}]`;
   if (context.path) output += ` [Path: ${context.path}]`;
   if (context.method) output += ` [Method: ${context.method}]`;
+  if (context.duration) output += ` [Duration: ${context.duration}ms]`;
+  
+  if (context.memoryUsage) {
+    const { heapUsed, heapTotal, external } = context.memoryUsage;
+    output += `\nMemory: Heap Used: ${(heapUsed / 1024 / 1024).toFixed(2)}MB, ` +
+              `Heap Total: ${(heapTotal / 1024 / 1024).toFixed(2)}MB, ` +
+              `External: ${(external / 1024 / 1024).toFixed(2)}MB`;
+  }
   
   if (data) output += `\nData: ${JSON.stringify(data, null, 2)}`;
   if (error) output += `\nError: ${error.stack || error.message}`;
   
   return output;
+}
+
+// Update performance metrics
+function updatePerformanceMetrics(path: string, duration: number, isError: boolean = false) {
+  performanceMetrics.totalRequests++;
+  
+  // Update path-specific metrics
+  const pathMetrics = performanceMetrics.requestsByPath.get(path) || { count: 0, totalTime: 0 };
+  pathMetrics.count++;
+  pathMetrics.totalTime += duration;
+  performanceMetrics.requestsByPath.set(path, pathMetrics);
+  
+  // Update error metrics
+  if (isError) {
+    const errorCount = performanceMetrics.errorsByPath.get(path) || 0;
+    performanceMetrics.errorsByPath.set(path, errorCount + 1);
+  }
+  
+  // Update average response time
+  performanceMetrics.averageResponseTime = 
+    (performanceMetrics.averageResponseTime * (performanceMetrics.totalRequests - 1) + duration) / 
+    performanceMetrics.totalRequests;
 }
 
 // Debug logger
@@ -60,7 +115,11 @@ export const debug = {
     const entry: DebugEntry = {
       level: DebugLevel.ERROR,
       message,
-      context: { ...context, timestamp: new Date().toISOString() },
+      context: { 
+        ...context, 
+        timestamp: new Date().toISOString(),
+        memoryUsage: process.memoryUsage()
+      },
       data,
       error
     };
@@ -77,7 +136,11 @@ export const debug = {
     const entry: DebugEntry = {
       level: DebugLevel.WARN,
       message,
-      context: { ...context, timestamp: new Date().toISOString() },
+      context: { 
+        ...context, 
+        timestamp: new Date().toISOString(),
+        memoryUsage: process.memoryUsage()
+      },
       data
     };
     
@@ -93,7 +156,11 @@ export const debug = {
     const entry: DebugEntry = {
       level: DebugLevel.INFO,
       message,
-      context: { ...context, timestamp: new Date().toISOString() },
+      context: { 
+        ...context, 
+        timestamp: new Date().toISOString(),
+        memoryUsage: process.memoryUsage()
+      },
       data
     };
     
@@ -109,7 +176,11 @@ export const debug = {
     const entry: DebugEntry = {
       level: DebugLevel.DEBUG,
       message,
-      context: { ...context, timestamp: new Date().toISOString() },
+      context: { 
+        ...context, 
+        timestamp: new Date().toISOString(),
+        memoryUsage: process.memoryUsage()
+      },
       data
     };
     
@@ -125,7 +196,11 @@ export const debug = {
     const entry: DebugEntry = {
       level: DebugLevel.TRACE,
       message,
-      context: { ...context, timestamp: new Date().toISOString() },
+      context: { 
+        ...context, 
+        timestamp: new Date().toISOString(),
+        memoryUsage: process.memoryUsage()
+      },
       data
     };
     
@@ -146,16 +221,27 @@ export const debug = {
     requestDebugStore.delete(requestId);
   },
   
+  // Performance metrics
+  getPerformanceMetrics: () => {
+    return {
+      ...performanceMetrics,
+      requestsByPath: Object.fromEntries(performanceMetrics.requestsByPath),
+      errorsByPath: Object.fromEntries(performanceMetrics.errorsByPath)
+    };
+  },
+  
   // Debug middleware
   middleware: (req: Request, res: Response, next: NextFunction) => {
     const requestId = generateRequestId();
     req.requestId = requestId;
+    const startTime = Date.now();
     
     const context: DebugContext = {
       requestId,
       path: req.path,
       method: req.method,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      memoryUsage: process.memoryUsage()
     };
     
     if (req.user) {
@@ -172,14 +258,56 @@ export const debug = {
     // Track response
     const originalSend = res.send;
     res.send = function(body) {
-      debug.info('Request completed', context, {
+      const duration = Date.now() - startTime;
+      const isError = res.statusCode >= 400;
+      
+      debug.info('Request completed', {
+        ...context,
+        duration,
+        memoryUsage: process.memoryUsage()
+      }, {
         statusCode: res.statusCode,
         responseBody: body
       });
+      
+      updatePerformanceMetrics(req.path, duration, isError);
+      
+      if (isError) {
+        performanceMetrics.lastError = {
+          timestamp: new Date().toISOString(),
+          path: req.path,
+          error: typeof body === 'string' ? body : JSON.stringify(body)
+        };
+      }
+      
       return originalSend.call(this, body);
     };
     
     next();
+  },
+  
+  // Health check endpoint
+  healthCheck: (req: Request, res: Response) => {
+    const metrics = debug.getPerformanceMetrics();
+    const memoryUsage = process.memoryUsage();
+    
+    res.json({
+      status: 'healthy',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+      memory: {
+        heapUsed: `${(memoryUsage.heapUsed / 1024 / 1024).toFixed(2)}MB`,
+        heapTotal: `${(memoryUsage.heapTotal / 1024 / 1024).toFixed(2)}MB`,
+        external: `${(memoryUsage.external / 1024 / 1024).toFixed(2)}MB`
+      },
+      performance: {
+        totalRequests: metrics.totalRequests,
+        averageResponseTime: `${metrics.averageResponseTime.toFixed(2)}ms`,
+        requestsByPath: metrics.requestsByPath,
+        errorsByPath: metrics.errorsByPath,
+        lastError: metrics.lastError
+      }
+    });
   }
 };
 

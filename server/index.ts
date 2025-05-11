@@ -119,6 +119,7 @@ async function initializeApp() {
 
   // 5) Health-check endpoints
   app.get("/_health", (_req: Request, res: Response) => res.status(200).send("OK"));
+  app.get("/_debug/health", debug.healthCheck);
   app.get("/", (req: Request, res: Response) => {
     if (req.method === "HEAD" || !req.accepts("html")) {
       return res.status(200).send("OK");
