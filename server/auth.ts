@@ -99,37 +99,9 @@ export function setupAuth(app: Express) {
     name: 'rowdy-cup.sid'
   };
 
-  // Add error handling for session middleware
-  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    debug.error('Session middleware error', { requestId: req.requestId }, {
-      errorCode: err.code,
-      errorMessage: err.message,
-      stack: err.stack
-    }, err);
-    
-    if (err.code === 'EBADCSRFTOKEN') {
-      return res.status(403).json({
-        error: 'Invalid CSRF token. Please refresh the page and try again.'
-      });
-    }
-    next(err);
-  });
-
-  // Initialize session before passport
+  // Initialize session first
   app.use(session(sessionSettings));
-  
-  // Session debugging middleware
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    debug.debug('Session state', { requestId: req.requestId }, {
-      sessionID: req.sessionID,
-      isAuthenticated: req.isAuthenticated(),
-      hasUser: !!req.user,
-      cookie: req.session?.cookie,
-      sessionStore: (req.session as any)?.store?.constructor?.name
-    });
-    next();
-  });
-  
+
   // Initialize passport after session
   app.use(passport.initialize());
   app.use(passport.session());
@@ -176,6 +148,34 @@ export function setupAuth(app: Express) {
     } catch (err) {
       done(err);
     }
+  });
+
+  // Add error handling for session middleware AFTER passport setup
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    debug.error('Session middleware error', { requestId: req.requestId }, {
+      errorCode: err.code,
+      errorMessage: err.message,
+      stack: err.stack
+    }, err);
+    
+    if (err.code === 'EBADCSRFTOKEN') {
+      return res.status(403).json({
+        error: 'Invalid CSRF token. Please refresh the page and try again.'
+      });
+    }
+    next(err);
+  });
+
+  // Session debugging middleware AFTER passport setup
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    debug.debug('Session state', { requestId: req.requestId }, {
+      sessionID: req.sessionID,
+      isAuthenticated: req.isAuthenticated(),
+      hasUser: !!req.user,
+      cookie: req.session?.cookie,
+      sessionStore: (req.session as any)?.store?.constructor?.name
+    });
+    next();
   });
 
   // Auth endpoints

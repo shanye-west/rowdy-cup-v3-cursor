@@ -19,6 +19,7 @@ interface DebugContext {
   timestamp: string;
   duration?: number;
   sessionID?: string;
+  cookie?: any;
   memoryUsage?: {
     heapUsed: number;
     heapTotal: number;

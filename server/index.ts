@@ -39,40 +39,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-setupAuth(app);
-const server = createServer(app);
-
-// WebSocket server setup
-const wss = new WebSocketServer({ 
-  server,
-  verifyClient: (info, callback) => {
-    const origin = info.origin;
-    const allowedOrigins = [
-      'https://rowdy-cup-v3-cursor.vercel.app',
-      'http://localhost:3000'
-    ];
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(true);
-    } else {
-      callback(false, 403, 'Forbidden');
-    }
-  }
-});
-
-wss.on('connection', (ws: WebSocket) => {
-  console.log('Client connected');
-  
-  ws.on('error', console.error);
-  
-  ws.on('close', () => {
-    console.log('Client disconnected');
-  });
-});
-
-// Parse JSON and URL-encoded bodies
+// Parse JSON and URL-encoded bodies BEFORE auth setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Setup auth AFTER body parsing but BEFORE routes
+setupAuth(app);
 
 // Logging middleware for all /api routes
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -101,6 +73,36 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   });
 
   next();
+});
+
+const server = createServer(app);
+
+// WebSocket server setup
+const wss = new WebSocketServer({ 
+  server,
+  verifyClient: (info, callback) => {
+    const origin = info.origin;
+    const allowedOrigins = [
+      'https://rowdy-cup-v3-cursor.vercel.app',
+      'http://localhost:3000'
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(true);
+    } else {
+      callback(false, 403, 'Forbidden');
+    }
+  }
+});
+
+wss.on('connection', (ws: WebSocket) => {
+  console.log('Client connected');
+  
+  ws.on('error', console.error);
+  
+  ws.on('close', () => {
+    console.log('Client disconnected');
+  });
 });
 
 // Initialize the app
