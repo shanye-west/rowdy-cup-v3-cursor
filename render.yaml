@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: rowdy-cup-api
+    name: rowdy-cup-v3-cursor
     env: node
     plan: starter
     buildCommand: |
