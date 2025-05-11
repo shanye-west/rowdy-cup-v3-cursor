@@ -1,29 +1,29 @@
 {
-    "version": 2,
-    "buildCommand": "npm run build",
-    "outputDirectory": "dist/public",
-    "installCommand": "npm install",
-    "routes": [
-      {
-        "src": "/api/(.*)",
-        "dest": "https://rowdy-cup-v3-cursor.onrender.com/api/$1",
-        "headers": {
-          "Access-Control-Allow-Origin": "https://rowdy-cup-v3-cursor.vercel.app",
-          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
-          "Access-Control-Allow-Credentials": "true"
-        }
-      },
-      {
-        "handle": "filesystem"
-      },
-      {
-        "src": "/(.*)",
-        "dest": "/$1"
+  "version": 2,
+  "buildCommand": "npm run build:client",
+  "outputDirectory": "dist/public",
+  "installCommand": "npm install",
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "https://rowdy-cup-api.onrender.com/api/$1",
+      "headers": {
+        "Access-Control-Allow-Origin": "https://rowdy-cup-v3-cursor.vercel.app",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+        "Access-Control-Allow-Credentials": "true"
       }
-    ],
-    "env": {
-      "NODE_ENV": "production",
-      "VITE_API_URL": "https://rowdy-cup-v3-cursor.onrender.com"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
     }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "VITE_API_URL": "https://rowdy-cup-api.onrender.com"
   }
+}
