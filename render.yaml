@@ -6,7 +6,7 @@ services:
     buildCommand: |
       npm install --production=false
       npm run build:server
-    startCommand: npm start
+    startCommand: node dist/server/index.js
     envVars:
       - key: NODE_ENV
         value: production
@@ -14,5 +14,7 @@ services:
         sync: false
       - key: SESSION_SECRET
         sync: false
+      - key: VITE_API_URL
+        value: https://rowdy-cup-api.onrender.com
     healthCheckPath: /_health
     autoDeploy: true
