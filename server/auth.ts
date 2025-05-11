@@ -206,6 +206,15 @@ export function setupAuth(app: Express) {
     
     debug.info('Login request received', context);
     
+    // Validate request body
+    if (!req.body.username || !req.body.passcode) {
+      debug.warn('Login attempt with missing credentials', context);
+      return res.status(400).json({ 
+        error: "Username and passcode are required",
+        authenticated: false 
+      });
+    }
+
     passport.authenticate("local", (err: Error | null, user: Express.User | false, info: any) => {
       if (err) {
         debug.error('Passport authentication error', context, {
@@ -217,7 +226,10 @@ export function setupAuth(app: Express) {
       }
       if (!user) {
         debug.warn('Authentication failed - invalid credentials', context);
-        return res.status(401).json({ error: "Invalid credentials" });
+        return res.status(401).json({ 
+          error: "Invalid credentials",
+          authenticated: false 
+        });
       }
       req.login(user, (err) => {
         if (err) {
@@ -256,6 +268,35 @@ export function setupAuth(app: Express) {
         });
       });
     })(req, res, next);
+  });
+
+  // Add a GET endpoint for login status
+  app.get("/api/login", (req, res) => {
+    const context = {
+      requestId: req.requestId,
+      isAuthenticated: req.isAuthenticated(),
+      hasUser: !!req.user
+    };
+    
+    debug.info('Login status check', context);
+    
+    if (!req.isAuthenticated()) {
+      return res.json({ 
+        authenticated: false,
+        message: "Not logged in"
+      });
+    }
+    
+    res.json({
+      authenticated: true,
+      user: {
+        id: req.user.id,
+        username: req.user.username,
+        isAdmin: req.user.isAdmin,
+        needsPasswordChange: req.user.needsPasswordChange,
+        playerId: req.user.playerId
+      }
+    });
   });
   
   // Protected routes that require authentication
