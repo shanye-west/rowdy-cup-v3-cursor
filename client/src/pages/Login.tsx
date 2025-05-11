@@ -23,7 +23,7 @@ function LoginPage() {
     try {
       const response = await apiRequest("POST", "/api/login", {
         username,
-        password: passcode
+        passcode
       });
 
       const data = await response.json();
