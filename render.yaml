@@ -15,7 +15,7 @@ services:
       - key: SESSION_SECRET
         sync: false
       - key: VITE_API_URL
-        value: https://rowdy-cup-api.onrender.com
+        value: https://rowdy-cup-v3-cursor.onrender.com
     healthCheckPath: /_health
     autoDeploy: true
     disk:

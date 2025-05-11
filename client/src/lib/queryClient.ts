@@ -13,7 +13,7 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   const baseUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD
-    ? 'https://rowdy-cup-api.onrender.com'
+    ? 'https://rowdy-cup-v3-cursor.onrender.com'
     : 'http://localhost:5000');
     
   const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
@@ -44,7 +44,7 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     const baseUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD
-      ? 'https://rowdy-cup-api.onrender.com'
+      ? 'https://rowdy-cup-v3-cursor.onrender.com'
       : 'http://localhost:5000');
       
     const url = queryKey[0] as string;
