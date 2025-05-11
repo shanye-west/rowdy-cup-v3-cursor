@@ -18,6 +18,14 @@ export async function apiRequest(
     
   const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
   
+  console.log('Making API request:', {
+    method,
+    url: fullUrl,
+    data,
+    baseUrl,
+    env: import.meta.env.VITE_API_URL
+  });
+  
   const res = await fetch(fullUrl, {
     method,
     headers: {
@@ -27,6 +35,12 @@ export async function apiRequest(
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
     mode: "cors",
+  });
+
+  console.log('API response:', {
+    status: res.status,
+    statusText: res.statusText,
+    headers: Object.fromEntries(res.headers.entries())
   });
 
   if (!res.ok) {
