@@ -17,7 +17,6 @@ import TournamentHistory from "@/pages/TournamentHistory";
 import Layout from "@/components/Layout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AuthProvider } from "@/hooks/use-auth";
-import { useState, useEffect } from "react";
 
 function App() {
   return (
@@ -27,18 +26,26 @@ function App() {
           <Layout>
             <Switch>
               {/* Public Routes */}
-              <ProtectedRoute path="/" component={Home} public />
-              <ProtectedRoute path="/teams" component={Teams} public />
-              <ProtectedRoute path="/auth" component={AuthPage} public />
-              <ProtectedRoute path="/login" component={LoginPage} public />
-              <ProtectedRoute path="/tournament-history" component={TournamentHistory} public />
+              <Route path="/" component={Home} />
+              <Route path="/teams" component={Teams} />
+              <Route path="/auth" component={AuthPage} />
+              <Route path="/login" component={LoginPage} />
+              <Route path="/tournament-history" component={TournamentHistory} />
               
               {/* Protected Routes */}
               <Route path="/round/:roundId">
-                {(params) => <Round id={parseInt(params.roundId)} />}
+                {(params: { roundId: string }) => (
+                  <ProtectedRoute path="/round/:roundId">
+                    <Round id={parseInt(params.roundId)} />
+                  </ProtectedRoute>
+                )}
               </Route>
               <Route path="/match/:matchId">
-                {(params) => <Match id={parseInt(params.matchId)} />}
+                {(params: { matchId: string }) => (
+                  <ProtectedRoute path="/match/:matchId">
+                    <Match id={parseInt(params.matchId)} />
+                  </ProtectedRoute>
+                )}
               </Route>
               <ProtectedRoute path="/set-pin" component={SetPinPage} />
               
