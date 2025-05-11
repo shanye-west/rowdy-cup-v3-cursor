@@ -32,10 +32,11 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     'http://localhost:5000'
   ];
   
-  // For Render deployment specifics
+  // For production, always allow from Vercel domains
   if (process.env.NODE_ENV === 'production') {
-    // Explicitly allow the Vercel frontend domain
-    res.header('Access-Control-Allow-Origin', 'https://rowdy-cup-v3-cursor.vercel.app');
+    if (origin && (origin.includes('.vercel.app') || allowedOrigins.includes(origin))) {
+      res.header('Access-Control-Allow-Origin', origin);
+    }
   } else {
     // For local development, use dynamic origin handling
     if (origin && allowedOrigins.includes(origin)) {
