@@ -19,84 +19,36 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AuthProvider } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 
-function Router() {
-  const [socket, setSocket] = useState<WebSocket | null>(null);
-
-  // Scroll to top on route change
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [window.location.pathname]);
-
-  useEffect(() => {
-    const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD
-      ? 'https://rowdy-cup-api.onrender.com'
-      : 'http://localhost:5000');
-    
-    // Convert http(s):// to ws(s):// for WebSocket connection
-    const wsUrl = apiUrl.replace(/^http/, 'ws') + '/ws';
-
-    const connectWebSocket = () => {
-      const ws = new WebSocket(wsUrl);
-      
-      ws.onopen = () => {
-        console.log('WebSocket connected');
-        setSocket(ws);
-      };
-
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-
-      ws.onclose = (event) => {
-        console.log('WebSocket connection closed with code', event.code);
-        setSocket(null);
-        
-        // Only attempt to reconnect if the connection was lost unexpectedly
-        if (event.code === 1006) {
-          console.log('Attempting to reconnect WebSocket...');
-          setTimeout(connectWebSocket, 5000);
-        }
-      };
-
-      return ws;
-    };
-
-    const ws = connectWebSocket();
-    return () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.close();
-      }
-    };
-  }, []);
-
-  return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/rounds/:id">
-        {(params) => <Round id={parseInt(params.id)} />}
-      </Route>
-      <Route path="/matches/:id">
-        {(params) => <Match id={parseInt(params.id)} />}
-      </Route>
-      <Route path="/teams" component={Teams} />
-      <Route path="/history" component={TournamentHistory} />
-      <Route path="/login" component={LoginPage} />
-      <Route path="/set-pin" component={SetPinPage} />
-      <Route path="/auth" component={AuthPage} />
-      <Route path="/test-courses" component={TestCourses} />
-      <ProtectedRoute path="/admin/players" component={AdminPlayersPage} adminOnly={true} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
           <Layout>
-            <Router />
+            <Switch>
+              {/* Public Routes */}
+              <ProtectedRoute path="/" component={Home} public />
+              <ProtectedRoute path="/teams" component={Teams} public />
+              <ProtectedRoute path="/auth" component={AuthPage} public />
+              <ProtectedRoute path="/login" component={LoginPage} public />
+              <ProtectedRoute path="/tournament-history" component={TournamentHistory} public />
+              
+              {/* Protected Routes */}
+              <Route path="/round/:roundId">
+                {(params) => <Round id={parseInt(params.roundId)} />}
+              </Route>
+              <Route path="/match/:matchId">
+                {(params) => <Match id={parseInt(params.matchId)} />}
+              </Route>
+              <ProtectedRoute path="/set-pin" component={SetPinPage} />
+              
+              {/* Admin Only Routes */}
+              <ProtectedRoute path="/admin/players" component={AdminPlayersPage} adminOnly />
+              <ProtectedRoute path="/test-courses" component={TestCourses} adminOnly />
+              
+              {/* 404 Route */}
+              <Route component={NotFound} />
+            </Switch>
           </Layout>
           <Toaster />
         </TooltipProvider>

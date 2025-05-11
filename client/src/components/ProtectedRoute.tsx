@@ -6,12 +6,14 @@ type ProtectedRouteProps = {
   path: string;
   component: React.ComponentType;
   adminOnly?: boolean;
+  public?: boolean;
 };
 
 export function ProtectedRoute({
   path,
   component: Component,
   adminOnly = false,
+  public: isPublic = false,
 }: ProtectedRouteProps) {
   const { user, isLoading, isAdmin } = useAuth();
 
@@ -24,6 +26,10 @@ export function ProtectedRoute({
               <Loader2 className="h-8 w-8 animate-spin text-border" />
             </div>
           );
+        }
+
+        if (isPublic) {
+          return <Component />;
         }
 
         if (!user) {
