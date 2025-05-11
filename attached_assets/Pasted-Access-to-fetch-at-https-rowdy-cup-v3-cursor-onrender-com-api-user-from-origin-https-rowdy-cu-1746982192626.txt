@@ -1,0 +1,55 @@
+Access to fetch at 'https://rowdy-cup-v3-cursor.onrender.com/api/user' from origin 'https://rowdy-cup-v3-cursor.vercel.app' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
+rowdy-cup-v3-cursor.onrender.com/api/user:1 
+            
+            
+           Failed to load resource: net::ERR_FAILEDUnderstand this error
+rowdy-cup-v3-cursor.vercel.app/:1 Access to fetch at 'https://rowdy-cup-v3-cursor.onrender.com/api/user' from origin 'https://rowdy-cup-v3-cursor.vercel.app' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
+queryClient.ts:53 
+            
+            
+           GET https://rowdy-cup-v3-cursor.onrender.com/api/user net::ERR_FAILED 502 (Bad Gateway)
+(anonymous) @ queryClient.ts:53
+fetchFn @ query.js:193
+u @ retryer.js:80
+start @ retryer.js:121
+fetch @ query.js:275
+ne @ queryObserver.js:179
+fetch @ queryObserver.js:169
+refetch @ queryObserver.js:159
+e @ use-auth.tsx:118Understand this error
+rowdy-cup-v3-cursor.vercel.app/:1 Access to fetch at 'https://rowdy-cup-v3-cursor.onrender.com/api/courses' from origin 'https://rowdy-cup-v3-cursor.vercel.app' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
+queryClient.ts:21 
+            
+            
+           GET https://rowdy-cup-v3-cursor.onrender.com/api/courses net::ERR_FAILED 502 (Bad Gateway)
+Ir @ queryClient.ts:21
+(anonymous) @ Home.tsx:44
+(anonymous) @ Home.tsx:68
+ri @ react-dom.production.min.js:243
+Ss @ react-dom.production.min.js:285
+(anonymous) @ react-dom.production.min.js:282
+ws @ react-dom.production.min.js:280
+is @ react-dom.production.min.js:272
+Bl @ react-dom.production.min.js:127
+(anonymous) @ react-dom.production.min.js:266
+setTimeout
+tr @ notifyManager.js:2
+(anonymous) @ notifyManager.js:26
+batch @ notifyManager.js:44
+y @ query.js:345
+l @ query.js:214
+c @ retryer.js:53
+(anonymous) @ retryer.js:93
+Promise.catch
+u @ retryer.js:84
+start @ retryer.js:121
+fetch @ query.js:275
+ne @ queryObserver.js:179
+fetch @ queryObserver.js:169
+refetch @ queryObserver.js:159
+e @ use-auth.tsx:118Understand this error
+rowdy-cup-v3-cursor.vercel.app/:1 Access to fetch at 'https://rowdy-cup-v3-cursor.onrender.com/api/courses' from origin 'https://rowdy-cup-v3-cursor.vercel.app' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
+queryClient.ts:21 
+            
+            
+           GET https://rowdy-cup-v3-cursor.onrender.com/api/courses net::ERR_FAILED 502 (Bad Gateway)
