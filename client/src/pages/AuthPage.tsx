@@ -3,23 +3,44 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import { Redirect } from "wouter";
+import { useLocation } from "wouter";
 
 export default function AuthPage() {
-  const { user, loginMutation } = useAuth();
+  const { user, loginMutation, isLoading } = useAuth();
   const [username, setUsername] = useState("");
   const [passcode, setPasscode] = useState("");
+  const [, setLocation] = useLocation();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     loginMutation.mutate({ username, passcode });
   };
 
-  // Redirect to home if already logged in
+  // Only redirect if we're not loading and the user is authenticated
+  useEffect(() => {
+    if (!isLoading && user) {
+      setLocation("/");
+    }
+  }, [user, isLoading, setLocation]);
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-border" />
+      </div>
+    );
+  }
+
+  // If user is authenticated, show loading while redirecting
   if (user) {
-    return <Redirect to="/" />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-border" />
+      </div>
+    );
   }
 
   return (

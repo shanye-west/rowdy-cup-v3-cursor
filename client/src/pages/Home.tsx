@@ -13,7 +13,7 @@ import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 
 const Home = () => {
   const [_, navigate] = useLocation();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
   const [isTournamentDialogOpen, setIsTournamentDialogOpen] = useState(false);
   const [isAddRoundDialogOpen, setIsAddRoundDialogOpen] = useState(false);
@@ -28,14 +28,14 @@ const Home = () => {
   const [roundFormData, setRoundFormData] = useState({
     name: "",
     matchType: "Singles Match",
-    courseId: 1, // Default value that will be updated when courses are loaded
+    courseId: 1,
     courseName: "",
     date: new Date().toISOString().split('T')[0],
     startTime: "08:00",
     isComplete: false,
-    tournamentId: 1 // Default tournament ID
+    tournamentId: 1
   });
-  
+
   // Fetch courses on component mount
   useEffect(() => {
     const fetchCourses = async () => {
@@ -47,7 +47,6 @@ const Home = () => {
           console.log("Home page got courses:", data);
           setCourses(data);
           
-          // If we have courses, set the default courseId and courseName
           if (data.length > 0) {
             setRoundFormData(prev => ({
               ...prev,
@@ -55,8 +54,6 @@ const Home = () => {
               courseName: data[0].name
             }));
           }
-        } else {
-          console.error("Error fetching courses:", response.status);
         }
       } catch (error) {
         console.error("Failed to fetch courses:", error);
@@ -65,8 +62,10 @@ const Home = () => {
       }
     };
 
-    fetchCourses();
-  }, []);
+    if (!isAuthLoading) {
+      fetchCourses();
+    }
+  }, [isAuthLoading]);
 
   // Define types
   interface Tournament {
@@ -95,11 +94,13 @@ const Home = () => {
   // Fetch tournament data
   const { data: tournament, isLoading: isTournamentLoading } = useQuery<Tournament>({
     queryKey: ['/api/tournament'],
+    enabled: !isAuthLoading
   });
 
   // Fetch rounds data
   const { data: rounds, isLoading: isRoundsLoading } = useQuery<Round[]>({
     queryKey: ['/api/rounds'],
+    enabled: !isAuthLoading
   });
 
   // Tournament update mutation
@@ -229,7 +230,7 @@ const Home = () => {
     setIsTournamentDialogOpen(true);
   };
 
-  const isLoading = isTournamentLoading || isRoundsLoading;
+  const isLoading = isAuthLoading || isTournamentLoading || isRoundsLoading || isLoadingCourses;
   
   // Process rounds data to include scores
   const roundsWithScores = rounds?.map((round: Round) => {
@@ -247,6 +248,15 @@ const Home = () => {
       pendingProducerScore
     };
   }) || [];
+
+  // Show loading state while checking auth
+  if (isAuthLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-border" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-6">
