@@ -18,6 +18,7 @@ interface DebugContext {
   method?: string;
   timestamp: string;
   duration?: number;
+  sessionID?: string;
   memoryUsage?: {
     heapUsed: number;
     heapTotal: number;
@@ -65,6 +66,38 @@ function generateRequestId(): string {
 function formatDebugEntry(entry: DebugEntry): string {
   const { level, message, context, data, error } = entry;
   const timestamp = new Date().toISOString();
+  
+  // Create a structured log object
+  const logObject = {
+    timestamp,
+    level,
+    requestId: context.requestId,
+    message,
+    userId: context.userId,
+    username: context.username,
+    path: context.path,
+    method: context.method,
+    duration: context.duration,
+    sessionID: context.sessionID,
+    memory: context.memoryUsage ? {
+      heapUsed: `${(context.memoryUsage.heapUsed / 1024 / 1024).toFixed(2)}MB`,
+      heapTotal: `${(context.memoryUsage.heapTotal / 1024 / 1024).toFixed(2)}MB`,
+      external: `${(context.memoryUsage.external / 1024 / 1024).toFixed(2)}MB`
+    } : undefined,
+    data,
+    error: error ? {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    } : undefined
+  };
+
+  // For cloud platforms, output JSON for better parsing
+  if (process.env.NODE_ENV === 'production') {
+    return JSON.stringify(logObject);
+  }
+
+  // For local development, use a more readable format
   let output = `[${timestamp}] [${level}] [${context.requestId}] ${message}`;
   
   if (context.userId) output += ` [User: ${context.userId}]`;

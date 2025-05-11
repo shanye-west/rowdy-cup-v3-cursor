@@ -101,7 +101,12 @@ export function setupAuth(app: Express) {
 
   // Add error handling for session middleware
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    debug.error('Session middleware error', { requestId: req.requestId }, null, err);
+    debug.error('Session middleware error', { requestId: req.requestId }, {
+      errorCode: err.code,
+      errorMessage: err.message,
+      stack: err.stack
+    }, err);
+    
     if (err.code === 'EBADCSRFTOKEN') {
       return res.status(403).json({
         error: 'Invalid CSRF token. Please refresh the page and try again.'
@@ -112,6 +117,18 @@ export function setupAuth(app: Express) {
 
   // Initialize session before passport
   app.use(session(sessionSettings));
+  
+  // Session debugging middleware
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    debug.debug('Session state', { requestId: req.requestId }, {
+      sessionID: req.sessionID,
+      isAuthenticated: req.isAuthenticated(),
+      hasUser: !!req.user,
+      cookie: req.session?.cookie,
+      sessionStore: (req.session as any)?.store?.constructor?.name
+    });
+    next();
+  });
   
   // Initialize passport after session
   app.use(passport.initialize());
@@ -166,14 +183,20 @@ export function setupAuth(app: Express) {
     const context = {
       requestId: req.requestId,
       username: req.body.username,
-      hasPasscode: !!req.body.passcode
+      hasPasscode: !!req.body.passcode,
+      headers: req.headers,
+      cookies: req.cookies
     };
     
     debug.info('Login request received', context);
     
     passport.authenticate("local", (err: Error | null, user: Express.User | false, info: any) => {
       if (err) {
-        debug.error('Passport authentication error', context, null, err);
+        debug.error('Passport authentication error', context, {
+          error: err.message,
+          stack: err.stack,
+          info
+        }, err);
         return next(err);
       }
       if (!user) {
@@ -182,16 +205,28 @@ export function setupAuth(app: Express) {
       }
       req.login(user, (err) => {
         if (err) {
-          debug.error('Session login error', context, null, err);
+          debug.error('Session login error', context, {
+            error: err.message,
+            stack: err.stack
+          }, err);
           return next(err);
         }
         // Set session cookie explicitly
         req.session.save((err) => {
           if (err) {
-            debug.error('Session save error', context, null, err);
+            debug.error('Session save error', context, {
+              error: err.message,
+              stack: err.stack,
+              sessionID: req.sessionID
+            }, err);
             return next(err);
           }
-          debug.info('Login successful, session saved', { ...context, userId: user.id });
+          debug.info('Login successful, session saved', { 
+            ...context, 
+            userId: user.id,
+            sessionID: req.sessionID,
+            cookie: req.session?.cookie
+          });
           return res.json({
             authenticated: true,
             user: {
