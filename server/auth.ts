@@ -95,6 +95,8 @@ export function setupAuth(app: Express) {
   // Configure session with PostgreSQL store
   const PostgresStore = connectPgSimple(session);
   
+  // In server/auth.ts, update the session configuration for production:
+
   const sessionSettings: session.SessionOptions = {
     store: new PostgresStore({
       pool: pool,
@@ -107,10 +109,10 @@ export function setupAuth(app: Express) {
     cookie: {
       maxAge: 24 * 60 * 60 * 1000,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       httpOnly: true,
-      path: '/'
-      // Remove domain restriction to allow cross-domain cookies
+      path: '/',
+      domain: process.env.NODE_ENV === 'production' ? undefined : undefined // Let the browser handle this
     },
     name: 'rowdy-cup.sid'
   };

@@ -2,7 +2,7 @@ services:
   - type: web
     name: rowdy-cup-api
     env: node
-    rootDir: .
+    plan: starter
     buildCommand: |
       npm install --production=false
       npm run build:server
@@ -18,3 +18,7 @@ services:
         value: https://rowdy-cup-api.onrender.com
     healthCheckPath: /_health
     autoDeploy: true
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
