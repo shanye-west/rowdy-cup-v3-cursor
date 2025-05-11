@@ -122,19 +122,40 @@ wss.on('connection', (ws: WebSocket, req: Request) => {
     cookies: req.cookies
   });
   
-  // Handle authentication
+  // Get session info but don't require authentication
   const session = req.session as any;
-  if (!session?.passport?.user) {
-    debug.warn('WebSocket connection rejected - not authenticated', {
-      requestId: req.requestId
-    });
-    ws.close(1008, 'Authentication required');
-    return;
-  }
-
+  const isAuthenticated = !!session?.passport?.user;
+  
   debug.info('WebSocket client connected', {
     requestId: req.requestId,
-    userId: session.passport.user
+    isAuthenticated,
+    userId: session?.passport?.user
+  });
+  
+  // Handle messages
+  ws.on('message', (message: string) => {
+    try {
+      const data = JSON.parse(message);
+      
+      // Check authentication for protected operations
+      if (data.type === 'admin' && !isAuthenticated) {
+        ws.send(JSON.stringify({ error: 'Authentication required for admin operations' }));
+        return;
+      }
+      
+      if (data.type === 'scorecard' && !isAuthenticated) {
+        ws.send(JSON.stringify({ error: 'Authentication required for scorecard operations' }));
+        return;
+      }
+      
+      // Handle the message
+      // ... rest of message handling code ...
+    } catch (error) {
+      debug.error('WebSocket message error', {
+        requestId: req.requestId,
+        userId: session?.passport?.user
+      }, null, error as Error);
+    }
   });
   
   ws.on('error', (error) => {

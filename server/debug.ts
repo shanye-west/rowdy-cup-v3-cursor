@@ -22,6 +22,7 @@ interface DebugContext {
   cookie?: any;
   headers?: any;
   cookies?: any;
+  isAuthenticated?: boolean;
   memoryUsage?: {
     heapUsed: number;
     heapTotal: number;

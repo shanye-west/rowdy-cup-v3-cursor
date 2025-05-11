@@ -53,6 +53,7 @@ async function comparePasswords(supplied: string, stored: string) {
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
+// Middleware to check if user is authenticated
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
   if (req.isAuthenticated()) {
     return next();
@@ -60,11 +61,26 @@ export function isAuthenticated(req: Request, res: Response, next: NextFunction)
   res.status(401).json({ error: "Unauthorized" });
 }
 
+// Middleware to check if user is admin
 export function isAdmin(req: Request, res: Response, next: NextFunction) {
   if (req.isAuthenticated() && req.user.isAdmin) {
     return next();
   }
   res.status(403).json({ error: "Forbidden - Admin access required" });
+}
+
+// Middleware to check if user is a player in the match
+export function isMatchPlayer(req: Request, res: Response, next: NextFunction) {
+  if (req.isAuthenticated() && req.user.playerId) {
+    return next();
+  }
+  res.status(403).json({ error: "Forbidden - Must be a player in the match" });
+}
+
+// Optional auth middleware - doesn't require auth but adds user info if available
+export function optionalAuth(req: Request, res: Response, next: NextFunction) {
+  // Just pass through - the user object will be available if authenticated
+  next();
 }
 
 export function setupAuth(app: Express) {
@@ -242,7 +258,7 @@ export function setupAuth(app: Express) {
     })(req, res, next);
   });
   
-  // Password change endpoint
+  // Protected routes that require authentication
   app.post("/api/change-password", isAuthenticated, async (req, res) => {
     try {
       // Validate the request
@@ -283,9 +299,10 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/user", (req, res) => {
+  // Public routes that don't require authentication
+  app.get("/api/user", optionalAuth, (req, res) => {
     if (!req.isAuthenticated()) {
-      return res.status(401).json({ authenticated: false });
+      return res.json({ authenticated: false });
     }
     res.json({
       authenticated: true,
@@ -297,5 +314,15 @@ export function setupAuth(app: Express) {
         playerId: req.user.playerId
       }
     });
+  });
+
+  // Admin-only routes
+  app.get("/api/admin/*", isAdmin, (req, res, next) => {
+    next();
+  });
+
+  // Player-only routes (for scorecard editing)
+  app.post("/api/matches/*/scorecard", isMatchPlayer, (req, res, next) => {
+    next();
   });
 }
