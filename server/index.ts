@@ -14,6 +14,27 @@ import { registerRoutes } from "./routes";
 const log = console.log.bind(console);
 
 const app = express();
+
+// CORS middleware - MUST be first
+app.use((req: Request, res: Response, next: NextFunction) => {
+  // Always allow the Vercel domain
+  res.header('Access-Control-Allow-Origin', 'https://rowdy-cup-v3-cursor.vercel.app');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400');
+  res.header('Vary', 'Origin');
+  res.header('Access-Control-Expose-Headers', 'Set-Cookie');
+
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
+  next();
+});
+
 setupAuth(app);
 const server = createServer(app);
 
@@ -43,48 +64,6 @@ wss.on('connection', (ws: WebSocket) => {
   ws.on('close', () => {
     console.log('Client disconnected');
   });
-});
-
-// Enable CORS for Vercel frontend - moved to top
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log('CORS Middleware - Request Origin:', req.headers.origin);
-  console.log('CORS Middleware - Request Method:', req.method);
-  console.log('CORS Middleware - Request Path:', req.path);
-  console.log('CORS Middleware - Request Headers:', req.headers);
-  
-  // In development, allow all origins
-  if (process.env.NODE_ENV !== 'production') {
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  } else {
-    const allowedOrigins = [
-      'https://rowdy-cup-v3-cursor.vercel.app',
-      'http://localhost:3000'
-    ];
-    
-    const origin = req.headers.origin;
-    if (origin && allowedOrigins.includes(origin)) {
-      console.log('CORS Middleware - Setting allowed origin:', origin);
-      res.header('Access-Control-Allow-Origin', origin);
-    } else {
-      console.log('CORS Middleware - Origin not allowed:', origin);
-    }
-  }
-  
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Max-Age', '86400'); // 24 hours
-  res.header('Vary', 'Origin');
-  res.header('Access-Control-Expose-Headers', 'Set-Cookie');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    console.log('CORS Middleware - Handling preflight request');
-    res.status(200).end();
-    return;
-  }
-  
-  next();
 });
 
 // Parse JSON and URL-encoded bodies
