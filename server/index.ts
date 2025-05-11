@@ -45,20 +45,29 @@ wss.on('connection', (ws: WebSocket) => {
   });
 });
 
-// Parse JSON and URL-encoded bodies
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-// Enable CORS for Vercel frontend
+// Enable CORS for Vercel frontend - moved to top
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const allowedOrigins = [
-    'https://rowdy-cup-v3-cursor.vercel.app',
-    'http://localhost:3000'
-  ];
+  console.log('CORS Middleware - Request Origin:', req.headers.origin);
+  console.log('CORS Middleware - Request Method:', req.method);
+  console.log('CORS Middleware - Request Path:', req.path);
+  console.log('CORS Middleware - Request Headers:', req.headers);
   
-  const origin = req.headers.origin;
-  if (origin && allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
+  // In development, allow all origins
+  if (process.env.NODE_ENV !== 'production') {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  } else {
+    const allowedOrigins = [
+      'https://rowdy-cup-v3-cursor.vercel.app',
+      'http://localhost:3000'
+    ];
+    
+    const origin = req.headers.origin;
+    if (origin && allowedOrigins.includes(origin)) {
+      console.log('CORS Middleware - Setting allowed origin:', origin);
+      res.header('Access-Control-Allow-Origin', origin);
+    } else {
+      console.log('CORS Middleware - Origin not allowed:', origin);
+    }
   }
   
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
@@ -70,12 +79,17 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('CORS Middleware - Handling preflight request');
     res.status(200).end();
     return;
   }
   
   next();
 });
+
+// Parse JSON and URL-encoded bodies
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 // Logging middleware for all /api routes
 app.use((req: Request, res: Response, next: NextFunction) => {
